@@ -51,7 +51,7 @@ def write_results(
 		"# Transformation parameters",
 		"#",
 		"#   - rotation (Euler phi, psi, theta): [%6.3f, %6.3f, %6.3f]" \
-			% eulers[0], (eulers[2], eulers[1]),
+			% (eulers[0], eulers[2], eulers[1]),
 		"#   - scale = %6.3f" % transf.s_scalar,
 		"#   - translation for rotationaround [0,0,0] = [%6.3f, %6.3f, %6.3f]" \
 			 % (transf.d[0], transf.d[1], transf.d[2]),
