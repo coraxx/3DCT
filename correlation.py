@@ -84,11 +84,11 @@ def write_results(
 		"# Transformation of initial (3D) markers",
 		"#",
 		"#	Initial (3D) markers		Transformed initial"
-		 + "		Final (2D) markers "])
+		 + "		Final (2D) markers	Transformed-Final"])
 	out_vars = [markers_3d[0,:], markers_3d[1,:], markers_3d[2,:], 
 				transformed_3d[0,:], transformed_3d[1,:], transformed_3d[2,:],
-				markers_2d[0,:], markers_2d[1,:]]
-	out_format = '	%7.2f	%7.2f	%7.2f		%7.2f	%7.2f	%7.2f		%7.2f	%7.2f'
+				markers_2d[0,:], markers_2d[1,:], transformed_3d[0,:]-markers_2d[0,:], transformed_3d[1,:]-markers_2d[1,:]]
+	out_format = '	%7.2f	%7.2f	%7.2f		%7.2f	%7.2f	%7.2f		%7.2f	%7.2f		%7.2f	%7.2f'
 	ids = range(markers_3d.shape[1])
 	res_tab_markers = pyto.io.util.arrayFormat(
 		arrays=out_vars, format=out_format, indices=ids, prependIndex=False)
@@ -174,6 +174,6 @@ def main(markers_3d,markers_2d,spots_3d,rotation_center,results_file):
 	
 	# delta calc,real
 	delta2D = transf_3d[:2,:] - mark_2d
-	return [transf, transf_3d, spots_2d, delta2D, cm_3D_markers,modified_translation]
+	return [transf, transf_3d, spots_2d, delta2D, cm_3D_markers, modified_translation]
 
 
