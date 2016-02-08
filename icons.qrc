@@ -1,0 +1,5 @@
+<RCC>
+  <qresource prefix="ico">
+    <file>icons/mpi.png</file>
+  </qresource>
+</RCC>

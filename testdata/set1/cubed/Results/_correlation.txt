@@ -1,0 +1,40 @@
+#
+# Machine: Captain-Silver.biochem.mpg.de ['Darwin', 'x86_64', 'i386']
+# Date: Thu Aug 27 10:29:23 2015
+#
+# Input script: /Users/jan/python_modules/vladan/pyto/scripts/common.pyc (Fri May 29 12:43:02 2015)  $Revision: 1179 $
+# Working directory: /Users/jan/Desktop/Correlation/Area_02/cubed
+#
+#
+# Transformation parameters
+#
+#   - rotation (Euler phi, theta psi): [71.138, 77.625, -179.496]
+#   - scale =  1.082
+#   - translation = [127.931, -69.207,  0.000]
+#   - rms error (in 2d pixels) =   1.04
+#   - optimization successful
+#
+#
+# Transformation of initial (3D) markers
+#
+#  Initial (3D) markers      Transformed initial     Final (2D) markers 
+     141    266    638      345.11  555.91  379.45      344.83  555.50  
+     229    201    632      248.67  534.64  444.35      248.67  536.00  
+     113    277    642      366.63  566.05  357.03      367.00  565.50  
+    1050    834    679      610.68  359.52 1492.12      611.33  360.83  
+    1036    867    679      649.93  360.46 1489.92      650.50  361.67  
+    1031    946    682      732.46  359.36 1512.76      732.83  360.00  
+    1084    256    661        6.56  370.88 1324.44        6.00  369.83  
+    1083    367    670      120.72  373.43 1363.34      121.42  372.92  
+    1026    532    667      309.97  371.96 1362.69      309.17  372.00  
+    1136    895    687      643.83  345.10 1600.80      643.50  345.25  
+    1121    941    684      695.81  342.03 1600.92      696.50  342.25  
+    1090    967    684      732.77  347.69 1579.25      732.25  348.00  
+     974   1077    688      886.35  369.85 1501.32      885.75  368.75  
+     933   1103    694      927.25  383.85 1470.64      927.00  382.25  
+#
+#
+# Correlation of 3D spots to 2D
+#
+#       Spots (3D)             Correlated spots
+     229    201    632      248.67  534.64  444.35 
