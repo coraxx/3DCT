@@ -8,8 +8,8 @@
 #date				: 2015/10
 #version			: 0.1
 #status				: developement
-#usage				: import scatterHistPlot.py and call main(x,y), where x 
-#					  and y are numpy arrays
+#usage				: import scatterHistPlot.py and call scatterHistPlot.main(x,y)
+#					: where x and y are numpy arrays
 #notes				: 
 #python_version		: 2.7.10 
 #=================================================================================

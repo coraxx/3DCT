@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-#title				: interpolate_stack.py
-#description		: Interpolate z-slices in 3D image stack (only single channel stacks atm)
+#title				: stack_processing.py
+#description		: Process image stack files (.tif)
 #author				: Jan Arnold
 #email				: jan.arnold (at) coraxx.net
 #credits			: 
@@ -8,12 +8,12 @@
 #date				: 2016/01
 #version			: 0.1
 #status				: developement
-#usage				: Can be used as standalone application, i.e. run python -u interpolate_stack.py
-#					: or import interpolate_stack.py and use main function like:
-#					: interpolate_stack.main(imgpath, original_steppsize, interpolated_stepsize, interpolationmethod)
+#usage				: Can be used as standalone application, i.e. run python -u stack_processing.py
+#					: or import stack_processing.py and use main function like:
+#					: stack_processing.main(imgpath, original_steppsize, interpolated_stepsize, interpolationmethod)
 #					: 
-#					: e.g: interpolate_stack("image_stack.tif", 300, 161.25, 'linear') => fast (~25x faster)
-#					: or: interpolate_stack("image_stack.tif", 300, 161.25, 'spline') => slow
+#					: e.g: stack_processing("image_stack.tif", 300, 161.25, 'linear') => fast (~25x faster)
+#					: or: stack_processing("image_stack.tif", 300, 161.25, 'spline') => slow
 #					: 
 #					: where 300 is the focus step size the image stack was acquired with and 161.25 the step size
 #					: of the interpolated stack.
@@ -49,7 +49,10 @@ import matplotlib.pyplot as plt
 ## Adding execution directory to include possible scripts in the same folder (e.g. tifffile.py)
 execdir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(execdir)
-import tifffile as tf
+try:
+	import tifffile as tf
+except:
+	sys.exit("Please install tifffile, e.g.: pip install tifffile")
 
 ## Main function handling the file type and parsing of filenames/directories
 def main(img_path, ss_in, ss_out, interpolationmethod='linear', saveorigstack=True, showgraph=False):

@@ -24,22 +24,26 @@ import fileinput
 from subprocess import call
 from PyQt4 import QtCore, QtGui, uic
 import numpy as np
+import tifffile as tf
 # add working directory temporarily to PYTHONPATH
 execdir = os.path.dirname(os.path.realpath(__file__))
 workingdir = execdir
 sys.path.append(execdir)
 # import modules from working directory
 import csv_handler
-import image_navigation_quad
-import tifffile as tf
-import bead_pos
 import stack_processing
+import image_navigation_quad
+import bead_pos
+
+## Colored stdout
+import clrmsg
 
 ### debug stuff ###
 #import pdb
 #import inspect
 #import pyqtDebug
 ###################
+
 
 ########## GUI layout file #######################################################
 ##################################################################################
@@ -281,9 +285,9 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 		if sys.platform == 'win32':
 			str_lineEdit_selectTifPath = str(self.lineEdit_selectTifPath.displayText())
 			str_lineEdit_saveToPath = str(self.lineEdit_saveToPath.displayText())
-			print "DEBUG: ", str_lineEdit_selectTifPath, str_lineEdit_saveToPath
-			print "DEBUG: ", str_lineEdit_selectTifPath.encode('string-escape'), str_lineEdit_saveToPath.encode('string-escape')
-			print "DEBUG: ", (str_lineEdit_selectTifPath.encode('string-escape').replace('\\\\','\\'),
+			print clrmsg.DEBUG, str_lineEdit_selectTifPath, str_lineEdit_saveToPath
+			print clrmsg.DEBUG, str_lineEdit_selectTifPath.encode('string-escape'), str_lineEdit_saveToPath.encode('string-escape')
+			print clrmsg.DEBUG, (str_lineEdit_selectTifPath.encode('string-escape').replace('\\\\','\\'),
 								str_lineEdit_saveToPath.encode('string-escape').replace('\\\\','\\'))
 			pathFROM = "PATH = " + '"' + str_lineEdit_selectTifPath.encode('string-escape') + '/";'
 			pathTO = "PATHSAVETO = " + '"' + str_lineEdit_saveToPath.encode('string-escape') + '/";'
@@ -1055,6 +1059,11 @@ class GenericThread(QtCore.QThread):
 		return
 
 
+print clrmsg.DEBUG + 'Test bla bla'
+print clrmsg.OK + 'Test bla bla'
+print clrmsg.ERROR + 'Test bla bla'
+print clrmsg.INFO + 'Test bla bla'
+print clrmsg.WARNING + 'Test bla bla'
 ########## Executed when running in standalone ###################################
 ##################################################################################
 

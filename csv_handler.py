@@ -8,15 +8,14 @@
 #date				: 2015/09
 #version			: 0.2
 #status				: developement
-#usage				: python csv_handler.py
-#notes				: 
+#usage				: import csv_handler
+#notes				: e.g. import: >>> model = csv_handler.csv2model('test.csv',delimiter="\t",sniff=False,parent=None)
+#					: e.g. export: >>> csv_handler.model2csv(model,'test.csv',delimiter="\t")
 #python_version		: 2.7.10 
 #=================================================================================
 import csv
 from PyQt4 import QtCore, QtGui
 
-#csv_file_in = "/Users/jan/Desktop/MPI/csfib_test/data/csfib_test.csv"
-#csv_file_out = "/Users/jan/Desktop/test.txt"
 
 ## read csv/tsv into pyqt model for display in e.g. QTableView
 def csv2model(csv_file_in,delimiter="\t",sniff=False,parent=None):
@@ -28,6 +27,7 @@ def csv2model(csv_file_in,delimiter="\t",sniff=False,parent=None):
 				model.appendRow(items)
 		return model
 
+	## If sniff is set to true, csv.Sniffer attempts to resolve the correct delimiter
 	if sniff == True:
 		sniffer = csv.Sniffer()
 		## Sniff for delimiter
@@ -69,6 +69,8 @@ def model2csv(model,csv_file_out,delimiter="\t"):
 					for columnNumber in range(model.columnCount()) ]
 			writer.writerow(fields)
 
-# if __name__ == "__main__":
-# 	print "Import me"
+if __name__ == "__main__":
+	print(r"""Please import me and use me like: 
+		e.g. import: >>> model = csv_handler.csv2model('test.csv',delimiter="\t",sniff=False,parent=None)
+		e.g. export: >>> csv_handler.model2csv(model,'test.csv',delimiter="\t")""")
 
