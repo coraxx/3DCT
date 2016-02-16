@@ -10,7 +10,7 @@
 #version			: 0.1
 #status				: Final
 #usage				: import clrmsg
-#					: then call e.g. # print(print clrmsg.ERROR + 'Error message')
+#					: then call e.g. # print(clrmsg.ERROR + 'Error message')
 #					: and it will return # [ ERROR ] Error message
 #notes				: You can add your own status prefixes.
 #python_version		: 2.7.10 
