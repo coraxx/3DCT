@@ -20,7 +20,26 @@
       <widget class="QGraphicsView" name="graphicsView_left"/>
      </item>
      <item>
-      <widget class="QTableView" name="tableView_left"/>
+      <widget class="QTableViewCustom" name="tableView_left">
+       <property name="editTriggers">
+        <set>QAbstractItemView::AnyKeyPressed|QAbstractItemView::DoubleClicked|QAbstractItemView::EditKeyPressed</set>
+       </property>
+       <property name="dragEnabled">
+        <bool>true</bool>
+       </property>
+       <property name="dragDropOverwriteMode">
+        <bool>false</bool>
+       </property>
+       <property name="dragDropMode">
+        <enum>QAbstractItemView::InternalMove</enum>
+       </property>
+       <property name="selectionBehavior">
+        <enum>QAbstractItemView::SelectRows</enum>
+       </property>
+       <property name="sortingEnabled">
+        <bool>false</bool>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>
@@ -30,7 +49,20 @@
       <widget class="QGraphicsView" name="graphicsView_right"/>
      </item>
      <item>
-      <widget class="QTableView" name="tableView_right"/>
+      <widget class="QTableViewCustom" name="tableView_right">
+       <property name="dragEnabled">
+        <bool>true</bool>
+       </property>
+       <property name="dragDropOverwriteMode">
+        <bool>false</bool>
+       </property>
+       <property name="dragDropMode">
+        <enum>QAbstractItemView::InternalMove</enum>
+       </property>
+       <property name="selectionBehavior">
+        <enum>QAbstractItemView::SelectRows</enum>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>
@@ -49,6 +81,12 @@
          <string>Control</string>
         </attribute>
         <layout class="QVBoxLayout" name="verticalLayout">
+         <property name="leftMargin">
+          <number>10</number>
+         </property>
+         <property name="rightMargin">
+          <number>10</number>
+         </property>
          <item>
           <layout class="QGridLayout" name="gridLayout_2_bc">
            <item row="0" column="0">
@@ -61,10 +99,10 @@
            <item row="0" column="1">
             <widget class="QSlider" name="horizontalSlider_brightness">
              <property name="minimum">
-              <number>-50</number>
+              <number>-250</number>
              </property>
              <property name="maximum">
-              <number>50</number>
+              <number>250</number>
              </property>
              <property name="orientation">
               <enum>Qt::Horizontal</enum>
@@ -73,6 +111,15 @@
            </item>
            <item row="1" column="1">
             <widget class="QSlider" name="horizontalSlider_contrast">
+             <property name="minimum">
+              <number>0</number>
+             </property>
+             <property name="maximum">
+              <number>100</number>
+             </property>
+             <property name="value">
+              <number>10</number>
+             </property>
              <property name="orientation">
               <enum>Qt::Horizontal</enum>
              </property>
@@ -82,6 +129,20 @@
             <widget class="QLabel" name="label_4">
              <property name="text">
               <string>Contrast:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="2">
+            <widget class="QToolButton" name="toolButton_brightness_reset">
+             <property name="text">
+              <string>reset</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="2">
+            <widget class="QToolButton" name="toolButton_contrast_reset">
+             <property name="text">
+              <string>reset</string>
              </property>
             </widget>
            </item>
@@ -102,6 +163,19 @@
               <string>TextLabel</string>
              </property>
             </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
            </item>
           </layout>
          </item>
@@ -176,6 +250,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QTableViewCustom</class>
+   <extends>QTableView</extends>
+   <header>QtCustom.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>
