@@ -21,6 +21,7 @@ import cv2
 import tifffile as tf
 ## Colored stdout
 import clrmsg
+## Custom Qt functions (mostly to handle events) widgets in QtDesigner are promoted to
 import QtCustom
 
 execdir = os.path.dirname(os.path.realpath(__file__))
@@ -31,10 +32,11 @@ Ui_WidgetWindow, QtBaseClass = uic.loadUiType(qtCreatorFile_main)
 
 class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 	def __init__(self, parent=None, left=None, right=None):
+		self.debug = True
+		if self.debug == True: print clrmsg.DEBUG + 'Debug messages enabled'
 		QtGui.QWidget.__init__(self, parent)
 		Ui_WidgetWindow.__init__(self)
 		self.setupUi(self)
-		self.debug = True
 
 		## Tableview and models
 		self.model_left = QtCustom.QStandardItemModelCustom(self)
@@ -51,8 +53,6 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 		self.right = right
 
 		## Initialize parameters
-		self.rotangle_left = 0
-		self.rotangle_right = 0
 		self.brightness_left = 0
 		self.contrast_left = 10
 		self.brightness_right = 0
@@ -69,6 +69,7 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 
 		# SpinBoxes
 		self.spinBox_rot.valueChanged.connect(self.rotateImage)
+		self.spinBox_markerSize.valueChanged.connect(self.changeMarkerSize)
 
 		## Buttons
 		self.toolButton_rotcw.clicked.connect( lambda: self.rotateImage45(direction='cw' ))
@@ -116,24 +117,8 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 			self.formerFocusedWidgetName = former.objectName()
 			self.formerFocusedWidget = former
 
-		## Feed saved rotation angle/brightness-contrast value from selected image to spinbox/slider
-		 # Block emitting signals for correct setting of BOTH sliders. Otherwise the second one gets overwritten with wrong value
-		self.horizontalSlider_brightness.blockSignals(True)
-		self.horizontalSlider_contrast.blockSignals(True)
-		if self.currentFocusedWidgetName == 'graphicsView_left':
-			self.spinBox_rot.setValue(self.rotangle_left)
-			self.horizontalSlider_brightness.setValue(self.brightness_left)
-			self.horizontalSlider_contrast.setValue(self.contrast_left)
-		elif self.currentFocusedWidgetName == 'graphicsView_right':
-			self.spinBox_rot.setValue(self.rotangle_right)
-			self.horizontalSlider_brightness.setValue(self.brightness_right)
-			self.horizontalSlider_contrast.setValue(self.contrast_right)
-		 # Unblock emitting signals.
-		self.horizontalSlider_brightness.blockSignals(False)
-		self.horizontalSlider_contrast.blockSignals(False)
-
 		## Lable showing selected image
-		if self.currentFocusedWidgetName == 'spinBox_rot':
+		if self.currentFocusedWidgetName in ['spinBox_rot','spinBox_markerSize','horizontalSlider_brightness','horizontalSlider_contrast']:
 			pass
 		else:
 			if self.currentFocusedWidgetName != 'graphicsView_left' and self.currentFocusedWidgetName != 'graphicsView_right':
@@ -149,9 +134,28 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 				self.label_selimg.setText('right')
 				self.ctrlEnDisAble(True)
 
+		## Feed saved rotation angle/brightness-contrast value from selected image to spinbox/slider
+		 # Block emitting signals for correct setting of BOTH sliders. Otherwise the second one gets overwritten with the old value
+		self.horizontalSlider_brightness.blockSignals(True)
+		self.horizontalSlider_contrast.blockSignals(True)
+		if self.currentFocusedWidgetName == 'graphicsView_left':
+			self.spinBox_rot.setValue(self.sceneLeft.rotangle)
+			self.spinBox_markerSize.setValue(self.sceneLeft.markerSize)
+			self.horizontalSlider_brightness.setValue(self.brightness_left)
+			self.horizontalSlider_contrast.setValue(self.contrast_left)
+		elif self.currentFocusedWidgetName == 'graphicsView_right':
+			self.spinBox_rot.setValue(self.sceneRight.rotangle)
+			self.spinBox_markerSize.setValue(self.sceneRight.markerSize)
+			self.horizontalSlider_brightness.setValue(self.brightness_right)
+			self.horizontalSlider_contrast.setValue(self.contrast_right)
+		 # Unblock emitting signals.
+		self.horizontalSlider_brightness.blockSignals(False)
+		self.horizontalSlider_contrast.blockSignals(False)
+
 	## Funtion to dis-/enabling the buttons controlling rotation and contrast/brightness
 	def ctrlEnDisAble(self,status):
 		self.spinBox_rot.setEnabled(status)
+		self.spinBox_markerSize.setEnabled(status)
 		self.horizontalSlider_brightness.setEnabled(status)
 		self.horizontalSlider_contrast.setEnabled(status)
 		self.toolButton_rotcw.setEnabled(status)
@@ -196,66 +200,81 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 			self.graphicsView_right.scale(scaling_factor,scaling_factor)
 
 	def rotateImage(self):
-		if self.currentFocusedWidgetName == 'spinBox_rot':
-			if self.formerFocusedWidgetName != 'graphicsView_left' and self.formerFocusedWidgetName != 'graphicsView_right':
-				print clrmsg.ERROR + "Please click on the image you want to rotate."
-			elif self.formerFocusedWidgetName == 'graphicsView_left':
-				if int(self.spinBox_rot.value()) == 360:
-					self.spinBox_rot.setValue(0)
-				elif int(self.spinBox_rot.value()) == -1:
-					self.spinBox_rot.setValue(359)
-				self.graphicsView_left.rotate(int(self.spinBox_rot.value())-self.rotangle_left)
-				self.rotangle_left = int(self.spinBox_rot.value())
-			elif self.formerFocusedWidgetName == 'graphicsView_right':
-				if int(self.spinBox_rot.value()) == 360:
-					self.spinBox_rot.setValue(0)
-				elif int(self.spinBox_rot.value()) == -1:
-					self.spinBox_rot.setValue(359)
-				self.graphicsView_right.rotate(int(self.spinBox_rot.value())-self.rotangle_right)
-				self.rotangle_right = int(self.spinBox_rot.value())
+		if self.label_selimg.text() == 'left':
+			if int(self.spinBox_rot.value()) == 360:
+				self.spinBox_rot.setValue(0)
+			elif int(self.spinBox_rot.value()) == -1:
+				self.spinBox_rot.setValue(359)
+			self.graphicsView_left.rotate(int(self.spinBox_rot.value())-self.sceneLeft.rotangle)
+			self.sceneLeft.rotangle = int(self.spinBox_rot.value())
+			## Update graphics
+			self.sceneLeft.enumeratePoints()
+		elif self.label_selimg.text() == 'right':
+			if int(self.spinBox_rot.value()) == 360:
+				self.spinBox_rot.setValue(0)
+			elif int(self.spinBox_rot.value()) == -1:
+				self.spinBox_rot.setValue(359)
+			self.graphicsView_right.rotate(int(self.spinBox_rot.value())-self.sceneRight.rotangle)
+			self.sceneRight.rotangle = int(self.spinBox_rot.value())
+			## Update graphics
+			self.sceneRight.enumeratePoints()
 
 	def rotateImage45(self,direction=None):
-		if self.currentFocusedWidgetName == 'spinBox_rot':
-			cfwn = self.formerFocusedWidgetName
-		else:
-			cfwn = self.currentFocusedWidgetName
-		if cfwn != 'graphicsView_left' and cfwn != 'graphicsView_right':
-			print clrmsg.ERROR + "Please click on the image you want to rotate."
-		elif direction == None:
+		if direction == None:
 			print clrmsg.ERROR + "Please specify direction ('cw' or 'ccw')."
 		# rotate 45 degree clockwise
 		elif direction == 'cw':
-			if cfwn == 'graphicsView_left':
-				self.rotangle_left = self.rotangle_left+45
+			if self.label_selimg.text() == 'left':
+				self.sceneLeft.rotangle = self.sceneLeft.rotangle+45
 				self.graphicsView_left.rotate(45)
-				self.rotangle_left = self.anglectrl(angle=self.rotangle_left)
-				self.spinBox_rot.setValue(self.rotangle_left)
-			elif cfwn == 'graphicsView_right':
-				self.rotangle_right = self.rotangle_right+45
+				self.sceneLeft.rotangle = self.anglectrl(angle=self.sceneLeft.rotangle)
+				self.spinBox_rot.setValue(self.sceneLeft.rotangle)
+				## Update graphics
+				self.sceneLeft.enumeratePoints()
+			elif self.label_selimg.text() == 'right':
+				self.sceneRight.rotangle = self.sceneRight.rotangle+45
 				self.graphicsView_right.rotate(45)
-				self.rotangle_right = self.anglectrl(angle=self.rotangle_right)
-				self.spinBox_rot.setValue(self.rotangle_right)
+				self.sceneRight.rotangle = self.anglectrl(angle=self.sceneRight.rotangle)
+				self.spinBox_rot.setValue(self.sceneRight.rotangle)
+				## Update graphics
+				self.sceneRight.enumeratePoints()
 		# rotate 45 degree anticlockwise
 		elif direction == 'ccw':
-			if cfwn == 'graphicsView_left':
-				self.rotangle_left = self.rotangle_left-45
+			if self.label_selimg.text() == 'left':
+				self.sceneLeft.rotangle = self.sceneLeft.rotangle-45
 				self.graphicsView_left.rotate(-45)
-				self.rotangle_left = self.anglectrl(angle=self.rotangle_left)
-				self.spinBox_rot.setValue(self.rotangle_left)
-			elif cfwn == 'graphicsView_right':
-				self.rotangle_right = self.rotangle_right-45
+				self.sceneLeft.rotangle = self.anglectrl(angle=self.sceneLeft.rotangle)
+				self.spinBox_rot.setValue(self.sceneLeft.rotangle)
+			elif self.label_selimg.text() == 'right':
+				self.sceneRight.rotangle = self.sceneRight.rotangle-45
 				self.graphicsView_right.rotate(-45)
-				self.rotangle_right = self.anglectrl(angle=self.rotangle_right)
-				self.spinBox_rot.setValue(self.rotangle_right)
+				self.sceneRight.rotangle = self.anglectrl(angle=self.sceneRight.rotangle)
+				self.spinBox_rot.setValue(self.sceneRight.rotangle)
 
 	def anglectrl(self,angle=None):
 		if angle == None:
-			print clrmsg.ERROR + "Please specify side, e.g. anglectrl(angle=self.rotangle_left)"
+			print clrmsg.ERROR + "Please specify side, e.g. anglectrl(angle=self.sceneLeft.rotangle)"
 		elif angle >= 360:
 			angle = angle-360
 		elif angle < 0:
 			angle = angle+360
 		return angle
+
+	def changeMarkerSize(self):
+		if self.label_selimg.text() == 'left':
+			self.sceneLeft.markerSize = int(self.spinBox_markerSize.value())
+			## Update graphics
+			self.sceneLeft.enumeratePoints()
+			# if self.label_imgpxsize.text() != 'none': #### HIER WEITER MACHEN
+			# 	self.label_markerSizeNano = int(self.label_imgpxsize.text())*markersize
+		elif self.label_selimg.text() == 'right':
+			self.sceneRight.markerSize = int(self.spinBox_markerSize.value())
+			## Update graphics
+			self.sceneRight.enumeratePoints()
+
+	def calcMarkerSizeNM(self,markersize):
+		if self.label_imgpxsize.text() != 'none':
+			label_markerSizeNano = int(self.label_imgpxsize.text())*markersize
 
 												##################### END #####################
 												###### Image initialization and rotation ######
@@ -275,6 +294,7 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 			img = img.astype(dtype='uint8')
 			if self.debug == True: print clrmsg.DEBUG + "Image dtype converted to:", img.shape, img.dtype
 		if img.ndim == 4:
+			if self.debug == True: print clrmsg.DEBUG + "Calculating multichannel MIP"
 			return self.mip(img)
 		## this can only handle rgb. For more channels set "3" to whatever max number of channels should be handled
 		elif img.ndim == 3 and any([True for dim in img.shape if dim <= 3]) or img.ndim == 2:
@@ -284,7 +304,7 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 			else:
 				return img
 		elif img.ndim == 3:
-			if self.debug == True: print clrmsg.DEBUG + "Calculating MI"
+			if self.debug == True: print clrmsg.DEBUG + "Calculating MIP"
 			return self.mip(img)
 
 	## Convert opencv image (numpy array in BGR) to RGB QImage and return pixmap. Only takes 2D images
@@ -304,13 +324,7 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 	## Adjust Brightness and Contrast by sliders
 	def adjustBrightCont(self):
 		if self.debug == True: print clrmsg.DEBUG + "===== adjustBrightCont"
-		if self.currentFocusedWidgetName == 'spinBox_rot':
-			cfwn = self.formerFocusedWidgetName
-		else:
-			cfwn = self.currentFocusedWidgetName
-		if cfwn != 'graphicsView_left' and cfwn != 'graphicsView_right':
-			print clrmsg.ERROR + "Please click on the image you want to rotate."
-		elif cfwn == 'graphicsView_left':
+		if self.label_selimg.text() == 'left':
 			self.brightness_left = self.horizontalSlider_brightness.value()
 			self.contrast_left = self.horizontalSlider_contrast.value()
 			#print self.brightness_left,self.contrast_left
@@ -336,7 +350,7 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 			self.pixmap_item_left = QtGui.QGraphicsPixmapItem(self.pixmap_left, None, self.sceneLeft)
 			## Put exchanged image into background
 			QtGui.QGraphicsItem.stackBefore(self.pixmap_item_left, self.sceneLeft.items()[-1])
-		elif cfwn == 'graphicsView_right':
+		elif self.label_selimg.text() == 'right':
 			self.brightness_right = self.horizontalSlider_brightness.value()
 			self.contrast_right = self.horizontalSlider_contrast.value()
 			#print self.brightness_right,self.contrast_right
@@ -369,6 +383,7 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 		if copy == True:
 			img = np.copy(img)
 		dtype = str(img.dtype)
+		## Determine data type
 		if dtype == "uint16" or dtype == "int16":
 			typesize = 65535
 		elif dtype == "uint8" or dtype == "int8":
@@ -388,11 +403,6 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 			else:
 				for i in range(int(img.shape[2])):
 					img[:,:,i] *= typesize/img[:,:,i].max()
-		## 3D and multichannel image ###DELETE?!####
-		# elif img.ndim == 4:
-		# 	for i in range(int(img.shape[0])):
-		# 		for ii in range(int(img.shape[1])):
-		# 			img[i,ii,:,:] *= typesize/img[i,ii,:,:].max()
 		return img
 
 	## Create Maximum Intensity Projection (MIP)

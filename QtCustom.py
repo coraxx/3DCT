@@ -1,4 +1,5 @@
 from PyQt4 import QtCore, QtGui
+import math
 import clrmsg
 ##############################
 ## QTableViewCustom
@@ -7,7 +8,12 @@ class QTableViewCustom(QtGui.QTableView):
 	def __init__(self, parent=None):
 		QtGui.QTableView.__init__(self,parent)
 		self.parent = parent
-		self.debug = True
+		if hasattr(parent, "debug"):
+			self.debug = parent.debug
+			if self.debug == True: print clrmsg.DEBUG + 'Debug bool inherited'
+		else:
+			self.debug = True
+			if self.debug == True: print clrmsg.DEBUG + 'Debug messages enabled'
 		self._drop = False
 
 		## Enable Drag'n'Drop
@@ -26,17 +32,6 @@ class QTableViewCustom(QtGui.QTableView):
 		## Drop Flag to trigger item update only when there was a row move
 		self._drop = True
 		super(QTableViewCustom, self).dropEvent(event)
-
-	# def contextMenuEvent(self, event):
-	# 	self.menu = QtGui.QMenu(self)
-	# 	renameAction = QtGui.QAction('Rename', self)
-	# 	renameAction.triggered.connect(self.renameSlot)
-	# 	self.menu.addAction(renameAction)
-	# 	# add other required actions
-	# 	self.menu.popup(QtGui.QCursor.pos())
-
-	# def renameSlot(self):
-	# 	print "renaming slot called"
 
 												###############################################
 												#######          Update items           #######
@@ -86,6 +81,16 @@ class QTableViewCustom(QtGui.QTableView):
 				self._scene.removeItem(activeitems[row])
 				self._scene.enumeratePoints()
 			self._scene.itemsToModel()
+
+	## Context menu
+	def contextMenuEvent(self, event):
+		indices = self.selectedIndexes()
+		if indices:
+			cmDelete = QtGui.QAction('Delete', self)
+			cmDelete.triggered.connect(self.deleteItem)
+			self.contextMenu = QtGui.QMenu(self)
+			self.contextMenu.addAction(cmDelete)
+			self.contextMenu.popup(QtGui.QCursor.pos())
 												##################### END #####################
 												#######          Update items           #######
 												###############################################
@@ -114,12 +119,14 @@ class QGraphicsSceneCustom(QtGui.QGraphicsScene):
 		self.parent.setDragMode(QtGui.QGraphicsView.NoDrag)
 		## set standard pen color
 		self.pen = QtGui.QPen(QtCore.Qt.red)
+		## Initialize variables
 		self.lastScreenPos = QtCore.QPoint(0, 0)
 		self.lastScenePos = 0
 		self.selectionmode = False
 		self.pointidx = 1
+		self.rotangle = 0
 		## Circle size
-		self.cs = 20
+		self.markerSize = 10
 
 	def wheelEvent(self, event):
 		## Scaling
@@ -150,7 +157,7 @@ class QGraphicsSceneCustom(QtGui.QGraphicsScene):
 			return
 		elif event.button() == QtCore.Qt.RightButton:
 			## First add at 0,0 then move to get position from item.scenePos() or .x() and y.()
-			circle = self.addEllipse(-self.cs/2, -self.cs/2, self.cs, self.cs, self.pen)
+			circle = self.addEllipse(-self.markerSize, -self.markerSize, self.markerSize*2, self.markerSize*2, self.pen)
 			circle.setPos(event.scenePos().x(), event.scenePos().y())
 			circle.setFlag(QtGui.QGraphicsItem.ItemIsMovable, True)
 			circle.setFlag(QtGui.QGraphicsItem.ItemIsSelectable, True)
@@ -161,10 +168,6 @@ class QGraphicsSceneCustom(QtGui.QGraphicsScene):
 		elif event.button() == QtCore.Qt.MiddleButton:
 			item = self.itemAt(event.scenePos())
 			if isinstance(item, QtGui.QGraphicsEllipseItem):
-				#print item.mapToScene(0, 0).x(),item.mapToScene(0, 0).y()
-				# print item.x(),item.y()
-				# item.setPos(100.0,100.0)
-				# print item.x(),item.y()
 				self.removeItem(item)
 				self.enumeratePoints()
 		self.itemsToModel()
@@ -181,9 +184,15 @@ class QGraphicsSceneCustom(QtGui.QGraphicsScene):
 		self.selectionmode = False
 
 	def keyPressEvent(self, event):
+		## Delete selected points (hold ctrl and draw rubber selection rectangle over the points you want to select)
 		if event.key() == QtCore.Qt.Key_Delete:
 			for item in self.selectedItems(): self.removeItem(item)
 			self.itemsToModel()
+		## Zoom in/out with +/- keys
+		elif event.key() == QtCore.Qt.Key_Plus:
+			self.parent.scale(1.15, 1.15)
+		elif event.key() == QtCore.Qt.Key_Minus:
+			self.parent.scale(1/1.15, 1/1.15)
 
 	def enumeratePoints(self):
 		## Remove numbering
@@ -193,18 +202,30 @@ class QGraphicsSceneCustom(QtGui.QGraphicsScene):
 		pointidx = 1
 		for item in self.items():
 			if isinstance(item, QtGui.QGraphicsEllipseItem):
-				nr = self.addSimpleText(str(pointidx),QtGui.QFont("Helvetica", pointSize = self.cs))
+				## Update marker size
+				item.setRect(-self.markerSize, -self.markerSize, self.markerSize*2, self.markerSize*2)
+				## Adding number
+				nr = self.addSimpleText(str(pointidx),QtGui.QFont("Helvetica", pointSize = 1.5*self.markerSize))
 				nr.setParentItem(item)
-				nr.setPos(self.cs/2,self.cs/4)
-				#nr.setPen(self.pen) # outline
+				## Counter rotate number so it stays level
+				nr.setRotation(-self.rotangle)
+				## Convert degree to rad plus a 30 offset to place the number in the lower right corner of the marker
+				radangle = math.radians(390-self.rotangle)
+				## Number's position has to be angle dependant -> sin cos
+				nr.setPos(math.cos(radangle)*self.markerSize,math.sin(radangle)*self.markerSize)
+				# nr.setPen(self.pen) # outline
 				nr.setBrush(QtCore.Qt.cyan) # fill
 				## Adding crosshair
-				hline = self.addLine(-self.cs/2-2,0,self.cs/2+2,0)
+				hline = self.addLine(-self.markerSize-2,0,self.markerSize+2,0)
 				hline.setPen(QtGui.QPen(QtGui.QColor(255, 255, 255, 128)))# r,g,b,alpha
 				hline.setParentItem(item)
-				vline = self.addLine(0,-self.cs/2-2,0,self.cs/2+2)
+				## Counter rotate crosshair (horizontal line) so it stays level
+				hline.setRotation(-self.rotangle)
+				vline = self.addLine(0,-self.markerSize-2,0,self.markerSize+2)
 				vline.setPen(QtGui.QPen(QtGui.QColor(255, 255, 255, 128)))# r,g,b,alpha
 				vline.setParentItem(item)
+				## Counter rotate crosshair (vertical line) so it stays level
+				vline.setRotation(-self.rotangle)
 				## Counter
 				pointidx += 1
 
@@ -221,24 +242,6 @@ class QGraphicsSceneCustom(QtGui.QGraphicsScene):
 				self.model.setHeaderData(0, QtCore.Qt.Horizontal,'x')
 				self.model.setHeaderData(1, QtCore.Qt.Horizontal,'y')
 
-	# def addPointToModel(self,x,y):
-	# 	x_item = QtGui.QStandardItem(str(x))
-	# 	y_item = QtGui.QStandardItem(str(y))
-	# 	x_item.setFlags(x_item.flags() & ~QtCore.Qt.ItemIsDropEnabled)
-	# 	y_item.setFlags(y_item.flags() & ~QtCore.Qt.ItemIsDropEnabled)
-	# 	items = [x_item, y_item]
-	# 	model = getattr(widget, "%s" % "model_"+self.name)
-	# 	model.appendRow(items)
-	# 	model.setHeaderData(0, QtCore.Qt.Horizontal,'x')
-	# 	model.setHeaderData(1, QtCore.Qt.Horizontal,'y')
-
-# class StandardItemModelHandler(QtGui.QStandardItemModel):
-# 	def __init__(self, parent=None):
-# 		QtGui.QStandardItemModel.__init__(self,parent)
-# 		self.parent = parent
-
-# 	def mousePressEvent(self, event):
-# 		print 'click from', self.objectName()
 
 
 
