@@ -39,6 +39,7 @@
 
 import sys
 import os
+import re
 import fnmatch
 import time
 import numpy as np
@@ -68,6 +69,19 @@ def main(img_path, ss_in, ss_out, interpolationmethod='linear', saveorigstack=Tr
 			print "ERROR: This seems to be a 2D image with the shape {0}. Please select a stack image file.".format(img.shape)
 			return
 		print "		...done."
+		## Get pixel size
+		try:
+			pixelsize = pxSize(img_path)
+			if pixelsize != None:
+				px_info = True
+				print 'Adding pixel size information:', pixelsize
+			else:
+				px_info = False
+		except Exception as e:
+			print 'Error while adding pixel size information:', e, '... skipping'
+			px_info = False
+		## Start Processing
+		print px_info
 		file_out_int = os.path.join(img_path, os.path.splitext(img_path)[0]+"_resliced.tif")
 		print "Interpolating..."
 		img_int = interpol(img, ss_in, ss_out, interpolationmethod, showgraph)
@@ -76,7 +90,10 @@ def main(img_path, ss_in, ss_out, interpolationmethod='linear', saveorigstack=Tr
 			return
 		if img_int != None:
 			print "Saving interpolated stack as: ", file_out_int
-			tf.imsave(file_out_int, img_int)
+			if px_info == True:
+				tf.imsave(file_out_int, img_int, metadata={'PixelSize': str(pixelsize)})
+			else:
+				tf.imsave(file_out_int, img_int)
 			print "		...done."
 	## For image sequence (only FEI MAPS/LA image sequences at the moment)
 	elif os.path.isfile(img_path) == False:
@@ -96,6 +113,22 @@ def main(img_path, ss_in, ss_out, interpolationmethod='linear', saveorigstack=Tr
 			return
 		## Channel numbers in filename i zero-based, so add 1 for total number
 		channels = int(max(channels))+1
+		## Get pixel size
+		try:
+			for filename in files:
+				if fnmatch.fnmatch(filename, 'Tile_*.tif'):
+					pixelsize = pxSize(os.path.join(img_path,filename))
+					break
+			if pixelsize != None:
+				px_info = True
+				print 'Adding pixel size information:', pixelsize
+			else:
+				px_info = False
+		except Exception as e:
+			print 'Error while adding pixel size information:', e, '... skipping'
+			px_info = False
+		## Start Processing
+		print px_info
 		for i in range(channels):
 			print "Processing channel {0} of {1}".format(i+1, channels)
 			filelist = []
@@ -111,7 +144,10 @@ def main(img_path, ss_in, ss_out, interpolationmethod='linear', saveorigstack=Tr
 			if saveorigstack == True:
 				file_out_orig = os.path.join(img_path, os.path.basename(os.path.normpath(img_path))+"_"+str(i)+".tif")
 				print "Saving original image stack as single stack file: {0} |shape: {1}".format(file_out_orig,img.shape)
-				tf.imsave(file_out_orig, img)
+				if px_info == True:
+					tf.imsave(file_out_orig, img, metadata={'PixelSize': str(pixelsize)})
+				else:
+					tf.imsave(file_out_orig, img)
 				print "		...done."
 			## In case only the original image sequence is saved as a single stack file the interpolation is skiped
 			if interpolationmethod == 'none' and showgraph == False:
@@ -125,15 +161,49 @@ def main(img_path, ss_in, ss_out, interpolationmethod='linear', saveorigstack=Tr
 					return
 				elif img_int != None:
 					print "Saving interpolated stack as: ", file_out_int
-					tf.imsave(file_out_int, img_int)
+					if px_info == True:
+						tf.imsave(file_out_int, img_int, metadata={'PixelSize': str(pixelsize)})
+					else:
+						tf.imsave(file_out_int, img_int)
 					print "		...done."
+
+def pxSize(img_path):
+	with tf.TiffFile(img_path) as tif:
+		images = tif.asarray()
+		for page in tif:
+			for tag in page.tags.values():
+				if type(tag.value) == type(str()):
+					for keyword in ['PhysicalSizeX','PixelWidth','PixelSize']:
+						tagposs = [m.start() for m in re.finditer(keyword, tag.value)]
+						for tagpos in tagposs:
+							if keyword == 'PhysicalSizeX':
+								for piece in tag.value[tagpos:tagpos+30].split('"'):
+									try:
+										pixelsize = float(piece)
+										return pixelsize
+									except:
+										pass
+							elif keyword == 'PixelWidth':
+								for piece in tag.value[tagpos:tagpos+30].split('='):
+									try:
+										pixelsize = float(piece.strip().split('\r\n')[0])
+										return pixelsize
+									except:
+										pass
+							elif keyword == 'PixelSize':
+								for piece in tag.value[tagpos:tagpos+30].split('"'):
+									try:
+										pixelsize = float(piece)
+										return pixelsize
+									except:
+										pass
 
 def interpol(img, ss_in, ss_out, interpolationmethod, showgraph):
 	## Depending on tiff format the file can have a different shapes; e.g. z,y,x or c,z,y,x
 	if len(img.shape) == 4 and img.shape[0] == 1:
 		img = np.squeeze(img, axis=0)
-	else:
-		return "ERROR: I'm sorry, I cannot handle multichannel files!"
+	elif len(img.shape) == 4 and img.shape[0] > 1:
+		return "ERROR: I'm sorry, I cannot handle multichannel files: "+str(img.shape)
 
 	if len(img.shape) == 3:
 		## Number of slices in original stack
@@ -303,7 +373,10 @@ if __name__ == '__main__':
 			filenames.append("...")
 		ss_in = tkSimpleDialog.askfloat(parent=root, title='Enter ORIGINAL focus step size', prompt='Enter ORIGINAL focus step size for:\n'+'\n'.join('{}'.format(k) for k in filenames))
 		if not ss_in: return
-		ss_out = tkSimpleDialog.askfloat(parent=root, title='Enter INTERPOLATED focus step size', prompt='Enter INTERPOLATED focus step size for:\n'+'\n'.join('{}'.format(k) for k in filenames))
+		pixelsize = pxSize(files[0])
+		if pixelsize == None: pixelsize = 0
+		ss_out = tkSimpleDialog.askfloat(parent=root, title='Enter INTERPOLATED focus step size',
+										 prompt='Enter INTERPOLATED focus step size for:\n'+'\n'.join('{}'.format(k) for k in filenames), initialvalue=pixelsize*1000)
 		if not ss_out: return
 		print "Selected files: {0}\n".format(files), "\n", "Focus step size in: {0} | out: {1}\n".format(ss_in,ss_out),\
 			"Interpolation method: {0}\n".format(int_method.get())
@@ -318,7 +391,14 @@ if __name__ == '__main__':
 		if not directory: return
 		ss_in = tkSimpleDialog.askfloat(parent=root, title='Enter ORIGINAL focus step size', prompt='Enter ORIGINAL focus step size for:\n{0}'.format(os.path.split(directory)[1]))
 		if not ss_in: return
-		ss_out = tkSimpleDialog.askfloat(parent=root, title='Enter INTERPOLATED focus step size', prompt='Enter INTERPOLATED focus step size for:\n{0}'.format(os.path.split(directory)[1]))
+		try:
+			pixelsize = pxSize(os.path.join(directory,'Tile_001-001-000_0-000.tif'))
+			if pixelsize == None: pixelsize = 0
+		except:
+			pixelsize = 0
+			pass
+		ss_out = tkSimpleDialog.askfloat(parent=root, title='Enter INTERPOLATED focus step size', 
+										prompt='Enter INTERPOLATED focus step size for:\n{0}'.format(os.path.split(directory)[1]), initialvalue=pixelsize*1000)
 		if not ss_out: return
 		saveorigstack = tkMessageBox.askyesno("Save single stack file option", "Do you also want to save single stack file with original focus step size?")
 		print "directory: {0}\n".format(directory), "Focus step size in: {0} | out: {1}\n".format(ss_in,ss_out),\

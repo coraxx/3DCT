@@ -15,6 +15,7 @@
 #=================================================================================
 import sys
 import os
+import re
 from PyQt4 import QtCore, QtGui, uic
 import numpy as np
 import cv2
@@ -124,6 +125,8 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 			if self.currentFocusedWidgetName != 'graphicsView_left' and self.currentFocusedWidgetName != 'graphicsView_right':
 				self.label_selimg.setStyleSheet("color: rgb(255, 190, 0);")
 				self.label_selimg.setText('none')
+				self.label_markerSizeNano.setText('  ')
+				self.label_imgpxsize.setText('  ')
 				self.ctrlEnDisAble(False)
 			elif self.currentFocusedWidgetName == 'graphicsView_left':
 				self.label_selimg.setStyleSheet("color: rgb(0, 225, 90);")
@@ -143,14 +146,18 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 			self.spinBox_markerSize.setValue(self.sceneLeft.markerSize)
 			self.horizontalSlider_brightness.setValue(self.brightness_left)
 			self.horizontalSlider_contrast.setValue(self.contrast_left)
+			self.label_imgpxsize.setText(str(self.sceneLeft.pixelsize)+' um')
 		elif self.currentFocusedWidgetName == 'graphicsView_right':
 			self.spinBox_rot.setValue(self.sceneRight.rotangle)
 			self.spinBox_markerSize.setValue(self.sceneRight.markerSize)
 			self.horizontalSlider_brightness.setValue(self.brightness_right)
 			self.horizontalSlider_contrast.setValue(self.contrast_right)
+			self.label_imgpxsize.setText(str(self.sceneRight.pixelsize)+' um')
 		 # Unblock emitting signals.
 		self.horizontalSlider_brightness.blockSignals(False)
 		self.horizontalSlider_contrast.blockSignals(False)
+		# update marker size in nm
+		self.changeMarkerSize()
 
 	## Funtion to dis-/enabling the buttons controlling rotation and contrast/brightness
 	def ctrlEnDisAble(self,status):
@@ -168,6 +175,10 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 		if self.left != None:
 			## Changed GraphicsSceneLeft(self) to QtCustom.QGraphicsSceneCustom(self.graphicsView_left) to reuse class for both scenes
 			self.sceneLeft = QtCustom.QGraphicsSceneCustom(self.graphicsView_left,name='left',model=self.model_left)
+			## set pen color yellow
+			self.sceneLeft.pen = QtGui.QPen(QtCore.Qt.red)
+			## Get pixel size
+			self.sceneLeft.pixelsize = self.pxSize(self.left)
 			## Load image and assign to scene
 			self.img_left = self.imread(self.left)
 			#self.pixmap_left = QtGui.QPixmap(self.left)
@@ -186,6 +197,8 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 			self.sceneRight = QtCustom.QGraphicsSceneCustom(self.graphicsView_right,name='right',model=self.model_right)
 			## set pen color yellow
 			self.sceneRight.pen = QtGui.QPen(QtCore.Qt.yellow)
+			## Get pixel size
+			self.sceneRight.pixelsize = self.pxSize(self.right)
 			## Load image and assign to scene
 			self.img_right = self.imread(self.right)
 			#self.pixmap_right = QtGui.QPixmap(self.right)
@@ -265,16 +278,24 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 			self.sceneLeft.markerSize = int(self.spinBox_markerSize.value())
 			## Update graphics
 			self.sceneLeft.enumeratePoints()
-			# if self.label_imgpxsize.text() != 'none': #### HIER WEITER MACHEN
-			# 	self.label_markerSizeNano = int(self.label_imgpxsize.text())*markersize
+			if self.label_imgpxsize.text() != 'None':
+				if self.debug == True: print clrmsg.DEBUG + "Doing stuff with image pixelsize (left image).", self.label_imgpxsize.text()
+				try:
+					self.label_markerSizeNano.setText(str(self.sceneLeft.markerSize*2*self.sceneLeft.pixelsize)+" um") #int(self.label_imgpxsize.text())*markerSize
+				except:
+					if self.debug == True: print clrmsg.DEBUG + "Image pixel size is not a number:", self.label_imgpxsize.text()
+					self.label_markerSizeNano.setText("NaN")
 		elif self.label_selimg.text() == 'right':
 			self.sceneRight.markerSize = int(self.spinBox_markerSize.value())
 			## Update graphics
 			self.sceneRight.enumeratePoints()
-
-	def calcMarkerSizeNM(self,markersize):
-		if self.label_imgpxsize.text() != 'none':
-			label_markerSizeNano = int(self.label_imgpxsize.text())*markersize
+			if self.label_imgpxsize.text() != 'None':
+				if self.debug == True: print clrmsg.DEBUG + "Doing stuff with image pixelsize (right image).", self.label_imgpxsize.text()
+				try:
+					self.label_markerSizeNano.setText(str(self.sceneRight.markerSize*2*self.sceneRight.pixelsize)+" um") #int(self.label_imgpxsize.text())*markerSize
+				except:
+					if self.debug == True: print clrmsg.DEBUG + "Image pixel size is not a number:", self.label_imgpxsize.text()
+					self.label_markerSizeNano.setText("NaN")
 
 												##################### END #####################
 												###### Image initialization and rotation ######
@@ -306,6 +327,46 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 		elif img.ndim == 3:
 			if self.debug == True: print clrmsg.DEBUG + "Calculating MIP"
 			return self.mip(img)
+
+	def pxSize(self,img_path):
+		with tf.TiffFile(img_path) as tif:
+			images = tif.asarray()
+			for page in tif:
+				for tag in page.tags.values():
+					if type(tag.value) == type(str()):
+						for keyword in ['PhysicalSizeX','PixelWidth','PixelSize']:
+							tagposs = [m.start() for m in re.finditer(keyword, tag.value)]
+							for tagpos in tagposs:
+								if keyword == 'PhysicalSizeX':
+									for piece in tag.value[tagpos:tagpos+30].split('"'):
+										try:
+											pixelsize = float(piece)
+											if self.debug == True: print clrmsg.DEBUG + "Pixel size from exif metakey:", keyword
+											## Value is in um from Corrsight/LA tiff files
+											return pixelsize
+										except Exception as e:
+											if self.debug == True: print clrmsg.DEBUG + "Pixel size parser:", e
+											pass
+								elif keyword == 'PixelWidth':
+									for piece in tag.value[tagpos:tagpos+30].split('='):
+										try:
+											pixelsize = float(piece.strip().split('\r\n')[0])
+											if self.debug == True: print clrmsg.DEBUG + "Pixel size from exif metakey:", keyword
+											## *1E6 because these values from SEM/FIB image is in m
+											return pixelsize*1E6
+										except Exception as e:
+											if self.debug == True: print clrmsg.DEBUG + "Pixel size parser:", e
+											pass
+								elif keyword == 'PixelSize':
+									for piece in tag.value[tagpos:tagpos+30].split('"'):
+										try:
+											pixelsize = float(piece)
+											if self.debug == True: print clrmsg.DEBUG + "Pixel size from exif metakey:", keyword
+											## Value is in um from Corrsight/LA tiff files
+											return pixelsize
+										except Exception as e:
+											if self.debug == True: print clrmsg.DEBUG + "Pixel size parser:", e
+											pass
 
 	## Convert opencv image (numpy array in BGR) to RGB QImage and return pixmap. Only takes 2D images
 	def cv2Qimage(self,img):
@@ -446,6 +507,7 @@ if __name__ == "__main__":
 	#left = '/Volumes/Silver/output/Composite.tif'
 	#left = '/Users/jan/Desktop/LM-SEM.tif'
 	right = '/Volumes/Silver/Dropbox/Dokumente/Code/test_stuff/px_test.tif'
+	right = '/Volumes/Silver/Dropbox/Dokumente/Code/test_stuff/Tile_001-001-000_0-000.tif'
 	## win
 	# left = r'E:\Dropbox\Dokumente\Code\test_stuff\IB_030.tif'
 	# right = r'E:\Dropbox\Dokumente\Code\test_stuff\px_test.tif'
