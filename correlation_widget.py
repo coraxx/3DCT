@@ -38,6 +38,7 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 		QtGui.QWidget.__init__(self, parent)
 		Ui_WidgetWindow.__init__(self)
 		self.setupUi(self)
+		self.counter = 0		## Just for testing (loop counter for test button)
 
 		## Tableview and models
 		self.model_left = QtCustom.QStandardItemModelCustom(self)
@@ -107,7 +108,16 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 				self.tableView_right.updateItems()
 
 	def test(self):
-		print 'lol'
+		if self.counter == 0:
+			self.widget_scatterplot.setupCanvas(width=4,height=4,dpi=52,toolbar=True)
+		if self.counter < 2:
+			self.widget_scatterplot.scatterPlot(x='random',y='random',frame=True,framesize=6,xlabel="nm",ylabel="nm")
+		if self.counter == 2:
+			self.widget_scatterplot.clearAll()
+		if self.counter == 3:
+			self.widget_scatterplot.setupCanvas(width=4,height=4,dpi=72,toolbar=True)
+			self.widget_scatterplot.scatterPlot(x='random',y='random',frame=True,framesize=6,xlabel="lol",ylabel="rofl")
+		self.counter += 1
 
 	def changedFocusSlot(self, former, current):
 		if self.debug == True: print clrmsg.DEBUG + "focus changed from/to:", former, current
@@ -131,10 +141,14 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 			elif self.currentFocusedWidgetName == 'graphicsView_left':
 				self.label_selimg.setStyleSheet("color: rgb(0, 225, 90);")
 				self.label_selimg.setText('left')
+				self.label_imagetype.setStyleSheet("color: rgb(0, 225, 90);")
+				self.label_imagetype.setText('(2D)' if '{0:b}'.format(self.sceneLeft.imagetype)[-1] == '1' else '(3D)')
 				self.ctrlEnDisAble(True)
 			elif self.currentFocusedWidgetName == 'graphicsView_right':
 				self.label_selimg.setStyleSheet("color: rgb(0, 190, 255);")
 				self.label_selimg.setText('right')
+				self.label_imagetype.setStyleSheet("color: rgb(0, 190, 255);")
+				self.label_imagetype.setText('(2D)' if '{0:b}'.format(self.sceneRight.imagetype)[-1] == '1' else '(3D)')
 				self.ctrlEnDisAble(True)
 
 		## Feed saved rotation angle/brightness-contrast value from selected image to spinbox/slider
@@ -179,8 +193,8 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 			self.sceneLeft.pen = QtGui.QPen(QtCore.Qt.red)
 			## Get pixel size
 			self.sceneLeft.pixelsize = self.pxSize(self.left)
-			## Load image and assign to scene
-			self.img_left = self.imread(self.left)
+			## Load image, assign it to scene and store image type information
+			self.img_left,self.sceneLeft.imagetype = self.imread(self.left)
 			#self.pixmap_left = QtGui.QPixmap(self.left)
 			self.pixmap_left = self.cv2Qimage(self.img_left)
 			self.pixmap_item_left = QtGui.QGraphicsPixmapItem(self.pixmap_left, None, self.sceneLeft)
@@ -199,8 +213,8 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 			self.sceneRight.pen = QtGui.QPen(QtCore.Qt.yellow)
 			## Get pixel size
 			self.sceneRight.pixelsize = self.pxSize(self.right)
-			## Load image and assign to scene
-			self.img_right = self.imread(self.right)
+			## Load image, assign it to scene and store image type information
+			self.img_right,self.sceneRight.imagetype = self.imread(self.right)
 			#self.pixmap_right = QtGui.QPixmap(self.right)
 			self.pixmap_right = self.cv2Qimage(self.img_right)
 			self.pixmap_item_right = QtGui.QGraphicsPixmapItem(self.pixmap_right, None, self.sceneRight)
@@ -306,6 +320,14 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 												#################### START ####################
 	## Read image
 	def imread(self,path,normalize=True):
+		'''
+		return code in 5bit just for fun:
+			1 = 2D
+			2 = 3D (always normalized, +16)
+			4 = greyscale
+			8 = multicolor/multichannel
+			16= normalized
+		'''
 		if self.debug == True: print clrmsg.DEBUG + "===== imread"
 		img = tf.imread(path)
 		if self.debug == True: print clrmsg.DEBUG + "Image shape/dtype:", img.shape, img.dtype
@@ -316,17 +338,21 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 			if self.debug == True: print clrmsg.DEBUG + "Image dtype converted to:", img.shape, img.dtype
 		if img.ndim == 4:
 			if self.debug == True: print clrmsg.DEBUG + "Calculating multichannel MIP"
-			return self.mip(img)
+			## return mip and code 2+8+16
+			return self.mip(img), 26
 		## this can only handle rgb. For more channels set "3" to whatever max number of channels should be handled
 		elif img.ndim == 3 and any([True for dim in img.shape if dim <= 3]) or img.ndim == 2:
 			if self.debug == True: print clrmsg.DEBUG + "Loading regular 2D image... multicolor/normalize:", [True for x in [img.ndim] if img.ndim == 3],'/',[normalize]
 			if normalize == True:
-				return self.norm_img(img)
+				## return normalized 2D image with code 1+4+16 for greyscale normalized 2D image and 1+8+16 for multicolor normalized 2D image
+				return self.norm_img(img), 25 if img.ndim == 3 else 21
 			else:
-				return img
+				## return 2D image with code 1+4 for greyscale 2D image and 1+8 for multicolor 2D image
+				return img, 9 if img.ndim == 3 else 5
 		elif img.ndim == 3:
 			if self.debug == True: print clrmsg.DEBUG + "Calculating MIP"
-			return self.mip(img)
+			## return mip and code 2+4+16
+			return self.mip(img), 22
 
 	def pxSize(self,img_path):
 		with tf.TiffFile(img_path) as tif:
@@ -507,7 +533,8 @@ if __name__ == "__main__":
 	#left = '/Volumes/Silver/output/Composite.tif'
 	#left = '/Users/jan/Desktop/LM-SEM.tif'
 	right = '/Volumes/Silver/Dropbox/Dokumente/Code/test_stuff/px_test.tif'
-	right = '/Volumes/Silver/Dropbox/Dokumente/Code/test_stuff/Tile_001-001-000_0-000.tif'
+	# right = '/Volumes/Silver/Dropbox/Dokumente/Code/test_stuff/Tile_001-001-000_0-000.tif'
+	# right = '/Users/jan/Desktop/test/pxsize_test/pxsize_test_0_small.tif'
 	## win
 	# left = r'E:\Dropbox\Dokumente\Code\test_stuff\IB_030.tif'
 	# right = r'E:\Dropbox\Dokumente\Code\test_stuff\px_test.tif'

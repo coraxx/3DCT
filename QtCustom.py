@@ -245,3 +245,109 @@ class QGraphicsSceneCustom(QtGui.QGraphicsScene):
 
 
 
+#!/usr/bin/env python
+#title				: scatterHistPlot.py
+#description		: Draw a scatter plot with axis histograms
+#author				: Jan Arnold
+#email				: jan.arnold (at) coraxx.net
+#credits			: http://matplotlib.org/examples/axes_grid/scatter_hist.html
+#maintainer			: Jan Arnold
+#date				: 2015/10
+#version			: 0.1
+#status				: developement
+#usage				: import scatterHistPlot.py and call scatterHistPlot.main(x,y)
+#					: where x and y are numpy arrays
+#notes				: 
+#python_version		: 2.7.10 
+#=================================================================================
+
+import numpy as np
+from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
+from matplotlib.figure import Figure
+import matplotlib.patches as patches
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+
+class MatplotlibWidget(QtGui.QWidget):
+	def __init__(self, parent=None):
+		super(MatplotlibWidget, self).__init__(parent)
+		# self.setupCanvas(dpi)
+		# self.scatterPlot(x='random',y='random',frame=True,framesize=6,xlabel="lol",ylabel="rofl")
+
+	def setupCanvas(self,width=5,height=5,dpi=72,toolbar=False):
+		self.figure = Figure(figsize=(width,height),dpi=dpi)
+		self.axScatter = self.figure.add_subplot(111)
+		self.canvas = FigureCanvas(self.figure)
+		layout = QtGui.QVBoxLayout()
+		layout.addWidget(self.canvas)
+		if toolbar == True:
+			self.figure.set_figheight(height+0.5)
+			self.toolbar = NavigationToolbar(self.canvas, self)
+			layout.addWidget(self.toolbar)
+		self.setLayout(layout)
+
+	def clearAll(self):
+		QtGui.QWidget().setLayout(self.layout())
+
+	def scatterPlot(self,x='random',y='random',frame=False,framesize=None,xlabel="",ylabel=""):
+		if x == 'random' or y == 'random':
+			# the random data
+			x = np.random.randn(1000)
+			y = np.random.randn(1000)
+		# the scatter plot:
+		self.axScatter.clear()
+		self.axScatter.scatter(x, y)
+		self.axScatter.set_aspect(1.)
+		self.axScatter.set_xlabel(xlabel)
+		self.axScatter.set_ylabel(ylabel)
+		self.axScatter.plot([0], '+', mew=1, ms=10, c="red")
+
+		if frame == True and framesize != None:
+			self.axScatter.add_patch(patches.Rectangle( (-framesize*0.5, -framesize*0.5),
+								framesize,framesize,fill=False,edgecolor="red"))
+		elif frame == True and framesize == None:
+			print "Please specify frame size in px as e.g. framesize=1.86"
+
+		# create new axes on the right and on the top of the current axes
+		# The first argument of the new_vertical(new_horizontal) method is
+		# the height (width) of the axes to be created in inches.
+		self.divider = make_axes_locatable(self.axScatter)
+		self.axHistx = self.divider.append_axes("top", size="25%", pad=0.1)
+		self.axHisty = self.divider.append_axes("right", size="25%", pad=0.1)
+
+		# # make some labels invisible
+		# # plt.setp(self.axHistx.get_xticklabels() + self.axHisty.get_yticklabels(), visible=False)
+		self.axHistx.set_xticklabels(self.axHistx.get_xticklabels(),visible=False)
+		self.axHisty.set_yticklabels(self.axHisty.get_yticklabels(),visible=False)
+		# self.axHistx.set_yticks([0,0.5,1])
+		# self.axHisty.set_xticks([0,0.5,1])
+
+		# now determine nice limits by hand:
+		binwidth = 0.25
+		xymax = np.max( [np.max(np.fabs(x)), np.max(np.fabs(y))] )
+		lim = ( int(xymax/binwidth) + 1) * binwidth
+
+		bins = np.arange(-lim, lim + binwidth, binwidth)
+		self.axHistx.hist(x, bins=bins)
+		self.axHisty.hist(y, bins=bins, orientation='horizontal')
+
+		# the xaxis of self.axHistx and yaxis of self.axHisty are shared with self.axScatter,
+		# thus there is no need to manually adjust the xlim and ylim of these
+		# axis.
+
+		#self.axHistx.axis["bottom"].major_ticklabels.set_visible(False)
+		for tl in self.axHistx.get_xticklabels():
+			tl.set_visible(False)
+		self.axHistx.set_yticks([ ])
+
+		#self.axHisty.axis["left"].major_ticklabels.set_visible(False)
+		for tl in self.axHisty.get_yticklabels():
+			tl.set_visible(False)
+		self.axHisty.set_xticks([ ])
+
+
+		# self.figure.set_dpi(200)
+		self.canvas.draw()
+
+
+

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1400</width>
-    <height>800</height>
+    <height>834</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -69,7 +69,20 @@
    <item>
     <layout class="QVBoxLayout" name="QVBoxLayout_ctrl_stat" stretch="0,1">
      <item>
-      <widget class="QGraphicsView" name="graphicsView_scatter"/>
+      <widget class="MatplotlibWidget" name="widget_scatterplot" native="true">
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>192</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>256</width>
+         <height>16777215</height>
+        </size>
+       </property>
+      </widget>
      </item>
      <item>
       <widget class="QTabWidget" name="tabWidget_ctrl_result">
@@ -160,22 +173,19 @@
            <item>
             <widget class="QLabel" name="label_selimg">
              <property name="text">
-              <string>TextLabel</string>
+              <string/>
              </property>
             </widget>
            </item>
            <item>
-            <spacer name="horizontalSpacer">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
+            <widget class="QLabel" name="label_imagetype">
+             <property name="text">
+              <string/>
              </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>40</width>
-               <height>20</height>
-              </size>
+             <property name="alignment">
+              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
              </property>
-            </spacer>
+            </widget>
            </item>
           </layout>
          </item>
@@ -183,6 +193,9 @@
           <layout class="QGridLayout" name="gridLayout_rotation">
            <item row="0" column="2">
             <widget class="QSpinBox" name="spinBox_rot">
+             <property name="accelerated">
+              <bool>true</bool>
+             </property>
              <property name="suffix">
               <string>°</string>
              </property>
@@ -246,6 +259,9 @@
               <widget class="QSpinBox" name="spinBox_markerSize">
                <property name="focusPolicy">
                 <enum>Qt::WheelFocus</enum>
+               </property>
+               <property name="accelerated">
+                <bool>false</bool>
                </property>
                <property name="suffix">
                 <string> px</string>
@@ -321,9 +337,14 @@
          </item>
         </layout>
        </widget>
-       <widget class="QWidget" name="result">
+       <widget class="QWidget" name="results">
         <attribute name="title">
-         <string>Correlation Result</string>
+         <string>Results</string>
+        </attribute>
+       </widget>
+       <widget class="QWidget" name="options">
+        <attribute name="title">
+         <string>Options</string>
         </attribute>
        </widget>
       </widget>
@@ -337,6 +358,12 @@
    <class>QTableViewCustom</class>
    <extends>QTableView</extends>
    <header>QtCustom.h</header>
+  </customwidget>
+  <customwidget>
+   <class>MatplotlibWidget</class>
+   <extends>QWidget</extends>
+   <header>QtCustom.h</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources/>
