@@ -211,8 +211,11 @@ GeneratedArtifacts/
 _Pvt_Extensions/
 ModelManifest.xml
 
+# Sublime
+*.sublime-project
+*.sublime-workspace
+
 # Python
 *.pyc
 *.pyo
-Fiji
 .idea
