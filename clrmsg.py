@@ -1,21 +1,23 @@
 #!/usr/bin/env python
-
-# title				: clrmsg.py
-# description		: Colored stdout status powered by "Colorama"
-# author			: Jan Arnold
-# email				: jan.arnold (at) coraxx.net
-# credits			: Arnon Yaari
+# -*- coding: utf-8 -*-
+# @Title			: clrmsg
+# @Project			: 3DCTv2
+# @Description		: Colored stdout status powered by "Colorama"
+# @Author			: Jan Arnold
+# @Email			: jan.arnold (at) coraxx.net
+# @Credits			: Arnon Yaari
 # 					: https://github.com/tartley/colorama
-# maintainer		: Jan Arnold
-# date				: 2016/02
-# version			: 0.1
-# status			: Final
-# usage				: import clrmsg
+# @Maintainer		: Jan Arnold
+# @Date				: 2016/02
+# @Version			: 0.1
+# @Status			: stable
+# @Usage			: import clrmsg
 # 					: then call e.g. # print(clrmsg.ERROR + 'Error message')
 # 					: and it will return # [ ERROR ] Error message
-# notes				: You can add your own status prefixes.
-# python_version	: 2.7.10
-# =================================================================================
+# @Notes			: You can add your own status prefixes.
+# @Python_version	: 2.7.10
+# @Last Modified	: 2016/02/27 by jan
+# ============================================================================
 
 ## Fore: BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE, RESET.
 ## Back: BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE, RESET.

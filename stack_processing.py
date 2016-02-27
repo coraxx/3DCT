@@ -1,15 +1,16 @@
 #!/usr/bin/env python
-
-# title				: stack_processing.py
-# description		: Process image stack files (.tif)
-# author			: Jan Arnold
-# email				: jan.arnold (at) coraxx.net
-# credits			:
-# maintainer		: Jan Arnold
-# date				: 2016/01
-# version			: 0.1
-# status			: developement
-# usage				: Can be used as standalone application, i.e. run python -u stack_processing.py
+# -*- coding: utf-8 -*-
+# @Title			: stack_processing
+# @Project			: 3DCTv2
+# @Description		: Process image stack files (.tif)
+# @Author			: Jan Arnold
+# @Email			: jan.arnold (at) coraxx.net
+# @Credits			:
+# @Maintainer		: Jan Arnold
+# @Date				: 2016/01
+# @Version			: 0.1
+# @Status			: stable
+# @Usage			: Can be used as standalone application, i.e. run python -u stack_processing.py
 # 					: or import stack_processing.py and use main function like:
 # 					: stack_processing.main(imgpath, original_steppsize, interpolated_stepsize, interpolationmethod)
 # 					:
@@ -31,9 +32,10 @@
 # 					: showgraph:		boolean	If set True (default False) and nointerpolation is False a graph is returned
 # 					: 							representing the interpolation in z of one x,y pixel in the middle of input stack
 # 					: 							for comparison between the original data and the linear as well as the spline interpolation.
-# notes				:
-# python_version		: 2.7.10
-# =================================================================================
+# @Notes			:
+# @Python_version	: 2.7.10
+# @Last Modified	: 2016/02/27 by jan
+# ============================================================================
 
 import sys
 import os

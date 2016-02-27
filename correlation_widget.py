@@ -1,18 +1,20 @@
 #!/usr/bin/env python
-
-# title				: correlation-widget.py
-# description		: Extracting 2D and 3D points for 2D to 3D correlation
-# author			: Jan Arnold
-# email				: jan.arnold (at) coraxx.net
-# credits			:
-# maintainer		: Jan Arnold
-# date				: 2015/09
-# version			: 0.1
-# status			: developement
-# usage				: part of 3D Correlation Toolbox
-# notes				:
-# python_version	: 2.7.10
-# =================================================================================
+# -*- coding: utf-8 -*-
+# @Title			: correlation_widget
+# @Project			: 3DCTv2
+# @Description		: Extracting 2D and 3D points for 2D to 3D correlation
+# @Author			: Jan Arnold
+# @Email			: jan.arnold (at) coraxx.net
+# @Credits			:
+# @Maintainer		: Jan Arnold
+# @Date				: 2016/01
+# @Version			: 0.1
+# @Status			: developement
+# @Usage			: part of 3D Correlation Toolbox
+# @Notes			:
+# @Python_version	: 2.7.10
+# @Last Modified	: 2016/02/27 by jan
+# ============================================================================
 
 import sys
 import os

@@ -11,18 +11,12 @@ The Toolbox comes with a PyQt4 GUI. Further dependencies as of now are:
 + cv2 (opencv)
 + tifffile (Christoph Gohlke)
 
-A test dataset can be downloaded from the "tesdata" folder.
+A test dataset can be downloaded from the "testdata" folder.
 
 ### Version ###
 
 Version 2.0 receives a revised GUI and image stack handling (reslicing) done in python (formerly outsourced to FIJI)
 
-
-### Contribution guidelines ###
-
-* Writing tests
-* Code review
-* Other guidelines
 
 ### Who do I talk to? ###
 

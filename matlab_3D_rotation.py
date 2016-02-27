@@ -1,19 +1,22 @@
 #!/usr/bin/env python
-
-# title				: matlab_3D_rotation.py
-# description		: Rotate original light microscope volume
-# author				: Jan Arnold
-# email				: jan.arnold (at) coraxx.net
-# credits			: Florian Beck, Department Baumeister - Max-Planck-Institute for Biochemistry
-# maintainer			: Jan Arnold
-# date				: 2016/01
-# version			: 0.1
-# status				: developement
-# usage				: Meant to be imported, i.e. import matlab_3D_rotation.py and used with calling
+# -*- coding: utf-8 -*-
+# @Title			: matlab_3D_rotation
+# @Project			: 3DCTv2
+# @Description		: Rotate original light microscope volume
+# @Author			: Jan Arnold
+# @Email			: jan.arnold (at) coraxx.net
+# @Credits			: Florian Beck, Max-Planck-Institute for Biochemistry
+# @Maintainer		: Jan Arnold
+# @Date				: 2016/01
+# @Version			: 0.1
+# @Status			: developement
+# @Usage			: Meant to be imported, i.e. import matlab_3D_rotation.py and used with calling
 # 					: matlab_rotate(img_vol,)
-# notes				:
-# python_version		: 2.7.10
-# =================================================================================
+# @Notes			:
+# @Python_version	: 2.7.10
+# @Last Modified	: 2016/02/27 by jan
+# ============================================================================
+
 import sys
 import os
 
@@ -215,5 +218,6 @@ def runMatlab():
 def cleanUp():
 	os.remove("rotate_script.m")
 
-writeScript()
-cleanUp()
+if __name__ == "__main__":
+	writeScript()
+	cleanUp()

@@ -1,18 +1,20 @@
 #!/usr/bin/env python
-
-# title				: QtCustom.py
-# description		: Custom Qt classes
-# author			: Jan Arnold
-# email				: jan.arnold (at) coraxx.net
-# credits			:
-# maintainer		: Jan Arnold
-# date				: 2016/02
-# version			: 0.1
-# status			: developement
-# usage				: part of 3D Correlation Toolbox
-# notes				: Some widgets in QT Designer are promoted to these classes
-# python_version	: 2.7.10
-# =================================================================================
+# -*- coding: utf-8 -*-
+# @Title			: QtCustom
+# @Project			: 3DCTv2
+# @Description		: Custom Qt classes
+# @Author			: Jan Arnold
+# @Email			: jan.arnold (at) coraxx.net
+# @Credits			:
+# @Maintainer		: Jan Arnold
+# @Date				: 2016/02/27
+# @Version			: 0.1
+# @Status			: developement
+# @Usage			: part of 3D Correlation Toolbox
+# @Notes			: Some widgets in QT Designer are promoted to these classes
+# @Python_version	: 2.7.10
+# @Last Modified	: 2016/02/27 by jan
+# ============================================================================
 
 from PyQt4 import QtCore, QtGui
 import numpy as np

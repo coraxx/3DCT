@@ -1,20 +1,22 @@
 #!/usr/bin/env python
-
-# title				: bead_pos.py
-# description		: Get bead z axis position from 3D image stacks (tiff z-stack)
-# author			: Jan Arnold
-# email				: jan.arnold (at) coraxx.net
-# credits			: endolith https://gist.github.com/endolith/255291 for parabolic fitting function
-# maintainer		: Jan Arnold
-# date				: 2015/12
-# version			: 0.1
-# status			: developement
-# usage				: import bead_pos.py and call z = bead_pos.getz(x,y,img_path,n=None,optimize=False) to get z position
+# -*- coding: utf-8 -*-
+# @Title			: bead_pos
+# @Project			: 3DCTv2
+# @Description		: Get bead z axis position from 3D image stacks (tiff z-stack)
+# @Author			: Jan Arnold
+# @Email			: jan.arnold (at) coraxx.net
+# @Credits			: endolith https://gist.github.com/endolith/255291 for parabolic fitting function
+# @Maintainer		: Jan Arnold
+# @Date				: 2015/12
+# @Version			: 0.1
+# @Status			: stable
+# @Usage			: import bead_pos.py and call z = bead_pos.getz(x,y,img_path,n=None,optimize=False) to get z position
 # 					  at the given x and y pixel coordinate or call x,y,z = bead_pos.getz(x,y,img_path,n=None,optimize=True)
 # 					  to get an optimized bead position (optimization of x, y and z)
-# notes				:
-# python_version	: 2.7.10
-# =================================================================================
+# @Notes			: stable, but problems with low SNR <- needs revisiting
+# @Python_version	: 2.7.10
+# @Last Modified	: 2016/02/27 by jan
+# ============================================================================
 
 import numpy as np
 import matplotlib.pyplot as plt

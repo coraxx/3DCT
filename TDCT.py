@@ -1,20 +1,23 @@
 #!/usr/bin/env python
-
-# title				: TDCT.py
-# description		: 3D Correlation Toolbox - 3DCT
-# author			: Jan Arnold
-# email				: jan.arnold (at) coraxx.net
-# credits			: Vladan Lucic for the 3D to 2D correlation code
+# -*- coding: utf-8 -*-
+# @Title			: TDCT
+# @Project			: 3DCTv2
+# @Description		: 3D Correlation Toolbox - 3DCT
+# @Author			: Jan Arnold
+# @Email			: jan.arnold (at) coraxx.net
+# @Credits			: Vladan Lucic for the 3D to 2D correlation code
 # 					: and the stackoverflow community for all the bits and pieces
-# maintainer		: Max-Planck-Instute of Biochemistry
+# @Maintainer		: Jan Arnold
+# 					  Max-Planck-Instute of Biochemistry
 # 					  Department of Molecular Structural Biology
-# date				: 2015/08
-# version			: 0.1
-# status			: developement
-# usage				: python TDCT.py
-# notes				:
-# python_version	: 2.7.10
-# =================================================================================
+# @Date				: 2015/08
+# @Version			: 2.0
+# @Status			: developement
+# @Usage			: python -u TDCT.py
+# @Notes			:
+# @Python_version	: 2.7.10
+# @Last Modified	: 2016/02/27 by jan
+# ============================================================================
 
 import sys
 import os

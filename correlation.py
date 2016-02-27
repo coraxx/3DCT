@@ -1,21 +1,23 @@
 #!/usr/bin/env python
-
-# title				: correlation.py
-# description		: Establishes EM - LM correlation and correlates spots between EM and LM
-# author			: Vladan Lucic (Max Planck Institute for Biochemistry)
-# email				:
-# credits			:
-# maintainer		: Vladan Lucic
-# date				: 2015/10
-# version			: 0.1
-# status			: developement
-# usage				: import correlation.py and call main(markers_3d,markers_2d,spots_3d,rotation_center,results_file)
+# -*- coding: utf-8 -*-
+# @Title			: correlation
+# @Project			: 3DCTv2
+# @Description		: Establishes EM - LM correlation and correlates spots between EM and LM
+# @Author			: Vladan Lucic (Max Planck Institute for Biochemistry)
+# @Email			:
+# @Credits			:
+# @Maintainer		: Vladan Lucic
+# @Date				: 2015/10
+# @Version			: 0.2
+# @Status			: stable
+# @Usage			: import correlation.py and call main(markers_3d,markers_2d,spots_3d,rotation_center,results_file)
 # 					: "markers_3d", "markers_2d" and "spots_3d" are numpy arrays. Those contain 3D coordinates
 # 					: (arbitrary 3rd dimension for the 2D array). Marke rcoordinates are for the correlation and spot
 # 					: coordinates are points on which the correlation is applied to.
-# notes				: Edited and adapted by Jan Arnold (Max Planck Institute for Biochemistry)
-# python_version	: 2.7.10
-# =================================================================================
+# @Notes			: Edited and adapted by Jan Arnold (Max Planck Institute for Biochemistry)
+# @Python_version	: 2.7.10
+# @Last Modified	: 2016/02/27 by jan
+# ============================================================================
 
 import os
 import numpy as np

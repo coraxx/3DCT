@@ -1,23 +1,24 @@
 #!/usr/bin/env python
-#title				: parabolic.py
-#description		: Quadratic Interpolation of Spectral Peaks
-#author				: endolith
-#email				: endolith (at) gmail.com
-#credits			: https://gist.github.com/endolith/255291
-#maintainer			: 
-#date				: 2015/12
-#version			: 0.1
-#status				: 
-#usage				: 
-#					: 
-#notes				: 
-#python_version		: 2.7.10 
-#=================================================================================
+# -*- coding: utf-8 -*-
+# @Title			: parabolic
+# @Project			: 3DCTv2
+# @Description		: Quadratic Interpolation of Spectral Peaks
+# @Author			: endolith
+# @Email			: endolith (at) gmail.com
+# @Credits			: https://gist.github.com/endolith/255291
+# @Maintainer		:
+# @Date				: 2015/12
+# @Version			: 0.1
+# @Status			:
+# @Usage			:
+# @Notes			:
+# @Python_version	: 2.7.10
+# @Last Modified	: 2015/12/11 by jan
+# ============================================================================
 
 from __future__ import division
 from numpy import polyfit, arange
 
-#Source: https://gist.github.com/endolith/255291
 
 def parabolic(f, x):
 	"""Quadratic interpolation for estimating the true position of an
@@ -50,14 +51,14 @@ def parabolic_polyfit(f, x, n):
 
 	n is the number of samples of the curve used to fit the parabola.
 
-	"""    
+	"""
 	a, b, c = polyfit(arange(x-n//2, x+n//2+1), f[x-n//2:x+n//2+1], 2)
 	xv = -0.5 * b/a
 	yv = a * xv**2 + b * xv + c
 	return (xv, yv)
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
 	from numpy import argmax
 	import matplotlib.pyplot as plt
 
