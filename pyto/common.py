@@ -2,10 +2,10 @@
 """
 Contains functions often used in the scripts of this directory
 
-$Id$
+$Id: common.py 1179 2015-05-28 11:50:04Z vladan $
 Author: Vladan Lucic 
 """
-__version__ = "$Revision$"
+__version__ = "$Revision: 1179 $"
 
 # ToDo: see if this should become a superclass for some of the scripts
 
@@ -22,7 +22,7 @@ import logging
 import numpy
 
 import pyto
-import pyto.util.attributes as attributes
+import pyto.attributes as attributes
 
 
 #################################################
@@ -385,6 +385,30 @@ def find_shape(file_name, shape=None, suggest_shape=None):
 #
 # Writting result files
 #
+
+def make_top_header():
+    """
+    Returns header lines containing machine and files info
+    """
+
+    # machine info
+    mach_name, mach_arch = machine_info()
+
+    # out file names
+    script_file_name = sys.modules[__name__].__file__
+
+    # general 
+    header = ["#",
+        "# Machine: " + mach_name + " " + mach_arch,
+        "# Date: " + time.asctime(time.localtime()),
+        "#"]
+    header.extend(format_file_info(
+            name=script_file_name, description="Input script", 
+            extra=("  "+__version__)))
+    header.append("# Working directory: " + os.getcwd())
+    header.append("#")
+
+    return header
 
 def machine_info():
     """

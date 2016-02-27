@@ -1,20 +1,21 @@
 #!/usr/bin/env python
-#title				: clrmsg.py
-#description		: Colored stdout status powered by "Colorama"
-#author				: Jan Arnold
-#email				: jan.arnold (at) coraxx.net
-#credits			: Arnon Yaari
-#					: https://github.com/tartley/colorama
-#maintainer			: Jan Arnold
-#date				: 2016/02
-#version			: 0.1
-#status				: Final
-#usage				: import clrmsg
-#					: then call e.g. # print(clrmsg.ERROR + 'Error message')
-#					: and it will return # [ ERROR ] Error message
-#notes				: You can add your own status prefixes.
-#python_version		: 2.7.10 
-#=================================================================================
+
+# title				: clrmsg.py
+# description		: Colored stdout status powered by "Colorama"
+# author			: Jan Arnold
+# email				: jan.arnold (at) coraxx.net
+# credits			: Arnon Yaari
+# 					: https://github.com/tartley/colorama
+# maintainer		: Jan Arnold
+# date				: 2016/02
+# version			: 0.1
+# status			: Final
+# usage				: import clrmsg
+# 					: then call e.g. # print(clrmsg.ERROR + 'Error message')
+# 					: and it will return # [ ERROR ] Error message
+# notes				: You can add your own status prefixes.
+# python_version	: 2.7.10
+# =================================================================================
 
 ## Fore: BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE, RESET.
 ## Back: BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE, RESET.
@@ -26,7 +27,7 @@ try:
 	colorama.init(autoreset=True)
 	## prefixes
 	DEBUG = '[ ' + colorama.Fore.BLUE + colorama.Style.BRIGHT + 'DEBUG' + colorama.Style.RESET_ALL + ' ] '
-	OK = '[ ' + colorama.Fore.GREEN + colorama.Style.BRIGHT + 'OK   ' + colorama.Style.RESET_ALL + ' ] '
+	OK = '[ ' + colorama.Fore.GREEN + colorama.Style.BRIGHT + ' OK  ' + colorama.Style.RESET_ALL + ' ] '
 	ERROR = '[ ' + colorama.Fore.RED + colorama.Style.BRIGHT + 'ERROR' + colorama.Style.RESET_ALL + ' ] '
 	INFO = '[ ' + colorama.Fore.CYAN + colorama.Style.BRIGHT + 'INFO ' + colorama.Style.RESET_ALL + ' ] '
 	WARNING = '[ ' + colorama.Fore.YELLOW + colorama.Style.BRIGHT + 'WARN ' + colorama.Style.RESET_ALL + ' ] '
@@ -42,9 +43,8 @@ except:
 	WARNING = '[ WARN  ] '
 
 
-
 def msg(style,msg):
-	if clrm_import == True:
+	if clrm_import is True:
 		# Fore: BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE, RESET.
 		# Back: BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE, RESET.
 		# Style: DIM, NORMAL, BRIGHT, RESET_ALL

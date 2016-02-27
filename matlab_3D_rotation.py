@@ -1,20 +1,19 @@
 #!/usr/bin/env python
-#title				: matlab_3D_rotation.py
-#description		: Rotate original light microscope volume
-#author				: Jan Arnold
-#email				: jan.arnold (at) coraxx.net
-#credits			: Florian Beck, Department Baumeister - Max-Planck-Institute for Biochemistry
-#maintainer			: Jan Arnold
-#date				: 2016/01
-#version			: 0.1
-#status				: developement
-#usage				: Meant to be imported, i.e. import matlab_3D_rotation.py and used with calling
-#					: matlab_rotate(img_vol,)
-#					: 
-#					: 
-#notes				: 
-#python_version		: 2.7.10 
-#=================================================================================
+
+# title				: matlab_3D_rotation.py
+# description		: Rotate original light microscope volume
+# author				: Jan Arnold
+# email				: jan.arnold (at) coraxx.net
+# credits			: Florian Beck, Department Baumeister - Max-Planck-Institute for Biochemistry
+# maintainer			: Jan Arnold
+# date				: 2016/01
+# version			: 0.1
+# status				: developement
+# usage				: Meant to be imported, i.e. import matlab_3D_rotation.py and used with calling
+# 					: matlab_rotate(img_vol,)
+# notes				:
+# python_version		: 2.7.10
+# =================================================================================
 import sys
 import os
 
@@ -58,38 +57,39 @@ showfig			= 'true'
 savevolrot		= 'false'
 cutoutlamella	= 'true'
 
+
 def genMatlabScript():
 	## Generate Matlab script
 	format_args = [
-		filein,			# {0} = 'str'  filepath to raw volume
-		dtype,			# {1} = 'str'  dtype, probably 'int16' or 'uint16'
-		endiantype,		# {2} = 'str'  endian type, probably be
-		dimensions_x,	# {3} = 'int'  vol in dimension x	e.g. 1344	[px]
-		dimensions_y,	# {4} = 'int'  vol in dimension y	e.g. 1024	[px]
-		dimensions_z,	# {5} = 'int'  vol in dimension z	e.g. 106	[px]
-		fileout,		# {6} = 'str'  fileout e.g. /path/to/dir/filename without extension
-		eul1_phi,		# {7} = 'int'  correlated rotation angle e.g. FIB: phi
-		eul1_psi,		# {8} = 'int'  correlated rotation angle e.g. FIB: psi
-		eul1_theta,		# {9} = 'int'  correlated rotation angle e.g. FIB: theta
-		scale1,			#{10} = 'int'  scalingfactor e.g. FIB
-		shifty1,		#{11} = 'int'  shift in y e.g. FIB
-		shiftx1,		#{12} = 'int'  shift in x e.g. FIB
-		eul2_phi,		#{13} = 'int'  second correlated rotation angle e.g. SEM: phi
-		eul2_psi,		#{14} = 'int'  second correlated rotation angle e.g. SEM: psi
-		eul2_theta,		#{15} = 'int'  second correlated rotation angle e.g. SEM: theta
-		scale2,			#{16} = 'int'  second scalingfactor e.g. SEM
-		shifty2,		#{17} = 'int'  second shift in y e.g. SEM
-		shiftx2,		#{18} = 'int'  second shift in x e.g. SEM
+		filein,					# {0} = 'str'  filepath to raw volume
+		dtype,					# {1} = 'str'  dtype, probably 'int16' or 'uint16'
+		endiantype,				# {2} = 'str'  endian type, probably be
+		dimensions_x,			# {3} = 'int'  vol in dimension x	e.g. 1344	[px]
+		dimensions_y,			# {4} = 'int'  vol in dimension y	e.g. 1024	[px]
+		dimensions_z,			# {5} = 'int'  vol in dimension z	e.g. 106	[px]
+		fileout,				# {6} = 'str'  fileout e.g. /path/to/dir/filename without extension
+		eul1_phi,				# {7} = 'int'  correlated rotation angle e.g. FIB: phi
+		eul1_psi,				# {8} = 'int'  correlated rotation angle e.g. FIB: psi
+		eul1_theta,				# {9} = 'int'  correlated rotation angle e.g. FIB: theta
+		scale1,					# {10} = 'int'  scalingfactor e.g. FIB
+		shifty1,				# {11} = 'int'  shift in y e.g. FIB
+		shiftx1,				# {12} = 'int'  shift in x e.g. FIB
+		eul2_phi,				# {13} = 'int'  second correlated rotation angle e.g. SEM: phi
+		eul2_psi,				# {14} = 'int'  second correlated rotation angle e.g. SEM: psi
+		eul2_theta,				# {15} = 'int'  second correlated rotation angle e.g. SEM: theta
+		scale2,					# {16} = 'int'  second scalingfactor e.g. SEM
+		shifty2,				# {17} = 'int'  second shift in y e.g. SEM
+		shiftx2,				# {18} = 'int'  second shift in x e.g. SEM
 		# +1 because matlab is not counting zero-based
-		lam_start_x +1,	#{19} = 'int'  lamella start x coordinate	(1)		1/3----------------2/3
-		lam_end_x +1,	#{20} = 'int'  lamella end x coordinate		(2)		 |					|
-		lam_start_y +1,	#{21} = 'int'  lamella start y coordinate	(3)		 |					|
-		lam_end_y +1,	#{22} = 'int'  lamella end y coordinate		(4)		1/4----------------2/4
-		binning,		#{23} = 'str'  binning true or false
-		binfactor,		#{24} = 'int'  binning factor, e.g. 1 for one time binning
-		showfig,		#{25} = 'str'  showfig true or false
-		savevolrot,		#{26} = 'str'  savevolrot true or false
-		cutoutlamella,	#{27} = 'str'  cut out lamella part from LM data true or false
+		lam_start_x + 1,		# {19} = 'int'  lamella start x coordinate	(1)		1/3----------------2/3
+		lam_end_x + 1,			# {20} = 'int'  lamella end x coordinate		(2)		 |					|
+		lam_start_y + 1,		# {21} = 'int'  lamella start y coordinate	(3)		 |					|
+		lam_end_y + 1,			# {22} = 'int'  lamella end y coordinate		(4)		1/4----------------2/4
+		binning,				# {23} = 'str'  binning true or false
+		binfactor,				# {24} = 'int'  binning factor, e.g. 1 for one time binning
+		showfig,				# {25} = 'str'  showfig true or false
+		savevolrot,				# {26} = 'str'  savevolrot true or false
+		cutoutlamella,			# {27} = 'str'  cut out lamella part from LM data true or false
 	]
 
 	script_template = '''
@@ -194,10 +194,12 @@ exitcode = 0
 '''
 	return script_template.format(*format_args)
 
+
 def writeScript():
 	file = open("rotate_script.m", "w")
 	file.write(genMatlabScript())
 	file.close()
+
 
 def runMatlab():
 	writeScript()
@@ -208,6 +210,7 @@ def runMatlab():
 	else:
 		print "Something went horribly wrong!!!11 AAAAAHHHHHHHHH"
 	cleanUp()
+
 
 def cleanUp():
 	os.remove("rotate_script.m")

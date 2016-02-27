@@ -1,26 +1,27 @@
 #!/usr/bin/env python
-#title				: TDCT.py
-#description		: 3D Correlation Toolbox - 3DCT
-#author				: Jan Arnold
-#email				: jan.arnold (at) coraxx.net
-#credits			: Vladan Lucic for the 3D to 2D correlation code
-#					: and the stackoverflow community for all the bits and pieces
-#maintainer			: Max-Planck-Instute of Biochemistry
-#					  Department of Molecular Structural Biology
-#date				: 2015/08
-#version			: 0.1
-#status				: developement
-#usage				: python TDCT.py
-#notes				: 
-#python_version		: 2.7.10 
-#=================================================================================
+
+# title				: TDCT.py
+# description		: 3D Correlation Toolbox - 3DCT
+# author			: Jan Arnold
+# email				: jan.arnold (at) coraxx.net
+# credits			: Vladan Lucic for the 3D to 2D correlation code
+# 					: and the stackoverflow community for all the bits and pieces
+# maintainer		: Max-Planck-Instute of Biochemistry
+# 					  Department of Molecular Structural Biology
+# date				: 2015/08
+# version			: 0.1
+# status			: developement
+# usage				: python TDCT.py
+# notes				:
+# python_version	: 2.7.10
+# =================================================================================
 
 import sys
 import os
 import time
 import shutil
 import fileinput
-#from functools import partial
+# from functools import partial
 from subprocess import call
 from PyQt4 import QtCore, QtGui, uic
 import numpy as np
@@ -30,32 +31,36 @@ execdir = os.path.dirname(os.path.realpath(__file__))
 workingdir = execdir
 sys.path.append(execdir)
 # import modules from working directory
-import csv_handler
-import stack_processing
-import image_navigation_quad
-import bead_pos
-
-## Colored stdout
-import clrmsg
+try:
+	import csv_handler
+	# import stack_processing
+	import image_navigation_quad
+	import bead_pos
+	## Colored stdout
+	import clrmsg
+except Exception as e:
+	print e
+	sys.exit()
 
 ### debug stuff ###
-#import pdb
-#import inspect
-#import pyqtDebug
+# import pdb
+# import inspect
+# import pyqtDebug
 ###################
 
 
 ########## GUI layout file #######################################################
 ##################################################################################
-qtCreatorFile_main =  os.path.join(execdir, "TDCT_main.ui")
-qtCreatorFile_pointselection =  os.path.join(execdir, "TDCT_pointselect_wo_ctrl.ui")
-qtCreatorFile_sort =  os.path.join(execdir, "TDCT_sort.ui")
+qtCreatorFile_main = os.path.join(execdir, "TDCT_main.ui")
+qtCreatorFile_pointselection = os.path.join(execdir, "TDCT_pointselect_wo_ctrl.ui")
+qtCreatorFile_sort = os.path.join(execdir, "TDCT_sort.ui")
 Ui_MainWindow, QtBaseClass = uic.loadUiType(qtCreatorFile_main)
 Ui_pointSelectionWindow, QtBaseClassMM = uic.loadUiType(qtCreatorFile_pointselection)
 Ui_sortWindow, QtBaseClassSort = uic.loadUiType(qtCreatorFile_sort)
 
 ########## Main Application Class ################################################
 ##################################################################################
+
 
 class APP(QtGui.QMainWindow, Ui_MainWindow):
 	def __init__(self):
@@ -68,13 +73,13 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 		self.actionQuit.triggered.connect(self.close)
 		self.actionQuit.setShortcuts(['Ctrl+Q','Esc'])
 		self.actionQuit.setStatusTip('Exit application')
-		
+
 		QtGui.QShortcut(QtGui.QKeySequence(QtCore.Qt.CTRL + QtCore.Qt.Key_0), self, self.showDebugMenu)
 		self.actionLoad_Test_Dataset.triggered.connect(self.loadTestDataset)
 		self.actionLoad_Test_Dataset_sort.triggered.connect(self.loadTestDatasetSort)
 
 		self.actionAbout.triggered.connect(self.about)
-		
+
 		# Setting up Child exit status - see closeEvent()
 		self.childExitStatus_ps = True
 		self.childExitStatus_sort = True
@@ -154,11 +159,11 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 
 	## only for quick load of test datasets - REMOVE FROM FINAL VERSION
 	def tester(self):
-		#self.showDebugMenu()
-		#self.addItem_coordEx_list('yes')
-		#print QtCore.QDir.currentPath()
-		#self.populate_coordEx_list( QtCore.QDir.currentPath() )
-		#self.listWidget_coordEx_files.findItems(self, QString text, Qt.MatchFlags item.setCheckState)
+		# self.showDebugMenu()
+		# self.addItem_coordEx_list('yes')
+		# print QtCore.QDir.currentPath()
+		# self.populate_coordEx_list( QtCore.QDir.currentPath() )
+		# self.listWidget_coordEx_files.findItems(self, QString text, Qt.MatchFlags item.setCheckState)
 		# print 'LM Files:'
 		# for index in xrange(self.listWidget_coordEx_LMfiles.count()):
 		# 	#check_box = self.listWidget_coordEx_files.itemWidget(self.listWidget_coordEx_files.item(index))
@@ -174,16 +179,18 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 		# 	#state = foo.checkStateSet()
 		# 	if foo.checkState() == 2:
 		# 		print foo.text()
-		#img = "/Users/jan/Desktop/pyPhoOvTest/IB_030.tif"
-		#img = "F:/jan_temp/test.tif"
+		# img = "/Users/jan/Desktop/pyPhoOvTest/IB_030.tif"
+		# img = "F:/jan_temp/test.tif"
 		img = execdir+"/testdata/px_test.tif"
-		if os.path.isfile(img) == True:
+		if os.path.isfile(img)is True:
 			self.getPoints(img)
 
 	## About
 	def about(self):
-		QtGui.QMessageBox.about(self,	"About 3DCT", "3DCT v0.1\n\ndeveloped by:\n\nMax-Planck-Institute of Biochemistry\n\n"+
-										"3D Correlation Toolbox:	Jan Arnold\nCorrelation Algorithm:	Vladan Lucic")
+		QtGui.QMessageBox.about(
+								self, "About 3DCT", "3DCT v0.1\n\ndeveloped by:\n\nMax-Planck-Institute of Biochemistry\n\n" +
+								"3D Correlation Toolbox:	Jan Arnold\nCorrelation Algorithm:	Vladan Lucic"
+								)
 
 	## Open directory
 	def openDirectoy(self,targetDirectory):
@@ -198,8 +205,7 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 	## Exit Warning
 	def closeEvent(self, event):
 		quit_msg = "Are you sure you want to exit the program?"
-		reply = QtGui.QMessageBox.question(self, 'Message',
-						 quit_msg, QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
+		reply = QtGui.QMessageBox.question(self, 'Message', quit_msg, QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
 		if reply == QtGui.QMessageBox.Yes:
 			# if loaded, close pointselection tool widget and sub windows
 			if hasattr(self, "pointselect"):
@@ -208,9 +214,9 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 			if hasattr(self, "sortData"):
 				self.sortData.close()
 			try:
-				if self.childExitStatus_ps == True and self.childExitStatus_sort == True:
+				if self.childExitStatus_ps is True and self.childExitStatus_sort is True:
 					event.accept()
-				elif self.childExitStatus_ps == False or self.childExitStatus_sort == False:
+				elif self.childExitStatus_ps is False or self.childExitStatus_sort is False:
 					event.ignore()
 			except:
 				event.accept()
@@ -229,7 +235,7 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 				self.pushButton_openSaveToPath.setEnabled(True)
 			# Working directory
 			if sender == self.pushButton_selectWorkingDir:
-				#global workingdir ## moved to top of def
+				# global workingdir ## moved to top of def
 				workingdir = path
 				if (self.lineEdit_saveToPath.displayText() == ""):
 					self.lineEdit_saveToPath.setText(path)
@@ -246,10 +252,10 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 			if sender == self.pushButton_EMselect:
 				self.populate_coordEx_list(path,self.listWidget_coordEx_EMfiles)
 				self.EMselect_path = path
-		
+
 	## Cube Voxels button state handling
 	def cubeVoxels(self, checkstate):
-		if checkstate == True:
+		if checkstate is True:
 			self.doubleSpinBox_focusStepsize.setEnabled(True)
 			self.radioButton_20x.setEnabled(True)
 			self.radioButton_40x.setEnabled(True)
@@ -269,12 +275,12 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 	def runFiji(self):
 		# button visibility
 		def StackProcessStatusVisability(state):
-			if state == True and self.stackProcessStatus.isVisible() == False:
+			if state is True and self.stackProcessStatus.isVisible() is False:
 				self.stackProcessStatus.setVisible(True)
 				app.processEvents()
 			else:
 				return
-			if state == False and self.stackProcessStatus.isVisible() == True:
+			if state is False and self.stackProcessStatus.isVisible() is True:
 				self.stackProcessStatus.setVisible(False)
 				app.processEvents()
 			else:
@@ -287,8 +293,8 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 			str_lineEdit_saveToPath = str(self.lineEdit_saveToPath.displayText())
 			print clrmsg.DEBUG, str_lineEdit_selectTifPath, str_lineEdit_saveToPath
 			print clrmsg.DEBUG, str_lineEdit_selectTifPath.encode('string-escape'), str_lineEdit_saveToPath.encode('string-escape')
-			print clrmsg.DEBUG, (str_lineEdit_selectTifPath.encode('string-escape').replace('\\\\','\\'),
-								str_lineEdit_saveToPath.encode('string-escape').replace('\\\\','\\'))
+			print clrmsg.DEBUG, str_lineEdit_selectTifPath.encode('string-escape').replace('\\\\','\\'), \
+				str_lineEdit_saveToPath.encode('string-escape').replace('\\\\','\\')
 			pathFROM = "PATH = " + '"' + str_lineEdit_selectTifPath.encode('string-escape') + '/";'
 			pathTO = "PATHSAVETO = " + '"' + str_lineEdit_saveToPath.encode('string-escape') + '/";'
 		else:
@@ -297,7 +303,7 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 		template_path = os.path.join(execdir,"fiji_macro_template.ijm")
 		macro_path = os.path.join(execdir,"fiji_macro.ijm")
 		# check for cube voxels option
-		if self.checkBox_cubeVoxels.isChecked() == True and self.doubleSpinBox_focusStepsize.value() == 0:
+		if self.checkBox_cubeVoxels.isChecked() is True and self.doubleSpinBox_focusStepsize.value() == 0:
 			StackProcessStatusVisability(True)
 			self.stackProcessStatus.setStyleSheet("color: rgb(255, 80, 0);")
 			self.stackProcessStatus.setText('Set stepsize!')
@@ -315,14 +321,14 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 			if line.startswith('//PARAMETERS'):
 				print pathFROM
 				print pathTO
-				if self.checkBox_cubeVoxels.isChecked() == True:
+				if self.checkBox_cubeVoxels.isChecked() is True:
 					print """cubeVoxels = "True";"""
 					print "STEPSIZE = " + str(self.doubleSpinBox_focusStepsize.value()) + ";"
-					if self.radioButton_20x.isChecked() == True:
+					if self.radioButton_20x.isChecked() is True:
 						print """PIXELSIZE = 322.5;"""
-					elif self.radioButton_40x.isChecked() == True:
+					elif self.radioButton_40x.isChecked() is True:
 						print """PIXELSIZE = 161.25;"""
-					elif self.radioButton_63x.isChecked() == True:
+					elif self.radioButton_63x.isChecked() is True:
 						print """PIXELSIZE = 102.38;"""
 		StackProcessStatusVisability(True)
 		self.stackProcessStatus.setStyleSheet("color: rgb(255, 125, 0);")
@@ -330,8 +336,7 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 		app.processEvents()
 		# run FIJI with macro
 		if sys.platform == 'darwin':
-			self.runFiji_return_code = call([execdir + "/Fiji/Contents/MacOS/ImageJ-macosx",
-														 "--headless", "-macro", pathMACRO, "&"])
+			self.runFiji_return_code = call([execdir + "/Fiji/Contents/MacOS/ImageJ-macosx", "--headless", "-macro", pathMACRO, "&"])
 		elif sys.platform == 'linux2':
 			self.runFiji_return_code = call([execdir + "/Fiji/ImageJ-linux64", "-macro", pathMACRO, "&"])
 		elif sys.platform == 'win32':
@@ -343,8 +348,7 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 			self.stackProcessStatus.setStyleSheet("color: rgb(255, 0, 0);")
 			self.stackProcessStatus.setText('Fiji failed!')
 			restart_msg = "Fiji closed with an error. Do you want to restart it?"
-			reply = QtGui.QMessageBox.question(self, 'Message',
-						 restart_msg, QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
+			reply = QtGui.QMessageBox.question(self, 'Message', restart_msg, QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
 			if reply == QtGui.QMessageBox.Yes:
 				self.runFiji()
 		# clean up
@@ -357,16 +361,17 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 	def populate_coordEx_list(self,path,listWidget):
 		listWidget.clear()
 		listWidget.itempath = path
-		for fname in os.listdir( path ):
+		for fname in os.listdir(path):
 			checkdir = os.path.join(path, fname)
-			if (	os.path.isdir(checkdir) == False and
-					fname.startswith(".") == False and
-					fname.startswith("$") == False
+			if (
+				os.path.isdir(checkdir) is False and
+				fname.startswith(".") is False and
+				fname.startswith("$") is False
 				):
 				item = QtGui.QListWidgetItem()
 				item.setText(fname)
-				#item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
-				#item.setCheckState(QtCore.Qt.Unchecked)
+				# item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
+				# item.setCheckState(QtCore.Qt.Unchecked)
 				listWidget.addItem(item)
 
 	## Refresh file list
@@ -382,8 +387,8 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 			self.listWidget_coordEx_files.clear()
 		item = QtGui.QListWidgetItem()
 		item.setText(fname)
-		#item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
-		#item.setCheckState(QtCore.Qt.Unchecked)
+		# item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
+		# item.setCheckState(QtCore.Qt.Unchecked)
 		self.listWidget_coordEx_files.addItem(item)
 
 	def extract2D(self):
@@ -402,16 +407,17 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 
 	## Start Point Selection
 	def getPoints(self,img,z=False):
-		if (img.endswith(".tif") == True or
-			img.endswith(".tiff") == True or
-			img.endswith(".jpg") == True or
-			img.endswith(".bmp") == True or
-			img.endswith(".png") == True
+		if (
+			img.endswith(".tif") is True or
+			img.endswith(".tiff") is True or
+			img.endswith(".jpg") is True or
+			img.endswith(".bmp") is True or
+			img.endswith(".png") is True
 			):
 			self.childExitStatus_ps = False
-			if z == False:
+			if z is False:
 				self.pointselect = pointSelection(img,parent=self,z=False)
-			elif z == True:
+			elif z is True:
 				self.pointselect = pointSelection(img,parent=self,z=True)
 			self.pointselect.initialize()
 		else:
@@ -419,12 +425,13 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 
 	## Initialize sort data widget
 	def initSortData(self):
-		self.childExitStatus_sort == False
+		self.childExitStatus_sort is False
 		self.sortData = sortData()
 		self.sortData.initialize()
 
 ########## Point Selection Class #################################################
 ##################################################################################
+
 
 class pointSelection(QtGui.QWidget,Ui_pointSelectionWindow):
 	def __init__(self,img,parent=None,z=False):
@@ -459,14 +466,14 @@ class pointSelection(QtGui.QWidget,Ui_pointSelectionWindow):
 		self.toolButton_saveMIP.clicked.connect(self.saveMIP)
 
 		## Tableview interactions
-		#self.tableView_pointselect.selectionModel().selectionChanged.connect(self.drawPoint)
+		# self.tableView_pointselect.selectionModel().selectionChanged.connect(self.drawPoint)
 		self.tableView_pointselect.clicked.connect(self.drawPoint)
 
 	def initialize(self):
 		self.show()
-		if self.z == False:
+		if self.z is False:
 			self.minimap = image_navigation_quad.MINIMAP(self.img,parent=self)
-		elif self.z == True:
+		elif self.z is True:
 			## Create temp folder
 			if not os.path.exists(os.path.join(execdir,'.3dct_tmp')):
 				os.makedirs(os.path.join(execdir,'.3dct_tmp'))
@@ -490,11 +497,11 @@ class pointSelection(QtGui.QWidget,Ui_pointSelectionWindow):
 		indices = self.tableView_pointselect.selectedIndexes()
 		data = []
 
-		#QtCore.pyqtRemoveInputHook()
-		#pdb.set_trace()
+		# QtCore.pyqtRemoveInputHook()
+		# pdb.set_trace()
 
 		if len(indices) == 2:
-			#print 'row: %s  column: %s  data: %s'%(index.row(), index.column(), index.data().toString() )
+			# print 'row: %s  column: %s  data: %s'%(index.row(), index.column(), index.data().toString() )
 			for column in range(2):
 				indexm = self.model_pointselect.index(index.row(), column)
 				data.append(str(self.model_pointselect.data(indexm).toString()))
@@ -508,12 +515,13 @@ class pointSelection(QtGui.QWidget,Ui_pointSelectionWindow):
 			for i in rows:
 				x = self.model_pointselect.index(i, 0)
 				y = self.model_pointselect.index(i, 1)
-				self.minimap.mainImageDrawPoint(float(self.model_pointselect.data(x).toString()),
-												float(self.model_pointselect.data(y).toString()),
-												add=True)
+				self.minimap.mainImageDrawPoint(
+					float(self.model_pointselect.data(x).toString()),
+					float(self.model_pointselect.data(y).toString()),
+					add=True)
 
 	def saveMIP(self):
-		if self.z == True:
+		if self.z is True:
 			img_exp = self.minimap.norm_img(self.img_MIP,copy=True)
 			tf.imsave(os.path.join(workingdir, os.path.splitext(self.img)[0]+'_MIP.tif'), img_exp)
 		else:
@@ -522,7 +530,7 @@ class pointSelection(QtGui.QWidget,Ui_pointSelectionWindow):
 	def autosave(self):
 		## Export Dioalog. Needs check for extension or add default extension
 		csv_file_out = os.path.splitext(self.img)[0]+'_coordinates.txt'
-		if self.z == True:
+		if self.z is True:
 			img_exp = self.minimap.norm_img(self.img_MIP,copy=True)
 			tf.imsave(os.path.join(workingdir, os.path.splitext(self.img)[0]+'_MIP.tif'), img_exp)
 		csv_handler.model2csv(self.model_pointselect,csv_file_out,delimiter="\t")
@@ -531,25 +539,24 @@ class pointSelection(QtGui.QWidget,Ui_pointSelectionWindow):
 
 	def exportPoints(self):
 		## Export Dioalog. Needs check for extension or add default extension
-		csv_file_out, filterdialog = QtGui.QFileDialog.getSaveFileNameAndFilter(self, 'Export file as', os.path.dirname(self.img),
-							"Tabstop sepperated (*.csv *.txt);;Comma sepperated (*.csv *.txt)")
-		if str(filterdialog).startswith('Comma') == True:
+		csv_file_out, filterdialog = QtGui.QFileDialog.getSaveFileNameAndFilter(
+			self, 'Export file as', os.path.dirname(self.img), "Tabstop sepperated (*.csv *.txt);;Comma sepperated (*.csv *.txt)")
+		if str(filterdialog).startswith('Comma') is True:
 			csv_handler.model2csv(self.model_pointselect,csv_file_out,delimiter=",")
-		elif str(filterdialog).startswith('Tabstop') == True:
+		elif str(filterdialog).startswith('Tabstop') is True:
 			csv_handler.model2csv(self.model_pointselect,csv_file_out,delimiter="\t")
 
 	def importPoints(self):
-		csv_file_in, filterdialog = QtGui.QFileDialog.getOpenFileNameAndFilter(self, 'Import file as', os.path.dirname(self.img),
-							"Tabstop sepperated (*.csv *.txt);;Comma sepperated (*.csv *.txt)")
-		if str(filterdialog).startswith('Comma') == True:
+		csv_file_in, filterdialog = QtGui.QFileDialog.getOpenFileNameAndFilter(
+			self, 'Import file as', os.path.dirname(self.img), "Tabstop sepperated (*.csv *.txt);;Comma sepperated (*.csv *.txt)")
+		if str(filterdialog).startswith('Comma') is True:
 			self.model_pointselect = csv_handler.csv2model(csv_file_in,delimiter=",",parent=self,sniff=True)
-		elif str(filterdialog).startswith('Tabstop') == True:
+		elif str(filterdialog).startswith('Tabstop') is True:
 			self.model_pointselect = csv_handler.csv2model(csv_file_in,delimiter="\t",parent=self,sniff=True)
 		self.tableView_pointselect.setModel(self.model_pointselect)
 
 	def addPoint(self,x,y):
-		items = [QtGui.QStandardItem(str(x)),
-				QtGui.QStandardItem(str(y))]
+		items = [QtGui.QStandardItem(str(x)), QtGui.QStandardItem(str(y))]
 		self.model_pointselect.appendRow(items)
 		self.model_pointselect.setHeaderData(0, QtCore.Qt.Horizontal,'x')
 		self.model_pointselect.setHeaderData(1, QtCore.Qt.Horizontal,'y')
@@ -573,7 +580,7 @@ class pointSelection(QtGui.QWidget,Ui_pointSelectionWindow):
 		i = 0
 		for row in rows:
 			QtGui.QStandardItemModel.removeRows(self.model_pointselect,row-i,1)
-			#print('Row %d is deleted' % row)
+			# print('Row %d is deleted' % row)
 			i += 1
 
 	def get_z(self,optimize=False):
@@ -588,14 +595,16 @@ class pointSelection(QtGui.QWidget,Ui_pointSelectionWindow):
 		self.minimap.px_backscale = self.minimap.cc[0]+sfactor_CropToOrig*point[0]
 		self.minimap.py_backscale = self.minimap.cc[2]+sfactor_CropToOrig*point[1]
 
-		if optimize == False:
+		if optimize is False:
 			z = bead_pos.getz(self.minimap.px_backscale,self.minimap.py_backscale,self.img,n=None)
-			items = [QtGui.QStandardItem(str(self.minimap.px_backscale)),
+			items = [
+					QtGui.QStandardItem(str(self.minimap.px_backscale)),
 					QtGui.QStandardItem(str(self.minimap.py_backscale)),
 					QtGui.QStandardItem(str(z))]
-		elif optimize == True:
+		elif optimize is True:
 			x,y,z = bead_pos.getz(self.minimap.px_backscale,self.minimap.py_backscale,self.img,n=None,optimize=True)
-			items = [QtGui.QStandardItem(str(x)),
+			items = [
+					QtGui.QStandardItem(str(x)),
 					QtGui.QStandardItem(str(y)),
 					QtGui.QStandardItem(str(z))]
 		self.model_pointselect.appendRow(items)
@@ -606,10 +615,10 @@ class pointSelection(QtGui.QWidget,Ui_pointSelectionWindow):
 	## Exit Warning
 	def closeEvent(self,event):
 		if hasattr(window, "pointselect"):
-			if self.forcequit == False:
+			if self.forcequit is False:
 				quit_msg = "Are you sure you want to close the Point Selection Tool?"
-				reply = QtGui.QMessageBox.question(self, 'Message',
-								 quit_msg, QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
+				reply = QtGui.QMessageBox.question(
+					self, 'Message', quit_msg, QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
 				if reply == QtGui.QMessageBox.Yes:
 					self.minimap.closeWindows()
 					del window.pointselect
@@ -623,7 +632,7 @@ class pointSelection(QtGui.QWidget,Ui_pointSelectionWindow):
 				else:
 					window.childExitStatus_ps = False
 					event.ignore()
-			elif self.forcequit == True:
+			elif self.forcequit is True:
 				self.minimap.closeWindows()
 				del window.pointselect
 				window.childExitStatus_ps = True
@@ -631,6 +640,7 @@ class pointSelection(QtGui.QWidget,Ui_pointSelectionWindow):
 
 ########## Sort Data Class #######################################################
 ##################################################################################
+
 
 class sortData(QtGui.QWidget,Ui_sortWindow):
 	def __init__(self):
@@ -640,7 +650,7 @@ class sortData(QtGui.QWidget,Ui_sortWindow):
 
 		point = self.rect().bottomRight()
 		print self.mapToGlobal(point)
-		point =  self.rect().topLeft()
+		point = self.rect().topLeft()
 		print self.mapToGlobal(point)
 
 		## Move Window
@@ -684,17 +694,17 @@ class sortData(QtGui.QWidget,Ui_sortWindow):
 		self.toolButton_edit_left.clicked.connect(lambda: self.editModel(self.model_left))
 		self.toolButton_open_right.clicked.connect(lambda: self.importPoints('right'))
 		self.toolButton_edit_right.clicked.connect(lambda: self.editModel(self.model_right))
-		#left
+		# left
 		self.toolButton_copy_left.clicked.connect(lambda: self.copyPoint('left'))
 		self.toolButton_delsel_left.clicked.connect(lambda: self.delPoint('left'))
 		self.toolButton_export_left.clicked.connect(lambda: self.exportSortModel(self.model_left_sort))
 		self.toolButton_showimg_left.clicked.connect(lambda: self.openImage('left'))
-		#right
+		# right
 		self.toolButton_copy_right.clicked.connect(lambda: self.copyPoint('right'))
 		self.toolButton_delsel_right.clicked.connect(lambda: self.delPoint('right'))
 		self.toolButton_export_right.clicked.connect(lambda: self.exportSortModel(self.model_right_sort))
 		self.toolButton_showimg_right.clicked.connect(lambda: self.openImage('right'))
-		#correlate
+		# correlate
 		self.Button_correlate.clicked.connect(self.correlate)
 
 		## Checkbox
@@ -711,7 +721,7 @@ class sortData(QtGui.QWidget,Ui_sortWindow):
 		self.img_left_loaded = False
 		self.img_right_loaded = False
 		## test init image sbs widget
-		#self.initializeImageWidget(imgleft='/Users/jan/Desktop/pyPhoOvTest/IB_030.tif',imgright='/Volumes/Silver/Dropbox/Dokumente/Code/px_test.tif')
+		# self.initializeImageWidget(imgleft='/Users/jan/Desktop/pyPhoOvTest/IB_030.tif',imgright='/Volumes/Silver/Dropbox/Dokumente/Code/px_test.tif')
 
 	def lol(self):
 		print "lol"
@@ -720,8 +730,8 @@ class sortData(QtGui.QWidget,Ui_sortWindow):
 	def closeEvent(self,event):
 		if hasattr(window, "sortData"):
 			quit_msg = "Are you sure you want to close the Sort Data Tool?"
-			reply = QtGui.QMessageBox.question(self, 'Message',
-							 quit_msg, QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
+			reply = QtGui.QMessageBox.question(
+				self, 'Message', quit_msg, QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
 			if reply == QtGui.QMessageBox.Yes:
 				del window.sortData
 				## Delete up temp folder
@@ -751,9 +761,9 @@ class sortData(QtGui.QWidget,Ui_sortWindow):
 		self.show()
 
 	def importPoints(self,model):
-		csv_file_in, filterdialog = QtGui.QFileDialog.getOpenFileNameAndFilter(self, 'Import file as', workingdir,
-							"Tabstop sepperated (*.csv *.txt);;Comma sepperated (*.csv *.txt)")
-		if str(filterdialog).startswith('Comma') == True:
+		csv_file_in, filterdialog = QtGui.QFileDialog.getOpenFileNameAndFilter(
+			self, 'Import file as', workingdir, "Tabstop sepperated (*.csv *.txt);;Comma sepperated (*.csv *.txt)")
+		if str(filterdialog).startswith('Comma') is True:
 			if model == 'left':
 				self.model_left = csv_handler.csv2model(csv_file_in,delimiter=",",parent=self,sniff=True)
 				self.toolButton_copy_left.setEnabled(True)
@@ -764,7 +774,7 @@ class sortData(QtGui.QWidget,Ui_sortWindow):
 				self.toolButton_copy_right.setEnabled(True)
 				self.toolButton_showimg_right.setEnabled(True)
 				self.toolButton_edit_right.setEnabled(True)
-		elif str(filterdialog).startswith('Tabstop') == True:
+		elif str(filterdialog).startswith('Tabstop') is True:
 			if model == 'left':
 				self.model_left = csv_handler.csv2model(csv_file_in,delimiter="\t",parent=self,sniff=True)
 				self.toolButton_copy_left.setEnabled(True)
@@ -781,12 +791,13 @@ class sortData(QtGui.QWidget,Ui_sortWindow):
 		self.tableView_right.selectionModel().selectionChanged.connect(lambda: self.drawPoint(tableview=self.tableView_right))
 
 	def copyPoint(self,side):
-		rows = set(index.row() for index in getattr(self, "%s" % "tableView_"+side).selectedIndexes() )
+		rows = set(index.row() for index in getattr(self, "%s" % "tableView_"+side).selectedIndexes())
 		for rowNumber in rows:
-			items = [	getattr(self, "%s" % "model_"+side).itemFromIndex(getattr(self, "%s" % "model_"+side).index(rowNumber, 0)).clone(),
-						getattr(self, "%s" % "model_"+side).itemFromIndex(getattr(self, "%s" % "model_"+side).index(rowNumber, 1)).clone(),
-						(getattr(self, "%s" % "model_"+side).itemFromIndex(getattr(self, "%s" % "model_"+side).index(rowNumber, 2)).clone()
-							if getattr(self, "%s" % "model_"+side).columnCount() == 3 else QtGui.QStandardItem('0'))]
+			items = [
+					getattr(self, "%s" % "model_"+side).itemFromIndex(getattr(self, "%s" % "model_"+side).index(rowNumber, 0)).clone(),
+					getattr(self, "%s" % "model_"+side).itemFromIndex(getattr(self, "%s" % "model_"+side).index(rowNumber, 1)).clone(),
+					(getattr(self, "%s" % "model_"+side).itemFromIndex(getattr(self, "%s" % "model_"+side).index(rowNumber, 2)).clone()
+						if getattr(self, "%s" % "model_"+side).columnCount() == 3 else QtGui.QStandardItem('0'))]
 			getattr(self, "%s" % "model_"+side+"_sort").appendRow(items)
 		getattr(self, "%s" % "model_"+side+"_sort").setHeaderData(0, QtCore.Qt.Horizontal,'x')
 		getattr(self, "%s" % "model_"+side+"_sort").setHeaderData(1, QtCore.Qt.Horizontal,'y')
@@ -795,7 +806,7 @@ class sortData(QtGui.QWidget,Ui_sortWindow):
 		getattr(self, "%s" % "toolButton_delsel_"+side).setEnabled(True)
 
 	def delPoint(self,side):
-		rows = sorted(set(index.row() for index in getattr(self, "%s" % "tableView_"+side+"_sort").selectedIndexes() ))
+		rows = sorted(set(index.row() for index in getattr(self, "%s" % "tableView_"+side+"_sort").selectedIndexes()))
 		i = 0
 		for row in rows:
 			QtGui.QStandardItemModel.removeRows(getattr(self, "%s" % "model_"+side+"_sort"),row-i,1)
@@ -812,8 +823,9 @@ class sortData(QtGui.QWidget,Ui_sortWindow):
 	def model2np(self,model):
 		listarray = []
 		for rowNumber in range(model.rowCount()):
-			fields = [ model.data(model.index(rowNumber, columnNumber), QtCore.Qt.DisplayRole).toFloat()[0]
-					for columnNumber in range(model.columnCount()) ]
+			fields = [
+					model.data(model.index(rowNumber, columnNumber), QtCore.Qt.DisplayRole).toFloat()[0]
+					for columnNumber in range(model.columnCount())]
 			listarray.append(fields)
 		return np.array(listarray).astype(np.float)
 
@@ -825,11 +837,12 @@ class sortData(QtGui.QWidget,Ui_sortWindow):
 		self.rotation_center = [self.doubleSpinBox_psi.value(),self.doubleSpinBox_phi.value(),self.doubleSpinBox_theta.value()]
 
 		## create model for poi (QtModel for consistency in handling data between functions. Can also be extended in the future for multiple POIs)
-		if self.checkBox_poi.isChecked() == True:
+		if self.checkBox_poi.isChecked() is True:
 			self.model_pois = QtGui.QStandardItemModel()
-			items = ([	QtGui.QStandardItem(str(self.doubleSpinBox_poi_x.value())),
-						QtGui.QStandardItem(str(self.doubleSpinBox_poi_y.value())),
-						QtGui.QStandardItem(str(self.doubleSpinBox_poi_z.value()))])
+			items = ([
+					QtGui.QStandardItem(str(self.doubleSpinBox_poi_x.value())),
+					QtGui.QStandardItem(str(self.doubleSpinBox_poi_y.value())),
+					QtGui.QStandardItem(str(self.doubleSpinBox_poi_z.value()))])
 			self.model_pois.appendRow(items)
 		else:
 			self.model_pois = QtGui.QStandardItemModel()
@@ -852,9 +865,10 @@ class sortData(QtGui.QWidget,Ui_sortWindow):
 						QtGui.QMessageBox.critical(self, "Data Structur",'At least THREE markers are needed to do the correlation')
 
 				else:
-					QtGui.QMessageBox.critical(self, "Data Structur",	'The two datasets do not contain the same amount of markers!\n\n'
-																		'Please use the copy function (double click entries or arrow button) to create two lists '
-																		'with the correspondent markers from both datasets in the same row.')
+					QtGui.QMessageBox.critical(
+						self, "Data Structur",	'The two datasets do not contain the same amount of markers!\n\n'
+						'Please use the copy function (double click entries or arrow button) to create two lists '
+						'with the correspondent markers from both datasets in the same row.')
 			else:
 				if l_rc == r_rc:
 					if l_rc >= 3:
@@ -877,7 +891,7 @@ class sortData(QtGui.QWidget,Ui_sortWindow):
 			elif self.model_left.rowCount() != 0 or self.model_right.rowCount() != 0:
 				QtGui.QMessageBox.information(self, "Import Data", "Please import two datasets to correlate!")
 
-		if self.checkBox_saveimage.isChecked() == True:
+		if self.checkBox_saveimage.isChecked() is True:
 			import cv2
 			try:
 				image = cv2.imread(unicode(self.imgpath_right.toUtf8(), encoding="UTF-8"))
@@ -886,7 +900,7 @@ class sortData(QtGui.QWidget,Ui_sortWindow):
 			transf_3d = self.correlation_results[1]
 			for i in range(transf_3d.shape[1]):
 				cv2.circle(image, (int(round(transf_3d[0,i])), int(round(transf_3d[1,i]))), 3, (0,255,0), -1)
-			if self.checkBox_poi.isChecked() == True:
+			if self.checkBox_poi.isChecked() is True:
 				calc_spots_2d = self.correlation_results[2]
 				# draw POI cv2.circle(img, (center x, center y), radius, [b,g,r], thickness(-1 for filled))
 				cv2.circle(image, (int(round(calc_spots_2d[0,0])), int(round(calc_spots_2d[1,0]))), 1, (0,0,255), -1)
@@ -898,26 +912,27 @@ class sortData(QtGui.QWidget,Ui_sortWindow):
 			import scatterHistPlot
 			## get data
 			transf = self.correlation_results[0]
-			#transf_3d = self.correlation_results[1]			## unused atm
-			#calc_spots_2d = self.correlation_results[2]		## unused atm
+			# transf_3d = self.correlation_results[1]			## unused atm
+			# calc_spots_2d = self.correlation_results[2]		## unused atm
 			delta2D = self.correlation_results[3]
 			delta2D_mean = np.absolute(delta2D).mean(axis=1)
-			#cm_3D_markers = self.correlation_results[4]		## unused atm
+			# cm_3D_markers = self.correlation_results[4]		## unused atm
 			modified_translation = self.correlation_results[5]
 			eulers = transf.extract_euler(r=transf.q, mode='x', ret='one')
 			eulers = eulers * 180 / np.pi
-			#scale = transf.s_scalar
-			translation = (transf.d[0], transf.d[1], transf.d[2])
+			# scale = transf.s_scalar
+			# translation = (transf.d[0], transf.d[1], transf.d[2])
 
-			##display data
+			## display data
 			# rotation
 			self.lcdNumber_psi.display(eulers[2])
 			self.lcdNumber_phi.display(eulers[0])
 			self.lcdNumber_theta.display(eulers[1])
 			# translation and scale
-			self.label_rotcenter.setText('[%5.2f, %5.2f, %5.2f]' % (self.rotation_center[0],
-																	self.rotation_center[1],
-																	self.rotation_center[2]))
+			self.label_rotcenter.setText('[%5.2f, %5.2f, %5.2f]' % (
+				self.rotation_center[0],
+				self.rotation_center[1],
+				self.rotation_center[2]))
 			self.lcdNumber_transxRotCenter.display(modified_translation[0])
 			self.lcdNumber_transyRotCenter.display(modified_translation[1])
 			self.lcdNumber_transx.display(transf.d[0])
@@ -930,22 +945,22 @@ class sortData(QtGui.QWidget,Ui_sortWindow):
 
 			# show results dock widget
 			self.dockWidget_results.show()
-			# generic thread - this was implemanted to keep a matplot graph from freezing up the main application 
+			# generic thread - this was implemanted to keep a matplot graph from freezing up the main application
 			# under windows. but it seems to be a matplotlib backend issue.
-			#self.genericThread = GenericThread(scatterHistPlot.main,x = delta2D[:1,:][0],y = delta2D[1:,:][0],\
-			#	frame=frame,framesize=framesize,xlabel="px",ylabel="px")
-			#self.genericThread.start()
+			# self.genericThread = GenericThread(scatterHistPlot.main,x = delta2D[:1,:][0],y = delta2D[1:,:][0],\
+			# frame=frame,framesize=framesize,xlabel="px",ylabel="px")
+			# self.genericThread.start()
 
 			# simple plt show in own window. Stops execution of main thred under windows (default tkinter backend).
 			# Own generic thread works under windows, not under mac os x.
 			# changed default backend to pyqt4 which works fine under both systems.
-			scatterHistPlot.main(x = delta2D[:1,:][0],y = delta2D[1:,:][0],frame=frame,framesize=framesize,xlabel="px",ylabel="px")
+			scatterHistPlot.main(x=delta2D[:1,:][0],y=delta2D[1:,:][0],frame=frame,framesize=framesize,xlabel="px",ylabel="px")
 
 		else:
 			QtGui.QMessageBox.critical(self, "Error", "No data to display!")
 
 	def setRotCenter(self,checkstate):
-		if checkstate == True:
+		if checkstate is True:
 			self.doubleSpinBox_psi.setEnabled(True)
 			self.doubleSpinBox_phi.setEnabled(True)
 			self.doubleSpinBox_theta.setEnabled(True)
@@ -955,7 +970,7 @@ class sortData(QtGui.QWidget,Ui_sortWindow):
 			self.doubleSpinBox_theta.setEnabled(False)
 
 	def setpoi(self,checkstate):
-		if checkstate == True:
+		if checkstate is True:
 			self.doubleSpinBox_poi_x.setEnabled(True)
 			self.doubleSpinBox_poi_y.setEnabled(True)
 			self.doubleSpinBox_poi_z.setEnabled(True)
@@ -965,7 +980,7 @@ class sortData(QtGui.QWidget,Ui_sortWindow):
 			self.doubleSpinBox_poi_z.setEnabled(False)
 
 	def drawScattFrame(self,checkstate):
-		if checkstate == True:
+		if checkstate is True:
 			self.doubleSpinBox_scattframe.setEnabled(True)
 			scatterHistPlot.closeAll()
 			self.displayResults(frame=True,framesize=self.doubleSpinBox_scattframe.value())
@@ -976,16 +991,16 @@ class sortData(QtGui.QWidget,Ui_sortWindow):
 
 	def exportSortModel(self,model):
 		## Export Dioalog. Needs check for extension or add default extension
-		csv_file_out, filterdialog = QtGui.QFileDialog.getSaveFileNameAndFilter(self, 'Export file as', workingdir,
-							"Tabstop sepperated (*.csv *.txt);;Comma sepperated (*.csv *.txt)")
-		if str(filterdialog).startswith('Comma') == True:
+		csv_file_out, filterdialog = QtGui.QFileDialog.getSaveFileNameAndFilter(
+			self, 'Export file as', workingdir, "Tabstop sepperated (*.csv *.txt);;Comma sepperated (*.csv *.txt)")
+		if str(filterdialog).startswith('Comma') is True:
 			csv_handler.model2csv(model,csv_file_out,delimiter=",")
-		elif str(filterdialog).startswith('Tabstop') == True:
+		elif str(filterdialog).startswith('Tabstop') is True:
 			csv_handler.model2csv(model,csv_file_out,delimiter="\t")
 
 	def openImage(self, location):
-		imgpath = QtGui.QFileDialog.getOpenFileName(self, 'Open Image', workingdir,
-							"Image Files (*.tif *.tiff *.png *.jpg *.gif *.bmp);;All files (*.*)")
+		imgpath = QtGui.QFileDialog.getOpenFileName(
+			self, 'Open Image', workingdir, "Image Files (*.tif *.tiff *.png *.jpg *.gif *.bmp);;All files (*.*)")
 		if location == 'left':
 			self.imgpath_left = imgpath
 			self.img_left_loaded = True
@@ -1008,7 +1023,7 @@ class sortData(QtGui.QWidget,Ui_sortWindow):
 		self.isbswidget.move(801,0)
 
 	def drawPoint(self, tableview=None):
-		if self.isbswidget.isHidden() == False:
+		if self.isbswidget.isHidden() is False:
 			tableView = self.sender()
 			if tableview:
 				tableView = tableview
@@ -1023,7 +1038,7 @@ class sortData(QtGui.QWidget,Ui_sortWindow):
 				for column in range(2):
 					indexm = model.index(indices[0].row(), column)
 					data.append(str(model.data(indexm).toString()))
-				#print int(float(data[0])), int(float(data[1]))
+				# print int(float(data[0])), int(float(data[1]))
 				if tableView == self.tableView_left or tableView == self.tableView_left_sort:
 					self.isbswidget.addCircle1(int(float(data[0])), int(float(data[1])))
 				elif tableView == self.tableView_right or tableView == self.tableView_right_sort:
@@ -1037,13 +1052,15 @@ class sortData(QtGui.QWidget,Ui_sortWindow):
 				for i in rows:
 					x = model.index(i, 0)
 					y = model.index(i, 1)
-					#print	int(float(model.data(x).toString())), int(float(model.data(y).toString()))
+					# print	int(float(model.data(x).toString())), int(float(model.data(y).toString()))
 					if tableView == self.tableView_left or tableView == self.tableView_left_sort:
 						self.isbswidget.addCircle1(int(float(model.data(x).toString())), int(float(model.data(y).toString())))
 					elif tableView == self.tableView_right or tableView == self.tableView_right_sort:
 						self.isbswidget.addCircle2(int(float(model.data(x).toString())), int(float(model.data(y).toString())))
 
-# Class to outsource work to an independant thread. Not used anymore at the moment.
+## Class to outsource work to an independant thread. Not used anymore at the moment.
+
+
 class GenericThread(QtCore.QThread):
 	def __init__(self, function, *args, **kwargs):
 		QtCore.QThread.__init__(self)
@@ -1059,11 +1076,11 @@ class GenericThread(QtCore.QThread):
 		return
 
 
-print clrmsg.DEBUG + 'Test bla bla'
-print clrmsg.OK + 'Test bla bla'
-print clrmsg.ERROR + 'Test bla bla'
-print clrmsg.INFO + 'Test bla bla'
-print clrmsg.WARNING + 'Test bla bla'
+print clrmsg.DEBUG + 'Debug Test'
+print clrmsg.OK + 'OK Test'
+print clrmsg.ERROR + 'Error Test'
+print clrmsg.INFO + 'Info Test'
+print clrmsg.WARNING + 'Warning Test'
 ########## Executed when running in standalone ###################################
 ##################################################################################
 
@@ -1072,4 +1089,3 @@ if __name__ == "__main__":
 	window = APP()
 	window.show()
 	sys.exit(app.exec_())
-

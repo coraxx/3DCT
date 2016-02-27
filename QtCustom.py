@@ -1,8 +1,34 @@
+#!/usr/bin/env python
+
+# title				: QtCustom.py
+# description		: Custom Qt classes
+# author			: Jan Arnold
+# email				: jan.arnold (at) coraxx.net
+# credits			:
+# maintainer		: Jan Arnold
+# date				: 2016/02
+# version			: 0.1
+# status			: developement
+# usage				: part of 3D Correlation Toolbox
+# notes				: Some widgets in QT Designer are promoted to these classes
+# python_version	: 2.7.10
+# =================================================================================
+
 from PyQt4 import QtCore, QtGui
+import numpy as np
+
+from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
+from matplotlib.figure import Figure
+import matplotlib.patches as patches
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+
 import math
 import clrmsg
+
 ##############################
 ## QTableViewCustom
+
 
 class QTableViewCustom(QtGui.QTableView):
 	def __init__(self, parent=None):
@@ -10,10 +36,10 @@ class QTableViewCustom(QtGui.QTableView):
 		self.parent = parent
 		if hasattr(parent, "debug"):
 			self.debug = parent.debug
-			if self.debug == True: print clrmsg.DEBUG + 'Debug bool inherited'
+			if self.debug is True: print clrmsg.DEBUG + 'Debug bool inherited'
 		else:
 			self.debug = True
-			if self.debug == True: print clrmsg.DEBUG + 'Debug messages enabled'
+			if self.debug is True: print clrmsg.DEBUG + 'Debug messages enabled'
 		self._drop = False
 
 		## Enable Drag'n'Drop
@@ -24,7 +50,7 @@ class QTableViewCustom(QtGui.QTableView):
 	def mouseMoveEvent(self,event):
 		super(QTableViewCustom, self).mouseMoveEvent(event)
 		## Drop Flag to trigger item update only when there was a row move
-		if self._drop == True:
+		if self._drop is True:
 			self.updateItems()
 			self._drop = False
 
@@ -41,11 +67,11 @@ class QTableViewCustom(QtGui.QTableView):
 		for item in self._scene.items():
 			if isinstance(item, QtGui.QGraphicsEllipseItem):
 				items.append(item)
-		if self.debug == True: print clrmsg.DEBUG + "Update items check - Nr. of items/rows:", len(items), self._model.rowCount()
+		if self.debug is True: print clrmsg.DEBUG + "Update items check - Nr. of items/rows:", len(items), self._model.rowCount()
 		if len(items) == self._model.rowCount():
 			row = 0
 			for item in items:
-				if self.debug == True: print clrmsg.DEBUG + 'Row:', row, '|', self._model.data(self._model.index(row, 0)).toString(),self._model.data(self._model.index(row, 1)).toString()
+				if self.debug is True: print clrmsg.DEBUG + 'Row:', row, '|', self._model.data(self._model.index(row, 0)).toString(),self._model.data(self._model.index(row, 1)).toString()
 				item.setPos(float(self._model.data(self._model.index(row, 0)).toString()),float(self._model.data(self._model.index(row, 1)).toString()))
 				row += 1
 
@@ -97,6 +123,7 @@ class QTableViewCustom(QtGui.QTableView):
 
 ##############################
 ## QStandardItemModelCustom
+
 
 class QStandardItemModelCustom(QtGui.QStandardItemModel):
 	def __init__(self, parent=None):
@@ -164,7 +191,7 @@ class QGraphicsSceneCustom(QtGui.QGraphicsScene):
 			## Reorder to have them in ascending order in the tableview
 			QtGui.QGraphicsItem.stackBefore(circle, self.items()[-2])
 			self.enumeratePoints()
-			#self.addPointToModel(event.scenePos().x(), event.scenePos().y())
+			# self.addPointToModel(event.scenePos().x(), event.scenePos().y())
 		elif event.button() == QtCore.Qt.MiddleButton:
 			item = self.itemAt(event.scenePos())
 			if isinstance(item, QtGui.QGraphicsEllipseItem):
@@ -176,8 +203,8 @@ class QGraphicsSceneCustom(QtGui.QGraphicsScene):
 		## Reinitialize mouseReleaseEvent handling from QtGui.QGraphicsScene for item drag and drop feature
 		super(QGraphicsSceneCustom, self).mouseReleaseEvent(event)
 		## Only update position when single item is drag and dropped
-		if self.selectedItems() and self.selectionmode == False:
-			#print 'New pos:', self.selectedItems()[0].x(), self.selectedItems()[0].y()
+		if self.selectedItems() and self.selectionmode is False:
+			# print 'New pos:', self.selectedItems()[0].x(), self.selectedItems()[0].y()
 			self.clearSelection()
 			self.itemsToModel()
 		self.parent.setDragMode(QtGui.QGraphicsView.NoDrag)
@@ -205,7 +232,7 @@ class QGraphicsSceneCustom(QtGui.QGraphicsScene):
 				## Update marker size
 				item.setRect(-self.markerSize, -self.markerSize, self.markerSize*2, self.markerSize*2)
 				## Adding number
-				nr = self.addSimpleText(str(pointidx),QtGui.QFont("Helvetica", pointSize = 1.5*self.markerSize))
+				nr = self.addSimpleText(str(pointidx),QtGui.QFont("Helvetica", pointSize=1.5*self.markerSize))
 				nr.setParentItem(item)
 				## Counter rotate number so it stays level
 				nr.setRotation(-self.rotangle)
@@ -214,15 +241,15 @@ class QGraphicsSceneCustom(QtGui.QGraphicsScene):
 				## Number's position has to be angle dependant -> sin cos
 				nr.setPos(math.cos(radangle)*self.markerSize,math.sin(radangle)*self.markerSize)
 				# nr.setPen(self.pen) # outline
-				nr.setBrush(QtCore.Qt.cyan) # fill
+				nr.setBrush(QtCore.Qt.cyan)  # fill
 				## Adding crosshair
 				hline = self.addLine(-self.markerSize-2,0,self.markerSize+2,0)
-				hline.setPen(QtGui.QPen(QtGui.QColor(255, 255, 255, 128)))# r,g,b,alpha
+				hline.setPen(QtGui.QPen(QtGui.QColor(255, 255, 255, 128)))  # r,g,b,alpha
 				hline.setParentItem(item)
 				## Counter rotate crosshair (horizontal line) so it stays level
 				hline.setRotation(-self.rotangle)
 				vline = self.addLine(0,-self.markerSize-2,0,self.markerSize+2)
-				vline.setPen(QtGui.QPen(QtGui.QColor(255, 255, 255, 128)))# r,g,b,alpha
+				vline.setPen(QtGui.QPen(QtGui.QColor(255, 255, 255, 128)))  # r,g,b,alpha
 				vline.setParentItem(item)
 				## Counter rotate crosshair (vertical line) so it stays level
 				vline.setRotation(-self.rotangle)
@@ -243,30 +270,9 @@ class QGraphicsSceneCustom(QtGui.QGraphicsScene):
 				self.model.setHeaderData(1, QtCore.Qt.Horizontal,'y')
 
 
+##############################
+## Scatter Plot
 
-
-#!/usr/bin/env python
-#title				: scatterHistPlot.py
-#description		: Draw a scatter plot with axis histograms
-#author				: Jan Arnold
-#email				: jan.arnold (at) coraxx.net
-#credits			: http://matplotlib.org/examples/axes_grid/scatter_hist.html
-#maintainer			: Jan Arnold
-#date				: 2015/10
-#version			: 0.1
-#status				: developement
-#usage				: import scatterHistPlot.py and call scatterHistPlot.main(x,y)
-#					: where x and y are numpy arrays
-#notes				: 
-#python_version		: 2.7.10 
-#=================================================================================
-
-import numpy as np
-from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
-from matplotlib.figure import Figure
-import matplotlib.patches as patches
-from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 class MatplotlibWidget(QtGui.QWidget):
 	def __init__(self, parent=None):
@@ -280,7 +286,7 @@ class MatplotlibWidget(QtGui.QWidget):
 		self.canvas = FigureCanvas(self.figure)
 		layout = QtGui.QVBoxLayout()
 		layout.addWidget(self.canvas)
-		if toolbar == True:
+		if toolbar is True:
 			self.figure.set_figheight(height+0.5)
 			self.toolbar = NavigationToolbar(self.canvas, self)
 			layout.addWidget(self.toolbar)
@@ -302,10 +308,9 @@ class MatplotlibWidget(QtGui.QWidget):
 		self.axScatter.set_ylabel(ylabel)
 		self.axScatter.plot([0], '+', mew=1, ms=10, c="red")
 
-		if frame == True and framesize != None:
-			self.axScatter.add_patch(patches.Rectangle( (-framesize*0.5, -framesize*0.5),
-								framesize,framesize,fill=False,edgecolor="red"))
-		elif frame == True and framesize == None:
+		if frame is True and framesize is not None:
+			self.axScatter.add_patch(patches.Rectangle((-framesize*0.5, -framesize*0.5), framesize, framesize, fill=False, edgecolor="red"))
+		elif frame is True and framesize is None:
 			print "Please specify frame size in px as e.g. framesize=1.86"
 
 		# create new axes on the right and on the top of the current axes
@@ -324,8 +329,8 @@ class MatplotlibWidget(QtGui.QWidget):
 
 		# now determine nice limits by hand:
 		binwidth = 0.25
-		xymax = np.max( [np.max(np.fabs(x)), np.max(np.fabs(y))] )
-		lim = ( int(xymax/binwidth) + 1) * binwidth
+		xymax = np.max([np.max(np.fabs(x)), np.max(np.fabs(y))])
+		lim = (int(xymax/binwidth) + 1) * binwidth
 
 		bins = np.arange(-lim, lim + binwidth, binwidth)
 		self.axHistx.hist(x, bins=bins)
@@ -335,19 +340,15 @@ class MatplotlibWidget(QtGui.QWidget):
 		# thus there is no need to manually adjust the xlim and ylim of these
 		# axis.
 
-		#self.axHistx.axis["bottom"].major_ticklabels.set_visible(False)
+		# self.axHistx.axis["bottom"].major_ticklabels.set_visible(False)
 		for tl in self.axHistx.get_xticklabels():
 			tl.set_visible(False)
-		self.axHistx.set_yticks([ ])
+		self.axHistx.set_yticks([])
 
-		#self.axHisty.axis["left"].major_ticklabels.set_visible(False)
+		# self.axHisty.axis["left"].major_ticklabels.set_visible(False)
 		for tl in self.axHisty.get_yticklabels():
 			tl.set_visible(False)
-		self.axHisty.set_xticks([ ])
-
+		self.axHisty.set_xticks([])
 
 		# self.figure.set_dpi(200)
 		self.canvas.draw()
-
-
-

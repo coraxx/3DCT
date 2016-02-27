@@ -6,6 +6,3 @@ Set of utilities for analysis of greyscale n-dimensional images.
 """
 
 __version__ = "$Revision: 447 $"
-
-
-import pyto.io
