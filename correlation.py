@@ -8,7 +8,7 @@
 # maintainer		: Vladan Lucic
 # date				: 2015/10
 # version			: 0.1
-# status				: developement
+# status			: developement
 # usage				: import correlation.py and call main(markers_3d,markers_2d,spots_3d,rotation_center,results_file)
 # 					: "markers_3d", "markers_2d" and "spots_3d" are numpy arrays. Those contain 3D coordinates
 # 					: (arbitrary 3rd dimension for the 2D array). Marke rcoordinates are for the correlation and spot
@@ -22,6 +22,7 @@ import numpy as np
 
 import pyto
 import pyto.common as common
+import pyto.util
 from pyto.rigid_3d import Rigid3D
 
 ########## Functions #############################################################
@@ -91,7 +92,7 @@ def write_results(
 				]
 	out_format = '	%7.2f	%7.2f	%7.2f		%7.2f	%7.2f	%7.2f		%7.2f	%7.2f		%7.2f	%7.2f'
 	ids = range(markers_3d.shape[1])
-	res_tab_markers = pyto.io.util.arrayFormat(
+	res_tab_markers = pyto.util.arrayFormat(
 		arrays=out_vars, format=out_format, indices=ids, prependIndex=False)
 	table.extend(res_tab_markers)
 
@@ -109,7 +110,7 @@ def write_results(
 					]
 		out_format = '	%6.0f	%6.0f	%6.0f		%7.2f	%7.2f	%7.2f'
 		ids = range(spots_3d.shape[1])
-		res_tab_spots = pyto.io.util.arrayFormat(
+		res_tab_spots = pyto.util.arrayFormat(
 			arrays=out_vars, format=out_format, indices=ids, prependIndex=False)
 		table.extend(res_tab_spots)
 
@@ -145,7 +146,7 @@ def main(markers_3d,markers_2d,spots_3d,rotation_center,results_file):
 		einit = rotation_init
 
 	# establish correlation
-	transf = pyto.geometry.Rigid3D.find_32(
+	transf = Rigid3D.find_32(
 		x=mark_3d, y=mark_2d, scale=scale,
 		randome=random_rotations, einit=einit, einit_dist=restrict_rotations,
 		randoms=random_scale, sinit=scale_init, ninit=ninit)

@@ -13,6 +13,8 @@ from functools import partial
 
 import numpy as np
 import scipy as sp
+# added for sp.stat
+import scipy.stats
 
 from affine import Affine
 
