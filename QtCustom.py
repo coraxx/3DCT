@@ -85,7 +85,9 @@ class QTableViewCustom(QtGui.QTableView):
 				item.setPos(
 					float(self._model.data(self._model.index(row, 0)).toString()),
 					float(self._model.data(self._model.index(row, 1)).toString()))
-				self._scene.zValuesDict[item] = [float(self._model.data(self._model.index(row, 2)).toString()), self._scene.zValuesDict[item][1]]
+				self._scene.zValuesDict[item] = [
+												float(self._model.data(self._model.index(row, 2)).toString()),
+												self._model.itemFromIndex(self._model.index(row, 2)).foreground().color().getRgb()]
 				row += 1
 
 	def showSelectedItem(self):
@@ -144,6 +146,10 @@ class QTableViewCustom(QtGui.QTableView):
 		indices = self.selectedIndexes()
 		## Determine z for selected rows
 		if indices:
+			activeitems = []
+			for item in self._scene.items():
+				if isinstance(item, QtGui.QGraphicsEllipseItem):
+					activeitems.append(item)
 			## Filter selected rows
 			rows = set(index.row() for index in indices)
 			## Delete selected rows in scene.
@@ -159,15 +165,27 @@ class QTableViewCustom(QtGui.QTableView):
 				if optimize is False:
 					z = bead_pos.getz(x,y,self.img,n=None)
 					# z = 45
+					print self.img.shape, z
+					if 0 <= z <= self.img.shape[0]:
+						self._scene.zValuesDict[activeitems[row]][1] = (0,0,0)
+						self._model.itemFromIndex(self._model.index(row, 2)).setForeground(QtCore.Qt.black)
+					else:
+						self._scene.zValuesDict[activeitems[row]][1] = (255,0,0)
+						self._model.itemFromIndex(self._model.index(row, 2)).setForeground(QtCore.Qt.red)
 					self._model.itemFromIndex(self._model.index(row, 2)).setText(str(z))
-					self._model.itemFromIndex(self._model.index(row, 2)).setForeground(QtCore.Qt.black)
 				elif optimize is True:
 					x,y,z = bead_pos.getz(x,y,self.img,n=None,optimize=True)
 					# x,y,z = 50,50,90
+					print self.img.shape, x,y,z
+					if 0 <= x <= self.img.shape[2] or 0 <= y <= self.img.shape[1] or 0 <= z <= self.img.shape[0]:
+						self._scene.zValuesDict[activeitems[row]][1] = (255,0,0)
+						self._model.itemFromIndex(self._model.index(row, 2)).setForeground(QtCore.Qt.red)
+					else:
+						self._scene.zValuesDict[activeitems[row]][1] = (0,0,0)
+						self._model.itemFromIndex(self._model.index(row, 2)).setForeground(QtCore.Qt.black)
 					self._model.itemFromIndex(self._model.index(row, 0)).setText(str(x))
 					self._model.itemFromIndex(self._model.index(row, 1)).setText(str(y))
 					self._model.itemFromIndex(self._model.index(row, 2)).setText(str(z))
-					self._model.itemFromIndex(self._model.index(row, 2)).setForeground(QtCore.Qt.black)
 
 												##################### END #####################
 												#######          Update items           #######
@@ -251,10 +269,9 @@ class QGraphicsSceneCustom(QtGui.QGraphicsScene):
 		## Only update position when single item is drag and dropped
 		if self.selectedItems() and self.selectionmode is False:
 			# print 'New pos:', self.selectedItems()[0].x(), self.selectedItems()[0].y()
-			activeitems = []
 			for item in self.selectedItems():
 				if isinstance(item, QtGui.QGraphicsEllipseItem):
-					self.zValuesDict[item] = [self.zValuesDict[item][0],1]
+					self.zValuesDict[item] = [self.zValuesDict[item][0],(255,190,0)]
 			self.clearSelection()
 			self.itemsToModel()
 		self.parent.setDragMode(QtGui.QGraphicsView.NoDrag)
@@ -271,18 +288,18 @@ class QGraphicsSceneCustom(QtGui.QGraphicsScene):
 		elif event.key() == QtCore.Qt.Key_Minus:
 			self.parent.scale(1/1.15, 1/1.15)
 
-	def addCircle(self,x,y,z=0):
+	def addCircle(self,x,y,z=0.0):
 		## First add at 0,0 then move to get position from item.scenePos() or .x() and y.()
 		circle = self.addEllipse(-self.markerSize, -self.markerSize, self.markerSize*2, self.markerSize*2, self.pen)
 		circle.setPos(x,y)
 		circle.setFlag(QtGui.QGraphicsItem.ItemIsMovable, True)
 		circle.setFlag(QtGui.QGraphicsItem.ItemIsSelectable, True)
 		## store placeholder z value in dictionary (QGraphicsitems cannot store additional (meta)data)
-		## and flag for color (0=black, 1=orange, 2=red)
+		## and flag for color (rgba)
 		if self._z and z == 0:
-			self.zValuesDict[circle] = [z,1]
+			self.zValuesDict[circle] = [z,(255, 190, 0)]
 		else:
-			self.zValuesDict[circle] = [z,0]
+			self.zValuesDict[circle] = [z,(0, 0, 0)]
 		## Reorder to have them in ascending order in the tableview
 		QtGui.QGraphicsItem.stackBefore(circle, self.items()[-2])
 		self.enumeratePoints()
@@ -329,10 +346,9 @@ class QGraphicsSceneCustom(QtGui.QGraphicsScene):
 				x_item = QtGui.QStandardItem(str(item.x()))
 				y_item = QtGui.QStandardItem(str(item.y()))
 				z_item = QtGui.QStandardItem(str(self.zValuesDict[item][0]))
-				if self.zValuesDict[item][1] == 1:
-					z_item.setForeground(QtGui.QColor(255, 190, 0))
-				elif self.zValuesDict[item][1] == 2:
-					z_item.setForeground(QtCore.Qt.red)
+
+				z_item.setForeground(QtGui.QColor(*self.zValuesDict[item][1]))
+
 				x_item.setFlags(x_item.flags() & ~QtCore.Qt.ItemIsDropEnabled)
 				y_item.setFlags(y_item.flags() & ~QtCore.Qt.ItemIsDropEnabled)
 				z_item.setFlags(z_item.flags() & ~QtCore.Qt.ItemIsDropEnabled)

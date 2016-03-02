@@ -53,7 +53,11 @@ def getz(x,y,img,n=None,optimize=False):
 
 	if math.isnan(data_z_xp_poly):
 		if clrmsg: print clrmsg.ERROR
-		raise TypeError('Failed: Probably due to low SNR')
+		print TypeError('Failed: Probably due to low SNR')
+		if optimize is True:
+			return x,y,'failed'
+		else:
+			return 'failed'
 
 	f, ax = plt.subplots()
 	ax.plot(range(0,len(data_z)), data_z, color='blue')
@@ -93,7 +97,8 @@ def optimize_z(x,y,z,image,n=None):
 			data_z = img[:,round(y_opt),round(x_opt)]
 		except Exception as e:
 			if clrmsg: print clrmsg.ERROR
-			raise IndexError("Optimization failed, possibly due to low signal or low SNR. "+str(e))
+			print IndexError("Optimization failed, possibly due to low signal or low SNR. "+str(e))
+			return [x],[y],['failed']
 		n = getn(data_z)
 		z_opt, data_z_yp_poly = parabolic.parabolic_polyfit(data_z, np.argmax(data_z), n)
 		x_opt_vals.append(x_opt)
