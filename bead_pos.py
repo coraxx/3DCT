@@ -8,37 +8,52 @@
 # @Credits			: endolith https://gist.github.com/endolith/255291 for parabolic fitting function
 # @Maintainer		: Jan Arnold
 # @Date				: 2015/12
-# @Version			: 0.1
+# @Version			: 0.2
 # @Status			: stable
-# @Usage			: import bead_pos.py and call z = bead_pos.getz(x,y,img_path,n=None,optimize=False) to get z position
-# 					  at the given x and y pixel coordinate or call x,y,z = bead_pos.getz(x,y,img_path,n=None,optimize=True)
+# @Usage			: import bead_pos.py and call z = bead_pos.getz(x,y,img,n=None,optimize=False) to get z position
+# 					  at the given x and y pixel coordinate or call x,y,z = bead_pos.getz(x,y,img,n=None,optimize=True)
 # 					  to get an optimized bead position (optimization of x, y and z)
 # @Notes			: stable, but problems with low SNR <- needs revisiting
 # @Python_version	: 2.7.10
-# @Last Modified	: 2016/02/27 by jan
+# @Last Modified	: 2016/03/02
 # ============================================================================
 
+import math
 import numpy as np
 import matplotlib.pyplot as plt
 import tifffile as tf
 import parabolic
 
+try:
+	import clrmsg
+except:
+	pass
 
-def getz(x,y,img_path,n=None,optimize=False):
+
+def getz(x,y,img,n=None,optimize=False):
 	## x and y are coordinates
-	## img_path is the path to the z-stack tiff file
+	## img is the path to the z-stack tiff file or a numpy.ndarray from tifffile.py imread function
 	## n is the number of points around the max value that are used in the polyfit
 	## leave n to use the maximum amount of points
 	## If optimize is set ti True, the algorythm will try to optimize the x,y,z position
 	## !! if optimize is True, 3 values are returned: x,y,z
 
-	img = tf.imread(img_path)
+	if not isinstance(img, str) and not isinstance(img, np.ndarray):
+		if clrmsg: print clrmsg.ERROR
+		raise TypeError('I can only handle an image path as string or an image volume as numpy.ndarray imported from tifffile.py')
+	elif isinstance(img, str):
+		img = tf.imread(img)
+
 	data_z = img[:,y,x]
 
 	if n is None:
 		n = getn(data_z)
 
 	data_z_xp_poly, data_z_yp_poly = parabolic.parabolic_polyfit(data_z, np.argmax(data_z), n)
+
+	if math.isnan(data_z_xp_poly):
+		if clrmsg: print clrmsg.ERROR
+		raise TypeError('Failed: Probably due to low SNR')
 
 	f, ax = plt.subplots()
 	ax.plot(range(0,len(data_z)), data_z, color='blue')
@@ -72,13 +87,13 @@ def optimize_z(x,y,z,image,n=None):
 	x_opt,y_opt,z_opt = x,y,z
 	for i in range(5):
 		try:
+			print x_opt,y_opt,z_opt
 			x_opt,y_opt,z_opt = int(round(x_opt)),int(round(y_opt)),int(round(z_opt))
 			x_opt, y_opt = optimize_xy(x_opt,y_opt,z_opt,img,nx=None,ny=None)
 			data_z = img[:,round(y_opt),round(x_opt)]
 		except Exception as e:
-			print e
-			print "Possibly due to low signal or low SNR"
-			return
+			if clrmsg: print clrmsg.ERROR
+			raise IndexError("Optimization failed, possibly due to low signal or low SNR. "+str(e))
 		n = getn(data_z)
 		z_opt, data_z_yp_poly = parabolic.parabolic_polyfit(data_z, np.argmax(data_z), n)
 		x_opt_vals.append(x_opt)

@@ -13,7 +13,7 @@
 # @Usage			: part of 3D Correlation Toolbox
 # @Notes			: Some widgets in QT Designer are promoted to these classes
 # @Python_version	: 2.7.10
-# @Last Modified	: 2016/02/27 by jan
+# @Last Modified	: 2016/03/02
 # ============================================================================
 
 from PyQt4 import QtCore, QtGui
@@ -27,13 +27,15 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 import math
 import clrmsg
+import bead_pos
 
 ##############################
 ## QTableViewCustom
 
 
 class QTableViewCustom(QtGui.QTableView):
-	def __init__(self, parent=None):
+	def __init__(self, parent=None,):
+		## parent is mainWidget
 		QtGui.QTableView.__init__(self,parent)
 		self.parent = parent
 		if hasattr(parent, "debug"):
@@ -48,6 +50,8 @@ class QTableViewCustom(QtGui.QTableView):
 		self.setDragDropOverwriteMode(False)
 		self.setDragEnabled(True)
 		self.setDragDropMode(QtGui.QAbstractItemView.InternalMove)
+
+		'''associated model and scene are passed from correlation_widget and are available as self._model and self._scene'''
 
 	def mouseMoveEvent(self,event):
 		super(QTableViewCustom, self).mouseMoveEvent(event)
@@ -73,8 +77,15 @@ class QTableViewCustom(QtGui.QTableView):
 		if len(items) == self._model.rowCount():
 			row = 0
 			for item in items:
-				if self.debug is True: print clrmsg.DEBUG + 'Row:', row, '|', self._model.data(self._model.index(row, 0)).toString(),self._model.data(self._model.index(row, 1)).toString()
-				item.setPos(float(self._model.data(self._model.index(row, 0)).toString()),float(self._model.data(self._model.index(row, 1)).toString()))
+				if self.debug is True:
+					print clrmsg.DEBUG + 'Row:', row, '|', \
+						self._model.data(self._model.index(row, 0)).toString(),\
+						self._model.data(self._model.index(row, 1)).toString(),\
+						self._model.data(self._model.index(row, 2)).toString()
+				item.setPos(
+					float(self._model.data(self._model.index(row, 0)).toString()),
+					float(self._model.data(self._model.index(row, 1)).toString()))
+				self._scene.zValuesDict[item] = [float(self._model.data(self._model.index(row, 2)).toString()), self._scene.zValuesDict[item][1]]
 				row += 1
 
 	def showSelectedItem(self):
@@ -116,9 +127,48 @@ class QTableViewCustom(QtGui.QTableView):
 		if indices:
 			cmDelete = QtGui.QAction('Delete', self)
 			cmDelete.triggered.connect(self.deleteItem)
+			cmGetZ = QtGui.QAction('get z', self)
+			cmGetZ.triggered.connect(self.getz)
+			cmGetZopt = QtGui.QAction('get z optimized', self)
+			cmGetZopt.triggered.connect(lambda: self.getz(optimize=True))
+			if self.img is None:
+				cmGetZ.setEnabled(False)
+				cmGetZopt.setEnabled(False)
 			self.contextMenu = QtGui.QMenu(self)
 			self.contextMenu.addAction(cmDelete)
+			self.contextMenu.addAction(cmGetZ)
+			self.contextMenu.addAction(cmGetZopt)
 			self.contextMenu.popup(QtGui.QCursor.pos())
+
+	def getz(self,optimize=False):
+		indices = self.selectedIndexes()
+		## Determine z for selected rows
+		if indices:
+			## Filter selected rows
+			rows = set(index.row() for index in indices)
+			## Delete selected rows in scene.
+			for row in rows:
+				if self.debug is True:
+					print clrmsg.DEBUG + 'Row:', row, '|', \
+						self._model.data(self._model.index(row, 0)).toString(),\
+						self._model.data(self._model.index(row, 1)).toString(),\
+						self._model.data(self._model.index(row, 2)).toString()
+				x = float(self._model.data(self._model.index(row, 0)).toString())
+				y = float(self._model.data(self._model.index(row, 1)).toString())
+
+				if optimize is False:
+					z = bead_pos.getz(x,y,self.img,n=None)
+					# z = 45
+					self._model.itemFromIndex(self._model.index(row, 2)).setText(str(z))
+					self._model.itemFromIndex(self._model.index(row, 2)).setForeground(QtCore.Qt.black)
+				elif optimize is True:
+					x,y,z = bead_pos.getz(x,y,self.img,n=None,optimize=True)
+					# x,y,z = 50,50,90
+					self._model.itemFromIndex(self._model.index(row, 0)).setText(str(x))
+					self._model.itemFromIndex(self._model.index(row, 1)).setText(str(y))
+					self._model.itemFromIndex(self._model.index(row, 2)).setText(str(z))
+					self._model.itemFromIndex(self._model.index(row, 2)).setForeground(QtCore.Qt.black)
+
 												##################### END #####################
 												#######          Update items           #######
 												###############################################
@@ -140,11 +190,12 @@ class QStandardItemModelCustom(QtGui.QStandardItemModel):
 ## QGraphicsSceneCustom
 
 class QGraphicsSceneCustom(QtGui.QGraphicsScene):
-	def __init__(self, parent=None,name=None,model=None):
+	def __init__(self, parent=None,side=None,model=None):
+		## parent is QGraphicsView
 		QtGui.QGraphicsScene.__init__(self,parent)
 		self.parent = parent
-		self.name = name
-		self.model = model
+		self.side = side
+		self._model = model
 		self.parent.setDragMode(QtGui.QGraphicsView.NoDrag)
 		## set standard pen color
 		self.pen = QtGui.QPen(QtCore.Qt.red)
@@ -156,6 +207,7 @@ class QGraphicsSceneCustom(QtGui.QGraphicsScene):
 		self.rotangle = 0
 		## Circle size
 		self.markerSize = 10
+		self.zValuesDict = {}
 
 	def wheelEvent(self, event):
 		## Scaling
@@ -182,18 +234,10 @@ class QGraphicsSceneCustom(QtGui.QGraphicsScene):
 		elif event.button() == QtCore.Qt.LeftButton and modifiers == QtCore.Qt.ControlModifier:
 			self.parent.setDragMode(QtGui.QGraphicsView.RubberBandDrag)
 			self.selectionmode = True
-			## Model does not to be refreshed every time while selecting
+			## Model does not have to be refreshed every time while selecting
 			return
 		elif event.button() == QtCore.Qt.RightButton:
-			## First add at 0,0 then move to get position from item.scenePos() or .x() and y.()
-			circle = self.addEllipse(-self.markerSize, -self.markerSize, self.markerSize*2, self.markerSize*2, self.pen)
-			circle.setPos(event.scenePos().x(), event.scenePos().y())
-			circle.setFlag(QtGui.QGraphicsItem.ItemIsMovable, True)
-			circle.setFlag(QtGui.QGraphicsItem.ItemIsSelectable, True)
-			## Reorder to have them in ascending order in the tableview
-			QtGui.QGraphicsItem.stackBefore(circle, self.items()[-2])
-			self.enumeratePoints()
-			# self.addPointToModel(event.scenePos().x(), event.scenePos().y())
+			self.addCircle(event.scenePos().x(), event.scenePos().y())
 		elif event.button() == QtCore.Qt.MiddleButton:
 			item = self.itemAt(event.scenePos())
 			if isinstance(item, QtGui.QGraphicsEllipseItem):
@@ -207,6 +251,10 @@ class QGraphicsSceneCustom(QtGui.QGraphicsScene):
 		## Only update position when single item is drag and dropped
 		if self.selectedItems() and self.selectionmode is False:
 			# print 'New pos:', self.selectedItems()[0].x(), self.selectedItems()[0].y()
+			activeitems = []
+			for item in self.selectedItems():
+				if isinstance(item, QtGui.QGraphicsEllipseItem):
+					self.zValuesDict[item] = [self.zValuesDict[item][0],1]
 			self.clearSelection()
 			self.itemsToModel()
 		self.parent.setDragMode(QtGui.QGraphicsView.NoDrag)
@@ -222,6 +270,22 @@ class QGraphicsSceneCustom(QtGui.QGraphicsScene):
 			self.parent.scale(1.15, 1.15)
 		elif event.key() == QtCore.Qt.Key_Minus:
 			self.parent.scale(1/1.15, 1/1.15)
+
+	def addCircle(self,x,y,z=0):
+		## First add at 0,0 then move to get position from item.scenePos() or .x() and y.()
+		circle = self.addEllipse(-self.markerSize, -self.markerSize, self.markerSize*2, self.markerSize*2, self.pen)
+		circle.setPos(x,y)
+		circle.setFlag(QtGui.QGraphicsItem.ItemIsMovable, True)
+		circle.setFlag(QtGui.QGraphicsItem.ItemIsSelectable, True)
+		## store placeholder z value in dictionary (QGraphicsitems cannot store additional (meta)data)
+		## and flag for color (0=black, 1=orange, 2=red)
+		if self._z and z == 0:
+			self.zValuesDict[circle] = [z,1]
+		else:
+			self.zValuesDict[circle] = [z,0]
+		## Reorder to have them in ascending order in the tableview
+		QtGui.QGraphicsItem.stackBefore(circle, self.items()[-2])
+		self.enumeratePoints()
 
 	def enumeratePoints(self):
 		## Remove numbering
@@ -259,17 +323,24 @@ class QGraphicsSceneCustom(QtGui.QGraphicsScene):
 				pointidx += 1
 
 	def itemsToModel(self):
-		self.model.removeRows(0,self.model.rowCount())
+		self._model.removeRows(0,self._model.rowCount())
 		for item in self.items():
 			if isinstance(item, QtGui.QGraphicsEllipseItem):
 				x_item = QtGui.QStandardItem(str(item.x()))
 				y_item = QtGui.QStandardItem(str(item.y()))
+				z_item = QtGui.QStandardItem(str(self.zValuesDict[item][0]))
+				if self.zValuesDict[item][1] == 1:
+					z_item.setForeground(QtGui.QColor(255, 190, 0))
+				elif self.zValuesDict[item][1] == 2:
+					z_item.setForeground(QtCore.Qt.red)
 				x_item.setFlags(x_item.flags() & ~QtCore.Qt.ItemIsDropEnabled)
 				y_item.setFlags(y_item.flags() & ~QtCore.Qt.ItemIsDropEnabled)
-				items = [x_item, y_item]
-				self.model.appendRow(items)
-				self.model.setHeaderData(0, QtCore.Qt.Horizontal,'x')
-				self.model.setHeaderData(1, QtCore.Qt.Horizontal,'y')
+				z_item.setFlags(z_item.flags() & ~QtCore.Qt.ItemIsDropEnabled)
+				items = [x_item, y_item, z_item]
+				self._model.appendRow(items)
+				self._model.setHeaderData(0, QtCore.Qt.Horizontal,'x')
+				self._model.setHeaderData(1, QtCore.Qt.Horizontal,'y')
+				self._model.setHeaderData(2, QtCore.Qt.Horizontal,'z')
 
 
 ##############################

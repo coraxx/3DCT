@@ -13,7 +13,7 @@
 # @Usage			: part of 3D Correlation Toolbox
 # @Notes			:
 # @Python_version	: 2.7.10
-# @Last Modified	: 2016/02/27 by jan
+# @Last Modified	: 2016/03/02
 # ============================================================================
 
 import sys
@@ -27,9 +27,12 @@ import tifffile as tf
 import clrmsg
 ## Custom Qt functions (mostly to handle events) widgets in QtDesigner are promoted to
 import QtCustom
+## CSV handler
+import csv_handler
 
 execdir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(execdir)
+workingdir = execdir
 
 qtCreatorFile_main = os.path.join(execdir, "TDCT_correlation.ui")
 Ui_WidgetWindow, QtBaseClass = uic.loadUiType(qtCreatorFile_main)
@@ -45,12 +48,12 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 		self.counter = 0		# Just for testing (loop counter for test button)
 
 		## Tableview and models
-		self.model_left = QtCustom.QStandardItemModelCustom(self)
-		self.tableView_left.setModel(self.model_left)
-		self.model_left.tableview = self.tableView_left
-		self.model_right = QtCustom.QStandardItemModelCustom(self)
-		self.tableView_right.setModel(self.model_right)
-		self.model_right.tableview = self.tableView_right
+		self.modelLleft = QtCustom.QStandardItemModelCustom(self)
+		self.tableView_left.setModel(self.modelLleft)
+		self.modelLleft.tableview = self.tableView_left
+		self.modelRight = QtCustom.QStandardItemModelCustom(self)
+		self.tableView_right.setModel(self.modelRight)
+		self.modelRight.tableview = self.tableView_right
 
 		## store parameters for resizing
 		self.parent = parent
@@ -68,8 +71,8 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 		self.initImageRight()
 
 		## connect item change signal to write changes in model back to QGraphicItems as well as highlighting selected points
-		self.model_left.itemChanged.connect(self.tableView_left.updateItems)
-		self.model_right.itemChanged.connect(self.tableView_right.updateItems)
+		self.modelLleft.itemChanged.connect(self.tableView_left.updateItems)
+		self.modelRight.itemChanged.connect(self.tableView_right.updateItems)
 		self.tableView_left.selectionModel().selectionChanged.connect(self.tableView_left.showSelectedItem)
 		self.tableView_right.selectionModel().selectionChanged.connect(self.tableView_right.showSelectedItem)
 
@@ -83,6 +86,8 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 		self.pushButton_test.clicked.connect(self.test)
 		self.toolButton_brightness_reset.clicked.connect(lambda: self.horizontalSlider_brightness.setValue(0))
 		self.toolButton_contrast_reset.clicked.connect(lambda: self.horizontalSlider_contrast.setValue(10))
+		self.toolButton_importPoints.clicked.connect(self.importPoints)
+		self.toolButton_exportPoints.clicked.connect(self.exportPoints)
 
 		## Sliders
 		self.horizontalSlider_brightness.valueChanged.connect(self.adjustBrightCont)
@@ -91,8 +96,8 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 		QtCore.QObject.connect(app, QtCore.SIGNAL("focusChanged(QWidget *, QWidget *)"), self.changedFocusSlot)
 
 		## Pass models and scenes to tableviewa
-		self.tableView_left._model = self.model_left
-		self.tableView_right._model = self.model_right
+		self.tableView_left._model = self.modelLleft
+		self.tableView_right._model = self.modelRight
 		self.tableView_left._scene = self.sceneLeft
 		self.tableView_right._scene = self.sceneRight
 
@@ -100,15 +105,15 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 		if event.key() == QtCore.Qt.Key_Delete:
 			if self.currentFocusedWidgetName == 'tableView_left':
 				if self.debug is True: print clrmsg.DEBUG + "Deleting item(s) on the left side"
-				# self.deleteItem(self.tableView_left,self.model_left,self.sceneLeft)
+				# self.deleteItem(self.tableView_left,self.modelLleft,self.sceneLeft)
 				self.tableView_left.deleteItem()
-				# self.updateItems(self.model_left,self.sceneLeft)
+				# self.updateItems(self.modelLleft,self.sceneLeft)
 				self.tableView_left.updateItems()
 			elif self.currentFocusedWidgetName == 'tableView_right':
 				if self.debug is True: print clrmsg.DEBUG + "Deleting item(s) on the right side"
-				# self.deleteItem(self.tableView_right,self.model_right,self.sceneRight)
+				# self.deleteItem(self.tableView_right,self.modelRight,self.sceneRight)
 				self.tableView_right.deleteItem()
-				# self.updateItems(self.model_right,self.sceneRight)
+				# self.updateItems(self.modelRight,self.sceneRight)
 				self.tableView_right.updateItems()
 
 	def test(self):
@@ -122,9 +127,11 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 			self.widget_scatterplot.setupCanvas(width=4,height=4,dpi=72,toolbar=True)
 			self.widget_scatterplot.scatterPlot(x='random',y='random',frame=True,framesize=6,xlabel="lol",ylabel="rofl")
 		self.counter += 1
+		self.modelLleft.itemFromIndex(self.modelLleft.index(0, 2)).setForeground(QtCore.Qt.red)
 
 	def changedFocusSlot(self, former, current):
-		if self.debug is True: print clrmsg.DEBUG + "focus changed from/to:", former, current
+		if self.debug is True: print clrmsg.DEBUG + "focus changed from/to:", former.objectName() if former else former, \
+				current.objectName() if current else current
 		if current:
 			self.currentFocusedWidgetName = current.objectName()
 			self.currentFocusedWidget = current
@@ -139,8 +146,11 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 			if self.currentFocusedWidgetName != 'graphicsView_left' and self.currentFocusedWidgetName != 'graphicsView_right':
 				self.label_selimg.setStyleSheet("color: rgb(255, 190, 0);")
 				self.label_selimg.setText('none')
-				self.label_markerSizeNano.setText('  ')
-				self.label_imgpxsize.setText('  ')
+				self.label_markerSizeNano.setText('')
+				self.label_markerSizeNanoUnit.setText('')
+				self.label_imgpxsize.setText('')
+				self.label_imgpxsizeUnit.setText('')
+				self.label_imagetype.setText('')
 				self.ctrlEnDisAble(False)
 			elif self.currentFocusedWidgetName == 'graphicsView_left':
 				self.label_selimg.setStyleSheet("color: rgb(0, 225, 90);")
@@ -155,6 +165,20 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 				self.label_imagetype.setText('(2D)' if '{0:b}'.format(self.sceneRight.imagetype)[-1] == '1' else '(3D)')
 				self.ctrlEnDisAble(True)
 
+		# ## Lable showing selected table
+		if self.currentFocusedWidgetName != 'tableView_left' and self.currentFocusedWidgetName != 'tableView_right':
+			self.label_selectedTable.setStyleSheet("color: rgb(255, 190, 0);")
+			self.label_selectedTable.setText('none')
+			self.ctrlEnDisAble(True)
+		elif self.currentFocusedWidgetName == 'tableView_left':
+			self.label_selectedTable.setStyleSheet("color: rgb(0, 225, 90);")
+			self.label_selectedTable.setText('left')
+			self.ctrlEnDisAble(False)
+		elif self.currentFocusedWidgetName == 'tableView_right':
+			self.label_selectedTable.setStyleSheet("color: rgb(0, 190, 255);")
+			self.label_selectedTable.setText('right')
+			self.ctrlEnDisAble(False)
+
 		## Feed saved rotation angle/brightness-contrast value from selected image to spinbox/slider
 		# Block emitting signals for correct setting of BOTH sliders. Otherwise the second one gets overwritten with the old value
 		self.horizontalSlider_brightness.blockSignals(True)
@@ -164,13 +188,15 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 			self.spinBox_markerSize.setValue(self.sceneLeft.markerSize)
 			self.horizontalSlider_brightness.setValue(self.brightness_left)
 			self.horizontalSlider_contrast.setValue(self.contrast_left)
-			self.label_imgpxsize.setText(str(self.sceneLeft.pixelsize)+' um')
+			self.label_imgpxsize.setText(str(self.sceneLeft.pixelSize))  # + ' um') # breaks markersize adjustments check
+			self.label_imgpxsizeUnit.setText('um') if self.sceneLeft.pixelSize else self.label_imgpxsizeUnit.setText('')
 		elif self.currentFocusedWidgetName == 'graphicsView_right':
 			self.spinBox_rot.setValue(self.sceneRight.rotangle)
 			self.spinBox_markerSize.setValue(self.sceneRight.markerSize)
 			self.horizontalSlider_brightness.setValue(self.brightness_right)
 			self.horizontalSlider_contrast.setValue(self.contrast_right)
-			self.label_imgpxsize.setText(str(self.sceneRight.pixelsize)+' um')
+			self.label_imgpxsize.setText(str(self.sceneRight.pixelSize))  # + ' um') # breaks markersize adjustments check
+			self.label_imgpxsizeUnit.setText('um') if self.sceneRight.pixelSize else self.label_imgpxsizeUnit.setText('')
 		# Unblock emitting signals.
 		self.horizontalSlider_brightness.blockSignals(False)
 		self.horizontalSlider_contrast.blockSignals(False)
@@ -183,8 +209,12 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 		self.spinBox_markerSize.setEnabled(status)
 		self.horizontalSlider_brightness.setEnabled(status)
 		self.horizontalSlider_contrast.setEnabled(status)
+		self.toolButton_brightness_reset.setEnabled(status)
+		self.toolButton_contrast_reset.setEnabled(status)
 		self.toolButton_rotcw.setEnabled(status)
 		self.toolButton_rotccw.setEnabled(status)
+		self.toolButton_importPoints.setEnabled(not status)
+		self.toolButton_exportPoints.setEnabled(not status)
 
 												###############################################
 												###### Image initialization and rotation ######
@@ -192,13 +222,21 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 	def initImageLeft(self):
 		if self.left is not None:
 			## Changed GraphicsSceneLeft(self) to QtCustom.QGraphicsSceneCustom(self.graphicsView_left) to reuse class for both scenes
-			self.sceneLeft = QtCustom.QGraphicsSceneCustom(self.graphicsView_left,name='left',model=self.model_left)
+			self.sceneLeft = QtCustom.QGraphicsSceneCustom(self.graphicsView_left,side='left',model=self.modelLleft)
 			## set pen color yellow
 			self.sceneLeft.pen = QtGui.QPen(QtCore.Qt.red)
 			## Get pixel size
-			self.sceneLeft.pixelsize = self.pxSize(self.left)
+			self.sceneLeft.pixelSize = self.pxSize(self.left)
+			self.sceneLeft.pixelSizeUnit = 'um'
 			## Load image, assign it to scene and store image type information
-			self.img_left,self.sceneLeft.imagetype = self.imread(self.left)
+			self.img_left,self.sceneLeft.imagetype,self.imgstack_left = self.imread(self.left)
+			## link image to QTableview for determining z
+			self.tableView_left.img = self.imgstack_left
+			## check if coloring z values in table is needed (correlation needs z=0 in 2D image, so no checking for valid z with 2D images needed)
+			if self.imgstack_left is None:
+				self.sceneLeft._z = False
+			else:
+				self.sceneLeft._z = True
 			# self.pixmap_left = QtGui.QPixmap(self.left)
 			self.pixmap_left = self.cv2Qimage(self.img_left)
 			self.pixmap_item_left = QtGui.QGraphicsPixmapItem(self.pixmap_left, None, self.sceneLeft)
@@ -212,13 +250,21 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 
 	def initImageRight(self):
 		if self.right is not None:
-			self.sceneRight = QtCustom.QGraphicsSceneCustom(self.graphicsView_right,name='right',model=self.model_right)
+			self.sceneRight = QtCustom.QGraphicsSceneCustom(self.graphicsView_right,side='right',model=self.modelRight)
 			## set pen color yellow
 			self.sceneRight.pen = QtGui.QPen(QtCore.Qt.yellow)
 			## Get pixel size
-			self.sceneRight.pixelsize = self.pxSize(self.right)
+			self.sceneRight.pixelSize = self.pxSize(self.right)
+			self.sceneRight.pixelSizeUnit = 'um'
 			## Load image, assign it to scene and store image type information
-			self.img_right,self.sceneRight.imagetype = self.imread(self.right)
+			self.img_right,self.sceneRight.imagetype,self.imgstack_right = self.imread(self.right)
+			## link image to QTableview for determining z
+			self.tableView_right.img = self.imgstack_right
+			## check if coloring z values in table is needed (correlation needs z=0 in 2D image, so no checking for valid z with 2D images needed)
+			if self.imgstack_right is None:
+				self.sceneRight._z = False
+			else:
+				self.sceneRight._z = True
 			# self.pixmap_right = QtGui.QPixmap(self.right)
 			self.pixmap_right = self.cv2Qimage(self.img_right)
 			self.pixmap_item_right = QtGui.QGraphicsPixmapItem(self.pixmap_right, None, self.sceneRight)
@@ -296,24 +342,34 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 			self.sceneLeft.markerSize = int(self.spinBox_markerSize.value())
 			## Update graphics
 			self.sceneLeft.enumeratePoints()
-			if self.label_imgpxsize.text() != 'None':
-				if self.debug is True: print clrmsg.DEBUG + "Doing stuff with image pixelsize (left image).", self.label_imgpxsize.text()
+			if self.sceneLeft.pixelSize:
+				if self.debug is True: print clrmsg.DEBUG + "Doing stuff with image pixelSize (left image).", self.label_imgpxsize.text()
 				try:
-					self.label_markerSizeNano.setText(str(self.sceneLeft.markerSize*2*self.sceneLeft.pixelsize)+" um")  # int(self.label_imgpxsize.text())*markerSize
+					self.label_markerSizeNano.setText(str(self.sceneLeft.markerSize*2*self.sceneLeft.pixelSize))
+					self.label_markerSizeNanoUnit.setText(self.sceneLeft.pixelSizeUnit)
 				except:
 					if self.debug is True: print clrmsg.DEBUG + "Image pixel size is not a number:", self.label_imgpxsize.text()
 					self.label_markerSizeNano.setText("NaN")
+					self.label_markerSizeNanoUnit.setText('')
+			else:
+				self.label_markerSizeNano.setText('')
+				self.label_markerSizeNanoUnit.setText('')
 		elif self.label_selimg.text() == 'right':
 			self.sceneRight.markerSize = int(self.spinBox_markerSize.value())
 			## Update graphics
 			self.sceneRight.enumeratePoints()
-			if self.label_imgpxsize.text() != 'None':
-				if self.debug is True: print clrmsg.DEBUG + "Doing stuff with image pixelsize (right image).", self.label_imgpxsize.text()
+			if self.sceneRight.pixelSize:
+				if self.debug is True: print clrmsg.DEBUG + "Doing stuff with image pixelSize (right image).", self.label_imgpxsize.text()
 				try:
-					self.label_markerSizeNano.setText(str(self.sceneRight.markerSize*2*self.sceneRight.pixelsize)+" um")  # int(self.label_imgpxsize.text())*markerSize
+					self.label_markerSizeNano.setText(str(self.sceneRight.markerSize*2*self.sceneRight.pixelSize))
+					self.label_markerSizeNanoUnit.setText(self.sceneRight.pixelSizeUnit)
 				except:
 					if self.debug is True: print clrmsg.DEBUG + "Image pixel size is not a number:", self.label_imgpxsize.text()
 					self.label_markerSizeNano.setText("NaN")
+					self.label_markerSizeNanoUnit.setText('')
+			else:
+				self.label_markerSizeNano.setText('')
+				self.label_markerSizeNanoUnit.setText('')
 
 												##################### END #####################
 												###### Image initialization and rotation ######
@@ -342,21 +398,22 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 			if self.debug is True: print clrmsg.DEBUG + "Image dtype converted to:", img.shape, img.dtype
 		if img.ndim == 4:
 			if self.debug is True: print clrmsg.DEBUG + "Calculating multichannel MIP"
-			## return mip and code 2+8+16
-			return self.mip(img), 26
+			## return mip, code 2+8+16 and imagestack
+			return np.amax(img, axis=1), 26, img
 		## this can only handle rgb. For more channels set "3" to whatever max number of channels should be handled
 		elif img.ndim == 3 and any([True for dim in img.shape if dim <= 3]) or img.ndim == 2:
-			if self.debug is True: print clrmsg.DEBUG + "Loading regular 2D image... multicolor/normalize:", [True for x in [img.ndim] if img.ndim == 3],'/',[normalize]
+			if self.debug is True: print clrmsg.DEBUG + "Loading regular 2D image... multicolor/normalize:", \
+				[True for x in [img.ndim] if img.ndim == 3],'/',[normalize]
 			if normalize is True:
 				## return normalized 2D image with code 1+4+16 for greyscale normalized 2D image and 1+8+16 for multicolor normalized 2D image
-				return self.norm_img(img), 25 if img.ndim == 3 else 21
+				return self.norm_img(img), 25 if img.ndim == 3 else 21, None
 			else:
 				## return 2D image with code 1+4 for greyscale 2D image and 1+8 for multicolor 2D image
-				return img, 9 if img.ndim == 3 else 5
+				return img, 9 if img.ndim == 3 else 5, None
 		elif img.ndim == 3:
 			if self.debug is True: print clrmsg.DEBUG + "Calculating MIP"
 			## return mip and code 2+4+16
-			return self.mip(img), 22
+			return np.amax(img, axis=0), 22, img
 
 	def pxSize(self,img_path):
 		with tf.TiffFile(img_path) as tif:
@@ -369,30 +426,30 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 								if keyword == 'PhysicalSizeX':
 									for piece in tag.value[tagpos:tagpos+30].split('"'):
 										try:
-											pixelsize = float(piece)
+											pixelSize = float(piece)
 											if self.debug is True: print clrmsg.DEBUG + "Pixel size from exif metakey:", keyword
 											## Value is in um from Corrsight/LA tiff files
-											return pixelsize
+											return pixelSize
 										except Exception as e:
 											if self.debug is True: print clrmsg.DEBUG + "Pixel size parser:", e
 											pass
 								elif keyword == 'PixelWidth':
 									for piece in tag.value[tagpos:tagpos+30].split('='):
 										try:
-											pixelsize = float(piece.strip().split('\r\n')[0])
+											pixelSize = float(piece.strip().split('\r\n')[0])
 											if self.debug is True: print clrmsg.DEBUG + "Pixel size from exif metakey:", keyword
 											## *1E6 because these values from SEM/FIB image is in m
-											return pixelsize*1E6
+											return pixelSize*1E6
 										except Exception as e:
 											if self.debug is True: print clrmsg.DEBUG + "Pixel size parser:", e
 											pass
 								elif keyword == 'PixelSize':
 									for piece in tag.value[tagpos:tagpos+30].split('"'):
 										try:
-											pixelsize = float(piece)
+											pixelSize = float(piece)
 											if self.debug is True: print clrmsg.DEBUG + "Pixel size from exif metakey:", keyword
 											## Value is in um from Corrsight/LA tiff files
-											return pixelsize
+											return pixelSize
 										except Exception as e:
 											if self.debug is True: print clrmsg.DEBUG + "Pixel size parser:", e
 											pass
@@ -495,34 +552,87 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 					img[:,:,i] *= typesize/img[:,:,i].max()
 		return img
 
-	## Create Maximum Intensity Projection (MIP)
-	def mip(self,img):
-		if self.debug is True: print clrmsg.DEBUG + "===== mip"
-		if len(img.shape) == 4:
-			img_MIP = np.zeros((img.shape[0], img.shape[2],img.shape[3]), dtype=img.dtype)
-			for i in range(0,img.shape[0]):
-				for ii in range(0,img.shape[2]):
-					for iii in range(0,img.shape[3]):
-						img_MIP[i,ii,iii] = img[i,:,ii,iii].max()
-			if self.debug is True: print clrmsg.DEBUG + "Image shape original/MIP:", img.shape, img_MIP.shape
-			img_MIP = self.norm_img(img_MIP)
-			if self.debug is True: print clrmsg.DEBUG + "Image shape normalized MIP:", img_MIP.shape
-			return img_MIP
-		elif len(img.shape) == 3:
-			img_MIP = np.zeros((img.shape[1],img.shape[2]), dtype=img.dtype)
-			for i in range(0,img.shape[1]):
-				for ii in range(0,img.shape[2]):
-					img_MIP[i,ii] = img[:,i,ii].max()
-			if self.debug is True: print clrmsg.DEBUG + "Image shape original/MIP:", img.shape, img_MIP.shape
-			img_MIP = self.norm_img(img_MIP)
-			if self.debug is True: print clrmsg.DEBUG + "Image shape normalized MIP:", img_MIP.shape
-			return img_MIP
-		else:
-			print clrmsg.ERROR + "I'm sorry, I don't know this image shape: {0}".format(img.shape)
+	## function is now done via numpay axis max
+	# ## Create Maximum Intensity Projection (MIP)
+	# def mip(self,img):
+	# 	if self.debug is True: print clrmsg.DEBUG + "===== mip"
+	# 	if len(img.shape) == 4:
+	# 		img_MIP = np.zeros((img.shape[0], img.shape[2],img.shape[3]), dtype=img.dtype)
+	# 		for i in range(0,img.shape[0]):
+	# 			for ii in range(0,img.shape[2]):
+	# 				for iii in range(0,img.shape[3]):
+	# 					img_MIP[i,ii,iii] = img[i,:,ii,iii].max()
+	# 		if self.debug is True: print clrmsg.DEBUG + "Image shape original/MIP:", img.shape, img_MIP.shape
+	# 		img_MIP = self.norm_img(img_MIP)
+	# 		if self.debug is True: print clrmsg.DEBUG + "Image shape normalized MIP:", img_MIP.shape
+	# 		return img_MIP
+	# 	elif len(img.shape) == 3:
+	# 		img_MIP = np.zeros((img.shape[1],img.shape[2]), dtype=img.dtype)
+	# 		for i in range(0,img.shape[1]):
+	# 			for ii in range(0,img.shape[2]):
+	# 				img_MIP[i,ii] = img[:,i,ii].max()
+	# 		if self.debug is True: print clrmsg.DEBUG + "Image shape original/MIP:", img.shape, img_MIP.shape
+	# 		img_MIP = self.norm_img(img_MIP)
+	# 		if self.debug is True: print clrmsg.DEBUG + "Image shape normalized MIP:", img_MIP.shape
+	# 		return img_MIP
+	# 	else:
+	# 		print clrmsg.ERROR + "I'm sorry, I don't know this image shape: {0}".format(img.shape)
 
 												##################### END #####################
 												######    Image processing functions    #######
 												###############################################
+
+												###############################################
+												######     CSV - Point import/export    ######
+												#################### START ####################
+
+	def autosave(self):
+		csv_file_out = os.path.splitext(self.left)[0] + '_coordinates.txt'
+		csv_handler.model2csv(self.modelLleft,csv_file_out,delimiter="\t")
+		csv_file_out = os.path.splitext(self.right)[0] + '_coordinates.txt'
+		csv_handler.model2csv(self.modelRight,csv_file_out,delimiter="\t")
+
+	def exportPoints(self):
+		if self.label_selectedTable.text() == 'left':
+			model = self.modelLleft
+		elif self.label_selectedTable.text() == 'right':
+			model = self.modelRight
+		## Export Dioalog. Needs check for extension or add default extension
+		csv_file_out, filterdialog = QtGui.QFileDialog.getSaveFileNameAndFilter(
+			self, 'Export file as', os.path.dirname(self.left) if self.label_selectedTable.text() == 'left' else os.path.dirname(self.right),
+			"Tabstop sepperated (*.csv *.txt);;Comma sepperated (*.csv *.txt)")
+		if str(filterdialog).startswith('Comma') is True:
+			csv_handler.model2csv(model,csv_file_out,delimiter=",")
+		elif str(filterdialog).startswith('Tabstop') is True:
+			csv_handler.model2csv(model,csv_file_out,delimiter="\t")
+
+	def importPoints(self):
+		csv_file_in, filterdialog = QtGui.QFileDialog.getOpenFileNameAndFilter(
+			self, 'Import file as', os.path.dirname(self.left) if self.label_selectedTable.text() == 'left' else os.path.dirname(self.right),
+			"Tabstop sepperated (*.csv *.txt);;Comma sepperated (*.csv *.txt)")
+		if str(filterdialog).startswith('Comma') is True:
+			itemlist = csv_handler.csv2list(csv_file_in,delimiter=",",parent=self,sniff=True)
+		elif str(filterdialog).startswith('Tabstop') is True:
+			itemlist = csv_handler.csv2list(csv_file_in,delimiter="\t",parent=self,sniff=True)
+		if self.label_selectedTable.text() == 'left':
+			for item in itemlist: self.sceneLeft.addCircle(
+				float(item[0]),
+				float(item[1]),
+				float(item[2]) if len(itemlist) > 2 else 0)
+			self.sceneLeft.itemsToModel()
+			# csv_handler.csvAppend2model(csv_file_in,self.modelLleft,delimiter="\t",parent=self,sniff=True)
+		elif self.label_selectedTable.text() == 'right':
+			for item in itemlist: self.sceneRight.addCircle(
+				float(item[0]),
+				float(item[1]),
+				float(item[2]) if len(itemlist) > 2 else 0)
+			self.sceneRight.itemsToModel()
+			# csv_handler.csvAppend2model(csv_file_in,self.modelRight,delimiter="\t",parent=self,sniff=True)
+
+												##################### END #####################
+												######     CSV - Point import/export    #######
+												###############################################
+
 
 if __name__ == "__main__":
 	print clrmsg.DEBUG + 'Debug Test'
@@ -530,6 +640,7 @@ if __name__ == "__main__":
 	print clrmsg.ERROR + 'Error Test'
 	print clrmsg.INFO + 'Info Test'
 	print clrmsg.WARNING + 'Warning Test'
+	print '='*20, 'Initializing', '='*20
 	app = QtGui.QApplication(sys.argv)
 	## mac
 	left = '/Volumes/Silver/Dropbox/Dokumente/Code/test_stuff/IB_030.tif'
@@ -537,11 +648,11 @@ if __name__ == "__main__":
 	# left = '/Users/jan/Desktop/160202/LM-SEM.tif'
 	# left = '/Volumes/Silver/output/MAX_input-0.tif'
 	# left = '/Users/jan/Desktop/rofllol.tif'
-	# left = '/Volumes/Silver/output/input-0.tif'
+	left = '/Volumes/Silver/output/input-0.tif'
 	# left = '/Volumes/Silver/output/Composite.tif'
 	# left = '/Users/jan/Desktop/LM-SEM.tif'
-	right = '/Volumes/Silver/Dropbox/Dokumente/Code/test_stuff/px_test.tif'
-	# right = '/Volumes/Silver/Dropbox/Dokumente/Code/test_stuff/Tile_001-001-000_0-000.tif'
+	# right = '/Volumes/Silver/Dropbox/Dokumente/Code/test_stuff/px_test.tif'
+	right = '/Volumes/Silver/Dropbox/Dokumente/Code/test_stuff/Tile_001-001-000_0-000.tif'
 	# right = '/Users/jan/Desktop/test/pxsize_test/pxsize_test_0_small.tif'
 	## win
 	# left = r'E:\Dropbox\Dokumente\Code\test_stuff\IB_030.tif'
