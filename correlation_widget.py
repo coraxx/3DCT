@@ -18,6 +18,7 @@
 
 import sys
 import os
+import time
 import re
 from PyQt4 import QtCore, QtGui, uic
 import numpy as np
@@ -29,6 +30,7 @@ import clrmsg
 import QtCustom
 ## CSV handler
 import csv_handler
+import correlation
 
 execdir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(execdir)
@@ -88,6 +90,7 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 		self.toolButton_contrast_reset.clicked.connect(lambda: self.horizontalSlider_contrast.setValue(10))
 		self.toolButton_importPoints.clicked.connect(self.importPoints)
 		self.toolButton_exportPoints.clicked.connect(self.exportPoints)
+		self.commandLinkButton_correlate.clicked.connect(self.correlate)
 
 		## Sliders
 		self.horizontalSlider_brightness.valueChanged.connect(self.adjustBrightCont)
@@ -117,17 +120,28 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 				self.tableView_right.updateItems()
 
 	def test(self):
-		if self.counter == 0:
-			self.widget_scatterplot.setupCanvas(width=4,height=4,dpi=52,toolbar=False)
-		if self.counter < 2:
-			self.widget_scatterplot.scatterPlot(x='random',y='random',frame=True,framesize=6,xlabel="nm",ylabel="nm")
+		if self.counter == 1:
+			self.matplotlibWidget.setupScatterCanvas(width=4,height=4,dpi=52,toolbar=False)
 		if self.counter == 2:
-			self.widget_scatterplot.clearAll()
+			self.matplotlibWidget.scatterPlot(x='random',y='random',frame=True,framesize=6,xlabel="nm",ylabel="nm")
 		if self.counter == 3:
-			self.widget_scatterplot.setupCanvas(width=4,height=4,dpi=72,toolbar=True)
-			self.widget_scatterplot.scatterPlot(x='random',y='random',frame=True,framesize=6,xlabel="lol",ylabel="rofl")
+			self.matplotlibWidget.clearAll()
+		if self.counter == 4:
+			self.matplotlibWidget.setupScatterCanvas(width=4,height=4,dpi=72,toolbar=True)
+			self.matplotlibWidget.scatterPlot(x='random',y='random',frame=True,framesize=6,xlabel="lol",ylabel="rofl")
+		itemlistL = csv_handler.csv2list('/Users/jan/Desktop/correlation_test_dataset/FIB_coordinates.txt',delimiter="\t",parent=self,sniff=True)
+		itemlistR = csv_handler.csv2list('/Users/jan/Desktop/correlation_test_dataset/LM_coordinates4FIB.txt',delimiter="\t",parent=self,sniff=True)
+		for item in itemlistL: self.sceneLeft.addCircle(
+				float(item[0]),
+				float(item[1]),
+				float(item[2]) if len(item) > 2 else 0)
+		self.sceneLeft.itemsToModel()
+		for item in itemlistR: self.sceneRight.addCircle(
+				float(item[0]),
+				float(item[1]),
+				float(item[2]) if len(item) > 2 else 0)
+		self.sceneRight.itemsToModel()
 		self.counter += 1
-		self.modelLleft.itemFromIndex(self.modelLleft.index(0, 2)).setForeground(QtCore.Qt.red)
 
 	def changedFocusSlot(self, former, current):
 		if self.debug is True: print clrmsg.DEBUG + "focus changed from/to:", former.objectName() if former else former, \
@@ -583,7 +597,7 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 												###############################################
 
 												###############################################
-												######     CSV - Point import/export    ######
+												######     CSV - Point import/export    #######
 												#################### START ####################
 
 	def autosave(self):
@@ -614,7 +628,6 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 			itemlist = csv_handler.csv2list(csv_file_in,delimiter=",",parent=self,sniff=True)
 		elif str(filterdialog).startswith('Tabstop') is True:
 			itemlist = csv_handler.csv2list(csv_file_in,delimiter="\t",parent=self,sniff=True)
-		print len(itemlist[0])
 		if self.label_selectedTable.text() == 'left':
 			for item in itemlist: self.sceneLeft.addCircle(
 				float(item[0]),
@@ -634,6 +647,145 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 												######     CSV - Point import/export    #######
 												###############################################
 
+												###############################################
+												######            Correlation           #######
+												#################### START ####################
+
+	def model2np(self,model):
+		listarray = []
+		for rowNumber in range(model.rowCount()):
+			fields = [
+					model.data(model.index(rowNumber, columnNumber), QtCore.Qt.DisplayRole).toFloat()[0]
+					for columnNumber in range(model.columnCount())]
+			listarray.append(fields)
+		return np.array(listarray).astype(np.float)
+
+	def correlate(self):
+		if '{0:b}'.format(self.sceneLeft.imagetype)[-1] == '1' and '{0:b}'.format(self.sceneRight.imagetype)[-1] == '0':
+			model2D = self.modelLleft
+			model3D = self.modelRight
+			## Temporary img to draw results and save it
+			img = np.copy(self.img_left)
+		elif '{0:b}'.format(self.sceneLeft.imagetype)[-1] == '0' and '{0:b}'.format(self.sceneRight.imagetype)[-1] == '1':
+			model2D = self.modelRight
+			model3D = self.modelLleft
+			## Temporary img to draw results and save it
+			img = np.copy(self.img_right)
+		else:
+			if '{0:b}'.format(self.sceneLeft.imagetype)[-1] == '0' and '{0:b}'.format(self.sceneRight.imagetype)[-1] == '0':
+				raise ValueError('Both datasets contain only 2D information. I need one 3D and one 2D dataset')
+			elif '{0:b}'.format(self.sceneLeft.imagetype)[-1] == '1' and '{0:b}'.format(self.sceneRight.imagetype)[-1] == '1':
+				raise ValueError('Both datasets contain only 3D information. I need one 3D and one 2D dataset')
+			else:
+				raise ValueError('Cannot determine if datasets are 2D or 3D')
+		## variables for dataset validation
+		nrRowsModel2D = model2D.rowCount()
+		nrRowsmodel3D = model3D.rowCount()
+		# self.rotation_center = [self.doubleSpinBox_psi.value(),self.doubleSpinBox_phi.value(),self.doubleSpinBox_theta.value()]
+		self.rotation_center = [670, 670, 670]
+
+		## create model for poi (QtModel for consistency in handling data between functions. Can also be extended in the future for multiple POIs)
+		# if self.checkBox_poi.isChecked() is True:
+		# 	self.model_pois = QtGui.QStandardItemModel()
+		# 	items = ([
+		# 			QtGui.QStandardItem(str(self.doubleSpinBox_poi_x.value())),
+		# 			QtGui.QStandardItem(str(self.doubleSpinBox_poi_y.value())),
+		# 			QtGui.QStandardItem(str(self.doubleSpinBox_poi_z.value()))])
+		# 	self.model_pois.appendRow(items)
+		# else:
+		# 	self.model_pois = QtGui.QStandardItemModel()
+
+		if True is True:
+			model_pois = QtGui.QStandardItemModel()
+			items = ([
+					QtGui.QStandardItem('666'),
+					QtGui.QStandardItem('758'),
+					QtGui.QStandardItem('51')])
+			model_pois.appendRow(items)
+			items = ([
+					QtGui.QStandardItem('660'),
+					QtGui.QStandardItem('750'),
+					QtGui.QStandardItem('45')])
+			model_pois.appendRow(items)
+			items = ([
+					QtGui.QStandardItem('670'),
+					QtGui.QStandardItem('765'),
+					QtGui.QStandardItem('55')])
+			model_pois.appendRow(items)
+		else:
+			model_pois = QtGui.QStandardItemModel()
+
+		if nrRowsModel2D >= 3:
+			if nrRowsModel2D == nrRowsmodel3D:
+				timestamp = time.strftime("%Y-%m-%d_%H-%M-%S")
+				self.correlation_results = correlation.main(
+														markers_3d=self.model2np(model3D),
+														markers_2d=self.model2np(model2D),
+														spots_3d=self.model2np(model_pois),
+														rotation_center=self.rotation_center,
+														results_file=''.join([workingdir,'/',timestamp, '_correlation.txt'])
+														)
+			else:
+				QtGui.QMessageBox.critical(self, "Data Structur", "The two datasets do not contain the same amount of markers!")
+		else:
+			QtGui.QMessageBox.critical(self, "Data Structur",'At least THREE markers are needed to do the correlation')
+
+		transf_3d = self.correlation_results[1]
+		for i in range(transf_3d.shape[1]):
+			cv2.circle(img, (int(round(transf_3d[0,i])), int(round(transf_3d[1,i]))), 3, (0,255,0), -1)
+		if self.correlation_results[2] is not None:
+			calc_spots_2d = self.correlation_results[2]
+			# draw POI cv2.circle(img, (center x, center y), radius, [b,g,r], thickness(-1 for filled))
+			for i in range(calc_spots_2d.shape[1]):
+				cv2.circle(img, (int(round(calc_spots_2d[0,i])), int(round(calc_spots_2d[1,i]))), 1, (0,0,255), -1)
+		cv2.imwrite(os.path.join(workingdir,timestamp+"_correlated.tif"), img)
+
+		self.displayResults(frame=False,framesize=None)
+		# self.displayResults(frame=True,framesize=1.8)
+
+	def displayResults(self,frame=False,framesize=None):
+		if self.correlation_results:
+			## get data
+			transf = self.correlation_results[0]
+			# transf_3d = self.correlation_results[1]			## unused atm
+			# calc_spots_2d = self.correlation_results[2]		## unused atm
+			delta2D = self.correlation_results[3]
+			delta2D_mean = np.absolute(delta2D).mean(axis=1)
+			# cm_3D_markers = self.correlation_results[4]		## unused atm
+			modified_translation = self.correlation_results[5]
+			eulers = transf.extract_euler(r=transf.q, mode='x', ret='one')
+			eulers = eulers * 180 / np.pi
+			# scale = transf.s_scalar
+			# translation = (transf.d[0], transf.d[1], transf.d[2])
+
+			# ## display data
+			# # rotation
+			# self.lcdNumber_psi.display(eulers[2])
+			# self.lcdNumber_phi.display(eulers[0])
+			# self.lcdNumber_theta.display(eulers[1])
+			# # translation and scale
+			# self.label_rotcenter.setText('[%5.2f, %5.2f, %5.2f]' % (
+			# 	self.rotation_center[0],
+			# 	self.rotation_center[1],
+			# 	self.rotation_center[2]))
+			# self.lcdNumber_transxRotCenter.display(modified_translation[0])
+			# self.lcdNumber_transyRotCenter.display(modified_translation[1])
+			# self.lcdNumber_transx.display(transf.d[0])
+			# self.lcdNumber_transy.display(transf.d[1])
+			# self.lcdNumber_scale.display(transf.s_scalar)
+			# # error
+			# self.lcdNumber_RMS.display(transf.rmsError)
+			# self.lcdNumber_meandx.display(delta2D_mean[0])
+			# self.lcdNumber_meandy.display(delta2D_mean[1])
+			self.matplotlibWidget.setupScatterCanvas(width=4,height=4,dpi=52,toolbar=False)
+			self.matplotlibWidget.scatterPlot(x=delta2D[:1,:][0],y=delta2D[1:,:][0],frame=frame,framesize=framesize,xlabel="px",ylabel="px")
+
+		else:
+			QtGui.QMessageBox.critical(self, "Error", "No data to display!")
+
+												##################### END #####################
+												######            Correlation           #######
+												###############################################
 
 if __name__ == "__main__":
 	print clrmsg.DEBUG + 'Debug Test'
@@ -658,6 +810,9 @@ if __name__ == "__main__":
 	## win
 	# left = r'E:\Dropbox\Dokumente\Code\test_stuff\IB_030.tif'
 	# right = r'E:\Dropbox\Dokumente\Code\test_stuff\px_test.tif'
+	## correlation dataset
+	left = '/Users/jan/Desktop/correlation_test_dataset/IB_030.tif'
+	right = '/Users/jan/Desktop/correlation_test_dataset/LM_green_reslized.tif'
 	widget = MainWidget(left=left, right=right)
 	widget.show()
 	sys.exit(app.exec_())

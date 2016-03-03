@@ -69,7 +69,7 @@
    <item>
     <layout class="QVBoxLayout" name="QVBoxLayout_ctrl_stat" stretch="0,1">
      <item>
-      <widget class="MatplotlibWidget" name="widget_scatterplot" native="true">
+      <widget class="MatplotlibWidget" name="matplotlibWidget" native="true">
        <property name="minimumSize">
         <size>
          <width>0</width>
@@ -268,7 +268,7 @@
                 </size>
                </property>
                <property name="text">
-                <string>  </string>
+                <string/>
                </property>
               </widget>
              </item>
@@ -426,7 +426,7 @@
           </spacer>
          </item>
          <item>
-          <widget class="QCommandLinkButton" name="commandLinkButton">
+          <widget class="QCommandLinkButton" name="commandLinkButton_correlate">
            <property name="text">
             <string>Run correlation</string>
            </property>

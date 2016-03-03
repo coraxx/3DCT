@@ -13,7 +13,7 @@
 # @Usage			: part of 3D Correlation Toolbox
 # @Notes			: Some widgets in QT Designer are promoted to these classes
 # @Python_version	: 2.7.10
-# @Last Modified	: 2016/03/02
+# @Last Modified	: 2016/03/03
 # ============================================================================
 
 from PyQt4 import QtCore, QtGui
@@ -86,7 +86,7 @@ class QTableViewCustom(QtGui.QTableView):
 					float(self._model.data(self._model.index(row, 0)).toString()),
 					float(self._model.data(self._model.index(row, 1)).toString()))
 				self._scene.zValuesDict[item] = [
-												float(self._model.data(self._model.index(row, 2)).toString()),
+												self._model.data(self._model.index(row, 2)).toString(),
 												self._model.itemFromIndex(self._model.index(row, 2)).foreground().color().getRgb()]
 				row += 1
 
@@ -166,7 +166,7 @@ class QTableViewCustom(QtGui.QTableView):
 					z = bead_pos.getz(x,y,self.img,n=None)
 					# z = 45
 					print self.img.shape, z
-					if 0 <= z <= self.img.shape[0]:
+					if 0 <= z <= self.img.shape[-3]:
 						self._scene.zValuesDict[activeitems[row]][1] = (0,0,0)
 						self._model.itemFromIndex(self._model.index(row, 2)).setForeground(QtCore.Qt.black)
 					else:
@@ -177,12 +177,12 @@ class QTableViewCustom(QtGui.QTableView):
 					x,y,z = bead_pos.getz(x,y,self.img,n=None,optimize=True)
 					# x,y,z = 50,50,90
 					print self.img.shape, x,y,z
-					if 0 <= x <= self.img.shape[2] or 0 <= y <= self.img.shape[1] or 0 <= z <= self.img.shape[0]:
+					if 0 <= x <= self.img.shape[-1] and 0 <= y <= self.img.shape[-2] and 0 <= z <= self.img.shape[-3]:
 						self._scene.zValuesDict[activeitems[row]][1] = (255,0,0)
-						self._model.itemFromIndex(self._model.index(row, 2)).setForeground(QtCore.Qt.red)
+						self._model.itemFromIndex(self._model.index(row, 2)).setForeground(QtCore.Qt.black)
 					else:
 						self._scene.zValuesDict[activeitems[row]][1] = (0,0,0)
-						self._model.itemFromIndex(self._model.index(row, 2)).setForeground(QtCore.Qt.black)
+						self._model.itemFromIndex(self._model.index(row, 2)).setForeground(QtCore.Qt.red)
 					self._model.itemFromIndex(self._model.index(row, 0)).setText(str(x))
 					self._model.itemFromIndex(self._model.index(row, 1)).setText(str(y))
 					self._model.itemFromIndex(self._model.index(row, 2)).setText(str(z))
@@ -366,20 +366,27 @@ class QGraphicsSceneCustom(QtGui.QGraphicsScene):
 class MatplotlibWidget(QtGui.QWidget):
 	def __init__(self, parent=None):
 		super(MatplotlibWidget, self).__init__(parent)
-		# self.setupCanvas(dpi)
+		self._setup = False
+		# self.setupScatterCanvas(dpi)
 		# self.scatterPlot(x='random',y='random',frame=True,framesize=6,xlabel="lol",ylabel="rofl")
 
-	def setupCanvas(self,width=5,height=5,dpi=72,toolbar=False):
-		self.figure = Figure(figsize=(width,height),dpi=dpi)
-		self.axScatter = self.figure.add_subplot(111)
-		self.canvas = FigureCanvas(self.figure)
-		layout = QtGui.QVBoxLayout()
-		layout.addWidget(self.canvas)
-		if toolbar is True:
-			self.figure.set_figheight(height+0.5)
-			self.toolbar = NavigationToolbar(self.canvas, self)
-			layout.addWidget(self.toolbar)
-		self.setLayout(layout)
+	def setupScatterCanvas(self,width=5,height=5,dpi=72,toolbar=False):
+		if self._setup is False:
+			self.figure = Figure(figsize=(width,height),dpi=dpi)
+			self.axScatter = self.figure.add_subplot(111)
+			self.canvas = FigureCanvas(self.figure)
+			layout = QtGui.QVBoxLayout()
+			layout.addWidget(self.canvas)
+			if toolbar is True:
+				self.figure.set_figheight(height+0.5)
+				self.toolbar = NavigationToolbar(self.canvas, self)
+				layout.addWidget(self.toolbar)
+			self.setLayout(layout)
+			self._setup = True
+		else:
+			self.clearAll()
+			self._setup = False
+			self.setupScatterCanvas(width,height,dpi,toolbar)
 
 	def clearAll(self):
 		QtGui.QWidget().setLayout(self.layout())
@@ -393,8 +400,15 @@ class MatplotlibWidget(QtGui.QWidget):
 		self.axScatter.clear()
 		self.axScatter.scatter(x, y)
 		self.axScatter.set_aspect(1.)
+		print x.min(), x.max(), y.min(), y.max()
+		limit = max([abs(x.min()), abs(x.max()), abs(y.min()), abs(y.max())]) + 0.2
+		print limit
+		self.axScatter.set_xlim(-limit, limit)
+		self.axScatter.set_ylim(-limit, limit)
 		self.axScatter.set_xlabel(xlabel)
 		self.axScatter.set_ylabel(ylabel)
+		self.axScatter.xaxis.set_label_coords(0.1,0.08)
+		self.axScatter.yaxis.set_label_coords(0.08,0.12)
 		self.axScatter.plot([0], '+', mew=1, ms=10, c="red")
 
 		if frame is True and framesize is not None:
