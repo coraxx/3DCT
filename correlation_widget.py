@@ -13,7 +13,7 @@
 # @Usage			: part of 3D Correlation Toolbox
 # @Notes			:
 # @Python_version	: 2.7.10
-# @Last Modified	: 2016/03/02
+# @Last Modified	: 2016/03/03
 # ============================================================================
 
 import sys
@@ -614,18 +614,19 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 			itemlist = csv_handler.csv2list(csv_file_in,delimiter=",",parent=self,sniff=True)
 		elif str(filterdialog).startswith('Tabstop') is True:
 			itemlist = csv_handler.csv2list(csv_file_in,delimiter="\t",parent=self,sniff=True)
+		print len(itemlist[0])
 		if self.label_selectedTable.text() == 'left':
 			for item in itemlist: self.sceneLeft.addCircle(
 				float(item[0]),
 				float(item[1]),
-				float(item[2]) if len(itemlist) > 2 else 0)
+				float(item[2]) if len(item) > 2 else 0)
 			self.sceneLeft.itemsToModel()
 			# csv_handler.csvAppend2model(csv_file_in,self.modelLleft,delimiter="\t",parent=self,sniff=True)
 		elif self.label_selectedTable.text() == 'right':
 			for item in itemlist: self.sceneRight.addCircle(
 				float(item[0]),
 				float(item[1]),
-				float(item[2]) if len(itemlist) > 2 else 0)
+				float(item[2]) if len(item) > 2 else 0)
 			self.sceneRight.itemsToModel()
 			# csv_handler.csvAppend2model(csv_file_in,self.modelRight,delimiter="\t",parent=self,sniff=True)
 
