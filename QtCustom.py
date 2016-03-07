@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# @Title			: QtCustom
+# @Title			: QtCustom{{project_name}}
 # @Project			: 3DCTv2
 # @Description		: Custom Qt classes
 # @Author			: Jan Arnold
@@ -13,7 +13,7 @@
 # @Usage			: part of 3D Correlation Toolbox
 # @Notes			: Some widgets in QT Designer are promoted to these classes
 # @Python_version	: 2.7.10
-# @Last Modified	: 2016/03/03
+# @Last Modified	: 2016/03/07 by {{author}}
 # ============================================================================
 
 from PyQt4 import QtCore, QtGui
@@ -271,7 +271,7 @@ class QGraphicsSceneCustom(QtGui.QGraphicsScene):
 			# print 'New pos:', self.selectedItems()[0].x(), self.selectedItems()[0].y()
 			for item in self.selectedItems():
 				if isinstance(item, QtGui.QGraphicsEllipseItem):
-					self.zValuesDict[item] = [self.zValuesDict[item][0],(255,190,0)]
+					self.zValuesDict[item] = [self.zValuesDict[item][0],(255, 190, 0)]  # orange
 			self.clearSelection()
 			self.itemsToModel()
 		self.parent.setDragMode(QtGui.QGraphicsView.NoDrag)
@@ -297,9 +297,9 @@ class QGraphicsSceneCustom(QtGui.QGraphicsScene):
 		## store placeholder z value in dictionary (QGraphicsitems cannot store additional (meta)data)
 		## and flag for color (rgba)
 		if self._z and z == 0:
-			self.zValuesDict[circle] = [z,(255, 190, 0)]
+			self.zValuesDict[circle] = [z,(255, 190, 0)]  # orange
 		else:
-			self.zValuesDict[circle] = [z,(0, 0, 0)]
+			self.zValuesDict[circle] = [z,(0, 0, 0)]  # black
 		## Reorder to have them in ascending order in the tableview
 		QtGui.QGraphicsItem.stackBefore(circle, self.items()[-2])
 		self.enumeratePoints()
@@ -327,12 +327,12 @@ class QGraphicsSceneCustom(QtGui.QGraphicsScene):
 				nr.setBrush(QtCore.Qt.cyan)  # fill
 				## Adding crosshair
 				hline = self.addLine(-self.markerSize-2,0,self.markerSize+2,0)
-				hline.setPen(QtGui.QPen(QtGui.QColor(255, 255, 255, 128)))  # r,g,b,alpha
+				hline.setPen(QtGui.QPen(QtGui.QColor(255, 255, 255, 128)))  # r,g,b,alpha, white transparent
 				hline.setParentItem(item)
 				## Counter rotate crosshair (horizontal line) so it stays level
 				hline.setRotation(-self.rotangle)
 				vline = self.addLine(0,-self.markerSize-2,0,self.markerSize+2)
-				vline.setPen(QtGui.QPen(QtGui.QColor(255, 255, 255, 128)))  # r,g,b,alpha
+				vline.setPen(QtGui.QPen(QtGui.QColor(255, 255, 255, 128)))  # r,g,b,alpha, white transparent
 				vline.setParentItem(item)
 				## Counter rotate crosshair (vertical line) so it stays level
 				vline.setRotation(-self.rotangle)
@@ -363,9 +363,9 @@ class QGraphicsSceneCustom(QtGui.QGraphicsScene):
 ## Scatter Plot
 
 
-class MatplotlibWidget(QtGui.QWidget):
+class MatplotlibWidgetCustom(QtGui.QWidget):
 	def __init__(self, parent=None):
-		super(MatplotlibWidget, self).__init__(parent)
+		super(MatplotlibWidgetCustom, self).__init__(parent)
 		self._setup = False
 		# self.setupScatterCanvas(dpi)
 		# self.scatterPlot(x='random',y='random',frame=True,framesize=6,xlabel="lol",ylabel="rofl")

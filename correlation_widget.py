@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# @Title			: correlation_widget
+# @Title			: correlation_widget{{project_name}}
 # @Project			: 3DCTv2
 # @Description		: Extracting 2D and 3D points for 2D to 3D correlation
 # @Author			: Jan Arnold
@@ -13,7 +13,7 @@
 # @Usage			: part of 3D Correlation Toolbox
 # @Notes			:
 # @Python_version	: 2.7.10
-# @Last Modified	: 2016/03/03
+# @Last Modified	: 2016/03/07 by {{author}}
 # ============================================================================
 
 import sys
@@ -48,6 +48,12 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 		Ui_WidgetWindow.__init__(self)
 		self.setupUi(self)
 		self.counter = 0		# Just for testing (loop counter for test button)
+
+		## Stylesheet colors:
+		self.stylesheet_orange = "color: rgb(255, 120,   0);"
+		self.stylesheet_green = "color: rgb(  0, 200,   0);"
+		self.stylesheet_blue = "color: rgb(  0, 190, 255);"
+		self.stylesheet_red = "color: rgb(255,   0,   0);"
 
 		## Tableview and models
 		self.modelLleft = QtCustom.QStandardItemModelCustom(self)
@@ -121,16 +127,16 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 
 	def test(self):
 		if self.counter == 1:
-			self.matplotlibWidget.setupScatterCanvas(width=4,height=4,dpi=52,toolbar=False)
+			self.widget_matplotlib.setupScatterCanvas(width=4,height=4,dpi=52,toolbar=False)
 		if self.counter == 2:
-			self.matplotlibWidget.scatterPlot(x='random',y='random',frame=True,framesize=6,xlabel="nm",ylabel="nm")
+			self.widget_matplotlib.scatterPlot(x='random',y='random',frame=True,framesize=6,xlabel="nm",ylabel="nm")
 		if self.counter == 3:
-			self.matplotlibWidget.clearAll()
+			self.widget_matplotlib.clearAll()
 		if self.counter == 4:
-			self.matplotlibWidget.setupScatterCanvas(width=4,height=4,dpi=72,toolbar=True)
-			self.matplotlibWidget.scatterPlot(x='random',y='random',frame=True,framesize=6,xlabel="lol",ylabel="rofl")
-		itemlistL = csv_handler.csv2list('/Users/jan/Desktop/correlation_test_dataset/FIB_coordinates.txt',delimiter="\t",parent=self,sniff=True)
-		itemlistR = csv_handler.csv2list('/Users/jan/Desktop/correlation_test_dataset/LM_coordinates4FIB.txt',delimiter="\t",parent=self,sniff=True)
+			self.widget_matplotlib.setupScatterCanvas(width=4,height=4,dpi=72,toolbar=True)
+			self.widget_matplotlib.scatterPlot(x='random',y='random',frame=True,framesize=6,xlabel="lol",ylabel="rofl")
+		itemlistL = csv_handler.csv2list(testpath+'correlation_test_dataset/FIB_coordinates.txt',delimiter="\t",parent=self,sniff=True)
+		itemlistR = csv_handler.csv2list(testpath+'correlation_test_dataset/LM_coordinates4FIB.txt',delimiter="\t",parent=self,sniff=True)
 		for item in itemlistL: self.sceneLeft.addCircle(
 				float(item[0]),
 				float(item[1]),
@@ -158,7 +164,7 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 			pass
 		else:
 			if self.currentFocusedWidgetName != 'graphicsView_left' and self.currentFocusedWidgetName != 'graphicsView_right':
-				self.label_selimg.setStyleSheet("color: rgb(255, 190, 0);")
+				self.label_selimg.setStyleSheet(self.stylesheet_orange)
 				self.label_selimg.setText('none')
 				self.label_markerSizeNano.setText('')
 				self.label_markerSizeNanoUnit.setText('')
@@ -167,29 +173,29 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 				self.label_imagetype.setText('')
 				self.ctrlEnDisAble(False)
 			elif self.currentFocusedWidgetName == 'graphicsView_left':
-				self.label_selimg.setStyleSheet("color: rgb(0, 225, 90);")
+				self.label_selimg.setStyleSheet(self.stylesheet_green)
 				self.label_selimg.setText('left')
-				self.label_imagetype.setStyleSheet("color: rgb(0, 225, 90);")
+				self.label_imagetype.setStyleSheet(self.stylesheet_green)
 				self.label_imagetype.setText('(2D)' if '{0:b}'.format(self.sceneLeft.imagetype)[-1] == '1' else '(3D)')
 				self.ctrlEnDisAble(True)
 			elif self.currentFocusedWidgetName == 'graphicsView_right':
-				self.label_selimg.setStyleSheet("color: rgb(0, 190, 255);")
+				self.label_selimg.setStyleSheet(self.stylesheet_blue)
 				self.label_selimg.setText('right')
-				self.label_imagetype.setStyleSheet("color: rgb(0, 190, 255);")
+				self.label_imagetype.setStyleSheet(self.stylesheet_blue)
 				self.label_imagetype.setText('(2D)' if '{0:b}'.format(self.sceneRight.imagetype)[-1] == '1' else '(3D)')
 				self.ctrlEnDisAble(True)
 
 		# ## Lable showing selected table
 		if self.currentFocusedWidgetName != 'tableView_left' and self.currentFocusedWidgetName != 'tableView_right':
-			self.label_selectedTable.setStyleSheet("color: rgb(255, 190, 0);")
+			self.label_selectedTable.setStyleSheet(self.stylesheet_orange)
 			self.label_selectedTable.setText('none')
 			self.ctrlEnDisAble(True)
 		elif self.currentFocusedWidgetName == 'tableView_left':
-			self.label_selectedTable.setStyleSheet("color: rgb(0, 225, 90);")
+			self.label_selectedTable.setStyleSheet(self.stylesheet_green)
 			self.label_selectedTable.setText('left')
 			self.ctrlEnDisAble(False)
 		elif self.currentFocusedWidgetName == 'tableView_right':
-			self.label_selectedTable.setStyleSheet("color: rgb(0, 190, 255);")
+			self.label_selectedTable.setStyleSheet(self.stylesheet_blue)
 			self.label_selectedTable.setText('right')
 			self.ctrlEnDisAble(False)
 
@@ -239,6 +245,9 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 			self.sceneLeft = QtCustom.QGraphicsSceneCustom(self.graphicsView_left,side='left',model=self.modelLleft)
 			## set pen color yellow
 			self.sceneLeft.pen = QtGui.QPen(QtCore.Qt.red)
+			## Splash screen message
+			splash.showMessage("Loading images... "+self.left,color=QtCore.Qt.white)
+			app.processEvents()
 			## Get pixel size
 			self.sceneLeft.pixelSize = self.pxSize(self.left)
 			self.sceneLeft.pixelSizeUnit = 'um'
@@ -267,6 +276,9 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 			self.sceneRight = QtCustom.QGraphicsSceneCustom(self.graphicsView_right,side='right',model=self.modelRight)
 			## set pen color yellow
 			self.sceneRight.pen = QtGui.QPen(QtCore.Qt.yellow)
+			## Splash screen message
+			splash.showMessage("Loading images... "+self.right,color=QtCore.Qt.white)
+			app.processEvents()
 			## Get pixel size
 			self.sceneRight.pixelSize = self.pxSize(self.right)
 			self.sceneRight.pixelSizeUnit = 'um'
@@ -777,8 +789,25 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 			# self.lcdNumber_RMS.display(transf.rmsError)
 			# self.lcdNumber_meandx.display(delta2D_mean[0])
 			# self.lcdNumber_meandy.display(delta2D_mean[1])
-			self.matplotlibWidget.setupScatterCanvas(width=4,height=4,dpi=52,toolbar=False)
-			self.matplotlibWidget.scatterPlot(x=delta2D[:1,:][0],y=delta2D[1:,:][0],frame=frame,framesize=framesize,xlabel="px",ylabel="px")
+			self.label_phi.setText('{0:.3f}'.format(eulers[0]))
+			self.label_phi.setStyleSheet(self.stylesheet_green)
+			self.label_psi.setText('{0:.3f}'.format(eulers[2]))
+			self.label_psi.setStyleSheet(self.stylesheet_green)
+			self.label_theta.setText('{0:.3f}'.format(eulers[1]))
+			self.label_theta.setStyleSheet(self.stylesheet_green)
+			self.label_translation.setText('x = {0:.3f} | y = {1:.3f}'.format(transf.d[0], transf.d[1]))
+			self.label_translation.setStyleSheet(self.stylesheet_green)
+			self.label_translation_custom_rot.setText('x = {0:.3f} | y = {1:.3f}'.format(modified_translation[0], modified_translation[1]))
+			self.label_translation_custom_rot.setStyleSheet(self.stylesheet_green)
+			self.label_meandxdy.setText('{0:.5f} / {1:.5f}'.format(delta2D_mean[0], delta2D_mean[1]))
+			if delta2D_mean[0] <= 1 and delta2D_mean[1] <= 1: self.label_meandxdy.setStyleSheet(self.stylesheet_green)
+			elif delta2D_mean[0] < 2 or delta2D_mean[1] < 2: self.label_meandxdy.setStyleSheet(self.stylesheet_orange)
+			else: self.label_meandxdy.setStyleSheet(self.stylesheet_red)
+			self.label_rms.setText('{0:.5f}'.format(transf.rmsError))
+			self.label_rms.setStyleSheet(self.stylesheet_green if transf.rmsError < 1 else self.stylesheet_orange)
+
+			self.widget_matplotlib.setupScatterCanvas(width=4,height=4,dpi=52,toolbar=False)
+			self.widget_matplotlib.scatterPlot(x=delta2D[0,:],y=delta2D[1,:],frame=frame,framesize=framesize,xlabel="px",ylabel="px")
 
 		else:
 			QtGui.QMessageBox.critical(self, "Error", "No data to display!")
@@ -810,9 +839,36 @@ if __name__ == "__main__":
 	## win
 	# left = r'E:\Dropbox\Dokumente\Code\test_stuff\IB_030.tif'
 	# right = r'E:\Dropbox\Dokumente\Code\test_stuff\px_test.tif'
+	# right = r'F:\jan_temp\sh2_g2_40x_SD_area5-0_reslized.tif'
 	## correlation dataset
-	left = '/Users/jan/Desktop/correlation_test_dataset/IB_030.tif'
-	right = '/Users/jan/Desktop/correlation_test_dataset/LM_green_reslized.tif'
+	testpath = '/Users/jan/Desktop/'
+	# testpath = 'F:/jan_temp/'
+	left = testpath+'correlation_test_dataset/IB_030.tif'
+	right = testpath+'correlation_test_dataset/LM_green_reslized.tif'
+
+	## Load splash screen image
+	splash_pix = QtGui.QPixmap('SplashScreen.png')
+	## Add version
+	painter = QtGui.QPainter()
+	painter.begin(splash_pix)
+	painter.setPen(QtCore.Qt.white)
+	painter.drawText(0, 0,splash_pix.size().width()-3,splash_pix.size().height()-1,QtCore.Qt.AlignBottom | QtCore.Qt.AlignRight, 'v2.0')
+	painter.end()
+	## Show splash screen
+	splash = QtGui.QSplashScreen(splash_pix, QtCore.Qt.WindowStaysOnTopHint)
+	splash.setMask(splash_pix.mask())
+	splash.show()
+	splash.showMessage("Initializing...",color=QtCore.Qt.white)
+	## Needed to receive mouse clicks to hide splash screen
+	app.processEvents()
+
+	# Simulate something that takes time
+	time.sleep(1)
+	splash.showMessage("Loading images...",color=QtCore.Qt.white)
+
 	widget = MainWidget(left=left, right=right)
 	widget.show()
+
+	splash.finish(widget)
+
 	sys.exit(app.exec_())
