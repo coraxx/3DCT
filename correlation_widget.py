@@ -13,7 +13,7 @@
 # @Usage			: part of 3D Correlation Toolbox
 # @Notes			:
 # @Python_version	: 2.7.10
-# @Last Modified	: 2016/03/07 by {{author}}
+# @Last Modified	: 2016/03/08 by {{author}}
 # ============================================================================
 
 import sys
@@ -260,6 +260,7 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 				self.sceneLeft._z = False
 			else:
 				self.sceneLeft._z = True
+				self.setCustomRotCenter(max(self.imgstack_left.shape))
 			# self.pixmap_left = QtGui.QPixmap(self.left)
 			self.pixmap_left = self.cv2Qimage(self.img_left)
 			self.pixmap_item_left = QtGui.QGraphicsPixmapItem(self.pixmap_left, None, self.sceneLeft)
@@ -291,6 +292,7 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 				self.sceneRight._z = False
 			else:
 				self.sceneRight._z = True
+				self.setCustomRotCenter(max(self.imgstack_right.shape))
 			# self.pixmap_right = QtGui.QPixmap(self.right)
 			self.pixmap_right = self.cv2Qimage(self.img_right)
 			self.pixmap_item_right = QtGui.QGraphicsPixmapItem(self.pixmap_right, None, self.sceneRight)
@@ -396,6 +398,12 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 			else:
 				self.label_markerSizeNano.setText('')
 				self.label_markerSizeNanoUnit.setText('')
+
+	def setCustomRotCenter(self,maxdim):
+		halfmaxdim = 0.5 * maxdim
+		self.doubleSpinBox_custom_rot_center_x.setValue(halfmaxdim)
+		self.doubleSpinBox_custom_rot_center_y.setValue(halfmaxdim)
+		self.doubleSpinBox_custom_rot_center_z.setValue(halfmaxdim)
 
 												##################### END #####################
 												###### Image initialization and rotation ######

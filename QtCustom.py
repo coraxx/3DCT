@@ -13,7 +13,7 @@
 # @Usage			: part of 3D Correlation Toolbox
 # @Notes			: Some widgets in QT Designer are promoted to these classes
 # @Python_version	: 2.7.10
-# @Last Modified	: 2016/03/07 by {{author}}
+# @Last Modified	: 2016/03/08 by {{author}}
 # ============================================================================
 
 from PyQt4 import QtCore, QtGui
@@ -129,20 +129,24 @@ class QTableViewCustom(QtGui.QTableView):
 		if indices:
 			cmDelete = QtGui.QAction('Delete', self)
 			cmDelete.triggered.connect(self.deleteItem)
-			cmGetZ = QtGui.QAction('get z', self)
-			cmGetZ.triggered.connect(self.getz)
-			cmGetZopt = QtGui.QAction('get z optimized', self)
+			cmGetZpoly = QtGui.QAction('get z poly', self)
+			cmGetZpoly.triggered.connect(self.getz)
+			cmGetZgauss = QtGui.QAction('get z gauss', self)
+			cmGetZgauss.triggered.connect(lambda: self.getz(gauss=True))
+			cmGetZopt = QtGui.QAction('get z poly optimized', self)
 			cmGetZopt.triggered.connect(lambda: self.getz(optimize=True))
 			if self.img is None:
-				cmGetZ.setEnabled(False)
+				cmGetZpoly.setEnabled(False)
 				cmGetZopt.setEnabled(False)
+				cmGetZgauss.setEnabled(False)
 			self.contextMenu = QtGui.QMenu(self)
 			self.contextMenu.addAction(cmDelete)
-			self.contextMenu.addAction(cmGetZ)
+			self.contextMenu.addAction(cmGetZpoly)
 			self.contextMenu.addAction(cmGetZopt)
+			self.contextMenu.addAction(cmGetZgauss)
 			self.contextMenu.popup(QtGui.QCursor.pos())
 
-	def getz(self,optimize=False):
+	def getz(self,optimize=False,gauss=False):
 		indices = self.selectedIndexes()
 		## Determine z for selected rows
 		if indices:
@@ -162,8 +166,18 @@ class QTableViewCustom(QtGui.QTableView):
 				x = float(self._model.data(self._model.index(row, 0)).toString())
 				y = float(self._model.data(self._model.index(row, 1)).toString())
 
-				if optimize is False:
-					z = bead_pos.getz(x,y,self.img,n=None)
+				if gauss is True:
+					z = bead_pos.getzGauss(x,y,self.img)
+					print self.img.shape, z
+					if 0 <= z <= self.img.shape[-3]:
+						self._scene.zValuesDict[activeitems[row]][1] = (0,0,0)
+						self._model.itemFromIndex(self._model.index(row, 2)).setForeground(QtCore.Qt.black)
+					else:
+						self._scene.zValuesDict[activeitems[row]][1] = (255,0,0)
+						self._model.itemFromIndex(self._model.index(row, 2)).setForeground(QtCore.Qt.red)
+					self._model.itemFromIndex(self._model.index(row, 2)).setText(str(z))
+				elif optimize is False:
+					z = bead_pos.getzPoly(x,y,self.img,n=None)
 					# z = 45
 					print self.img.shape, z
 					if 0 <= z <= self.img.shape[-3]:
@@ -174,7 +188,7 @@ class QTableViewCustom(QtGui.QTableView):
 						self._model.itemFromIndex(self._model.index(row, 2)).setForeground(QtCore.Qt.red)
 					self._model.itemFromIndex(self._model.index(row, 2)).setText(str(z))
 				elif optimize is True:
-					x,y,z = bead_pos.getz(x,y,self.img,n=None,optimize=True)
+					x,y,z = bead_pos.getzPoly(x,y,self.img,n=None,optimize=True)
 					# x,y,z = 50,50,90
 					print self.img.shape, x,y,z
 					if 0 <= x <= self.img.shape[-1] and 0 <= y <= self.img.shape[-2] and 0 <= z <= self.img.shape[-3]:

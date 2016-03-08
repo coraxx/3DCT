@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# @Title			: bead_pos
+# @Title			: bead_pos{{project_name}}
 # @Project			: 3DCTv2
 # @Description		: Get bead z axis position from 3D image stacks (tiff z-stack)
 # @Author			: Jan Arnold
@@ -15,11 +15,12 @@
 # 					  to get an optimized bead position (optimization of x, y and z)
 # @Notes			: stable, but problems with low SNR <- needs revisiting
 # @Python_version	: 2.7.10
-# @Last Modified	: 2016/03/02
+# @Last Modified	: 2016/03/08 by {{author}}
 # ============================================================================
 
 import math
 import numpy as np
+from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
 import tifffile as tf
 import parabolic
@@ -30,7 +31,7 @@ except:
 	pass
 
 
-def getz(x,y,img,n=None,optimize=False):
+def getzPoly(x,y,img,n=None,optimize=False):
 	## x and y are coordinates
 	## img is the path to the z-stack tiff file or a numpy.ndarray from tifffile.py imread function
 	## n is the number of points around the max value that are used in the polyfit
@@ -73,6 +74,27 @@ def getz(x,y,img,n=None,optimize=False):
 		return x_opt_vals[-1], y_opt_vals[-1], z_opt_vals[-1]
 	else:
 		return data_z_xp_poly
+
+
+def getzGauss(x,y,img):
+	## x and y are coordinates
+	## img is the path to the z-stack tiff file or a numpy.ndarray from tifffile.py imread function
+	## n is the number of points around the max value that are used in the polyfit
+	## leave n to use the maximum amount of points
+	## If optimize is set ti True, the algorythm will try to optimize the x,y,z position
+	## !! if optimize is True, 3 values are returned: x,y,z
+
+	if not isinstance(img, str) and not isinstance(img, np.ndarray):
+		if clrmsg: print clrmsg.ERROR
+		raise TypeError('I can only handle an image path as string or an image volume as numpy.ndarray imported from tifffile.py')
+	elif isinstance(img, str):
+		img = tf.imread(img)
+
+	data_z = img[:,y,x]
+	data = np.array([np.arange(len(data_z)), data_z])
+	popt, pcov = gaussfit(data)
+
+	return popt[1]
 
 
 def optimize_z(x,y,z,image,n=None):
@@ -213,3 +235,42 @@ def optimize_xy(x,y,z,image,nx=None,ny=None):
 	y_opt = y+ymaxvals.mean()-samplewidth
 
 	return x_opt, y_opt
+
+
+def gauss(x, *p):
+	# A "magnitude"
+	# mu "offset on x axis"
+	# sigma "width"
+	A, mu, sigma = p
+	return A*np.exp(-(x-mu)**2/(2.*sigma**2))
+
+
+def gaussfit(data):
+	data[1] = data[1]-data[1].min()
+	p0 = [data[1].max(), data[1].argmax(), 1]
+	popt, pcov = curve_fit(gauss, data[0], data[1], p0=p0)
+	# get std from the diagonal of the covariance matrix
+	std_height, std_mean, std_sigma = np.sqrt(np.diag(pcov))
+	print ('Height     : %.3f' % popt[0])
+	print ('Center     : %.3f' % popt[1])
+	print ('FWHM       : %.3f' % (popt[2] * 2 * math.sqrt(2 * math.log(2,math.e))))
+	print ('STD Height : %.3f' % std_height)
+	print ('STD Center : %.3f' % std_mean)
+	print ('STD FWHM   : %.3f' % (std_sigma * 2 * math.sqrt(2 * math.log(2,math.e))))
+	return popt, pcov
+
+# data = np.array([[0,1,2,3,4,5,6,7,8,9],[10,12,11,15,25,18,13,9,11,10]])
+# popt, pcov = gaussfit(data)
+
+# x = []
+# y = []
+# for i in np.arange(len(data[0])):
+# 	x.append(i)
+# 	y.append(gauss(i,*popt))
+# plt.clf()
+# plt.plot(data[0],data[1])
+# plt.plot(x,y,color='r')
+# plt.show()
+# print np.absolute(y-data[1]).mean()
+# from scipy.stats import ks_2samp
+# print ks_2samp(y, data[1])
