@@ -13,7 +13,7 @@
 # @Usage			: part of 3D Correlation Toolbox
 # @Notes			: Some widgets in QT Designer are promoted to these classes
 # @Python_version	: 2.7.10
-# @Last Modified	: 2016/03/08 by {{author}}
+# @Last Modified	: 2016/03/09 by {{author}}
 # ============================================================================
 
 from PyQt4 import QtCore, QtGui
@@ -167,7 +167,7 @@ class QTableViewCustom(QtGui.QTableView):
 				y = float(self._model.data(self._model.index(row, 1)).toString())
 
 				if gauss is True:
-					z = bead_pos.getzGauss(x,y,self.img)
+					z = bead_pos.getzGauss(x,y,self.img,parent=self.parent)
 					print self.img.shape, z
 					if 0 <= z <= self.img.shape[-3]:
 						self._scene.zValuesDict[activeitems[row]][1] = (0,0,0)
@@ -468,4 +468,10 @@ class MatplotlibWidgetCustom(QtGui.QWidget):
 		self.axHisty.set_xticks([])
 
 		# self.figure.set_dpi(200)
+		self.canvas.draw()
+
+	def xyPlot(self,x,y,label="",clear=False):
+		if clear is True:
+			self.axScatter.clear()
+		self.axScatter.plot(x, y)
 		self.canvas.draw()

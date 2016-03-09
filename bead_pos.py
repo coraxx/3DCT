@@ -15,7 +15,7 @@
 # 					  to get an optimized bead position (optimization of x, y and z)
 # @Notes			: stable, but problems with low SNR <- needs revisiting
 # @Python_version	: 2.7.10
-# @Last Modified	: 2016/03/08 by {{author}}
+# @Last Modified	: 2016/03/09 by {{author}}
 # ============================================================================
 
 import math
@@ -32,6 +32,7 @@ except:
 
 
 def getzPoly(x,y,img,n=None,optimize=False):
+	debug = True
 	## x and y are coordinates
 	## img is the path to the z-stack tiff file or a numpy.ndarray from tifffile.py imread function
 	## n is the number of points around the max value that are used in the polyfit
@@ -40,7 +41,7 @@ def getzPoly(x,y,img,n=None,optimize=False):
 	## !! if optimize is True, 3 values are returned: x,y,z
 
 	if not isinstance(img, str) and not isinstance(img, np.ndarray):
-		if clrmsg: print clrmsg.ERROR
+		if clrmsg and debug is True: print clrmsg.ERROR
 		raise TypeError('I can only handle an image path as string or an image volume as numpy.ndarray imported from tifffile.py')
 	elif isinstance(img, str):
 		img = tf.imread(img)
@@ -53,7 +54,7 @@ def getzPoly(x,y,img,n=None,optimize=False):
 	data_z_xp_poly, data_z_yp_poly = parabolic.parabolic_polyfit(data_z, np.argmax(data_z), n)
 
 	if math.isnan(data_z_xp_poly):
-		if clrmsg: print clrmsg.ERROR
+		if clrmsg and debug is True: print clrmsg.ERROR
 		print TypeError('Failed: Probably due to low SNR')
 		if optimize is True:
 			return x,y,'failed'
@@ -76,7 +77,8 @@ def getzPoly(x,y,img,n=None,optimize=False):
 		return data_z_xp_poly
 
 
-def getzGauss(x,y,img):
+def getzGauss(x,y,img,parent=None):
+	debug = True
 	## x and y are coordinates
 	## img is the path to the z-stack tiff file or a numpy.ndarray from tifffile.py imread function
 	## n is the number of points around the max value that are used in the polyfit
@@ -85,19 +87,20 @@ def getzGauss(x,y,img):
 	## !! if optimize is True, 3 values are returned: x,y,z
 
 	if not isinstance(img, str) and not isinstance(img, np.ndarray):
-		if clrmsg: print clrmsg.ERROR
+		if clrmsg and debug is True: print clrmsg.ERROR
 		raise TypeError('I can only handle an image path as string or an image volume as numpy.ndarray imported from tifffile.py')
 	elif isinstance(img, str):
 		img = tf.imread(img)
 
 	data_z = img[:,y,x]
 	data = np.array([np.arange(len(data_z)), data_z])
-	popt, pcov = gaussfit(data)
+	popt, pcov = gaussfit(data,parent)
 
 	return popt[1]
 
 
 def optimize_z(x,y,z,image,n=None):
+	debug = True
 	if type(image) == str:
 		img = tf.imread(image)
 	elif type(image) == np.ndarray:
@@ -118,7 +121,7 @@ def optimize_z(x,y,z,image,n=None):
 			x_opt, y_opt = optimize_xy(x_opt,y_opt,z_opt,img,nx=None,ny=None)
 			data_z = img[:,round(y_opt),round(x_opt)]
 		except Exception as e:
-			if clrmsg: print clrmsg.ERROR
+			if clrmsg and debug is True: print clrmsg.ERROR
 			print IndexError("Optimization failed, possibly due to low signal or low SNR. "+str(e))
 			return [x],[y],['failed']
 		n = getn(data_z)
@@ -245,32 +248,68 @@ def gauss(x, *p):
 	return A*np.exp(-(x-mu)**2/(2.*sigma**2))
 
 
-def gaussfit(data):
+def gaussfit(data,parent=None):
+	debug = True
+	## Fitting gaussian to data
 	data[1] = data[1]-data[1].min()
 	p0 = [data[1].max(), data[1].argmax(), 1]
 	popt, pcov = curve_fit(gauss, data[0], data[1], p0=p0)
-	# get std from the diagonal of the covariance matrix
-	std_height, std_mean, std_sigma = np.sqrt(np.diag(pcov))
-	print ('Height     : %.3f' % popt[0])
-	print ('Center     : %.3f' % popt[1])
-	print ('FWHM       : %.3f' % (popt[2] * 2 * math.sqrt(2 * math.log(2,math.e))))
-	print ('STD Height : %.3f' % std_height)
-	print ('STD Center : %.3f' % std_mean)
-	print ('STD FWHM   : %.3f' % (std_sigma * 2 * math.sqrt(2 * math.log(2,math.e))))
+
+	## DEBUG
+	if clrmsg and debug is True:
+		from scipy.stats import ks_2samp
+		x = []
+		y = []
+		for i in np.arange(len(data[0])):
+			x.append(i)
+			y.append(gauss(i,*popt))
+		# plt.clf()
+		# plt.plot(data[0], data[1], label='z data')
+		# plt.plot(x, y, label='gaussian fit')
+		# plt.legend()
+		# plt.show()
+		parent.widget_matplotlib.setupScatterCanvas(width=4,height=4,dpi=52,toolbar=False)
+		parent.widget_matplotlib.xyPlot(data[0], data[1], label='z data',clear=True)
+		parent.widget_matplotlib.xyPlot(x, y, label='gaussian fit',clear=False)
+		## Get std from the diagonal of the covariance matrix
+		std_height, std_mean, std_sigma = np.sqrt(np.diag(pcov))
+		print clrmsg.DEBUG + ('Height     : %.3f' % popt[0])
+		print clrmsg.DEBUG + ('Center     : %.3f' % popt[1])
+		print clrmsg.DEBUG + ('FWHM       : %.3f' % (popt[2] * 2 * math.sqrt(2 * math.log(2,math.e))))
+		print clrmsg.DEBUG + ('STD Height : %.3f' % std_height)
+		print clrmsg.DEBUG + ('STD Center : %.3f' % std_mean)
+		print clrmsg.DEBUG + ('STD FWHM   : %.3f' % (std_sigma * 2 * math.sqrt(2 * math.log(2,math.e))))
+		print clrmsg.DEBUG + ('Mean dy    : %.6f' % np.absolute(y-data[1]).mean())
+		print clrmsg.DEBUG + str(ks_2samp(y, data[1]))
 	return popt, pcov
 
-# data = np.array([[0,1,2,3,4,5,6,7,8,9],[10,12,11,15,25,18,13,9,11,10]])
-# popt, pcov = gaussfit(data)
 
-# x = []
-# y = []
-# for i in np.arange(len(data[0])):
-# 	x.append(i)
-# 	y.append(gauss(i,*popt))
-# plt.clf()
-# plt.plot(data[0],data[1])
-# plt.plot(x,y,color='r')
-# plt.show()
-# print np.absolute(y-data[1]).mean()
-# from scipy.stats import ks_2samp
-# print ks_2samp(y, data[1])
+def test(data=None):
+	debug = True
+	if not data:
+		data = np.random.normal(loc=5., size=10000)
+	hist, bin_edges = np.histogram(data, density=True)
+	bin_centres = (bin_edges[:-1] + bin_edges[1:])/2
+	data = np.array([bin_centres, hist])
+	# data = np.array([[0,1,2,3,4,5,6,7,8,9],[10,12,11,15,25,18,13,9,11,10]])
+	popt, pcov = gaussfit(data)
+
+	x = []
+	y = []
+	for i in np.arange(len(data[0])):
+		x.append(i)
+		y.append(gauss(i,*popt))
+	plt.clf()
+	plt.plot(data[0], data[1], label='Test data')
+	plt.plot(x, y, label='Gaussian fit')
+
+	new_bin_centers = np.linspace(bin_centres[0], bin_centres[-1], 200)
+	new_hist_fit = gauss(new_bin_centers, *popt)
+	plt.plot(new_bin_centers, new_hist_fit,label='Interpolated')
+
+	plt.legend()
+	plt.show()
+	if clrmsg and debug is True:
+		from scipy.stats import ks_2samp
+		print clrmsg.DEBUG + ('Mean dy : %.6f' % np.absolute(y-data[1]).mean())
+		print clrmsg.DEBUG + str(ks_2samp(y, data[1]))
