@@ -16,7 +16,7 @@
 # 					: coordinates are points on which the correlation is applied to.
 # @Notes			: Edited and adapted by Jan Arnold (Max Planck Institute for Biochemistry)
 # @Python_version	: 2.7.10
-# @Last Modified	: 2016/02/27 by jan
+# @Last Modified	: 2016/03/09
 # ============================================================================
 
 import os

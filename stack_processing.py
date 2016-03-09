@@ -34,7 +34,7 @@
 # 					: 							for comparison between the original data and the linear as well as the spline interpolation.
 # @Notes			:
 # @Python_version	: 2.7.10
-# @Last Modified	: 2016/02/27 by jan
+# @Last Modified	: 2016/02/27
 # ============================================================================
 
 import sys

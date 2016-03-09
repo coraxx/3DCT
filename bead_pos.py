@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# @Title			: bead_pos{{project_name}}
+# @Title			: bead_pos
 # @Project			: 3DCTv2
 # @Description		: Get bead z axis position from 3D image stacks (tiff z-stack)
 # @Author			: Jan Arnold
 # @Email			: jan.arnold (at) coraxx.net
 # @Credits			: endolith https://gist.github.com/endolith/255291 for parabolic fitting function
+# 					  2D Gaussian fit from http://scipy.github.io/old-wiki/pages/Cookbook/FittingData
 # @Maintainer		: Jan Arnold
 # @Date				: 2015/12
 # @Version			: 0.2
@@ -15,12 +16,12 @@
 # 					  to get an optimized bead position (optimization of x, y and z)
 # @Notes			: stable, but problems with low SNR <- needs revisiting
 # @Python_version	: 2.7.10
-# @Last Modified	: 2016/03/09 by {{author}}
+# @Last Modified	: 2016/03/09
 # ============================================================================
 
 import math
 import numpy as np
-from scipy.optimize import curve_fit
+from scipy.optimize import curve_fit, leastsq
 import matplotlib.pyplot as plt
 import tifffile as tf
 import parabolic
@@ -61,14 +62,15 @@ def getzPoly(x,y,img,n=None,optimize=False):
 		else:
 			return 'failed'
 
-	f, ax = plt.subplots()
-	ax.plot(range(0,len(data_z)), data_z, color='blue')
-	ax.plot(data_z_xp_poly, data_z_yp_poly, 'o', color='black')
-	ax.set_title("mid: "+str(data_z_xp_poly))
+	if debug is True:
+		f, ax = plt.subplots()
+		ax.plot(range(0,len(data_z)), data_z, color='blue')
+		ax.plot(data_z_xp_poly, data_z_yp_poly, 'o', color='black')
+		ax.set_title("mid: "+str(data_z_xp_poly))
 
-	plt.draw()
-	plt.pause(0.5)
-	plt.close()
+		plt.draw()
+		plt.pause(1)
+		plt.close()
 
 	if optimize is True:
 		x_opt_vals, y_opt_vals, z_opt_vals = optimize_z(x,y,data_z_xp_poly,img,n=None)
@@ -77,7 +79,7 @@ def getzPoly(x,y,img,n=None,optimize=False):
 		return data_z_xp_poly
 
 
-def getzGauss(x,y,img,parent=None):
+def getzGauss(x,y,img,parent=None,optimize=False):
 	debug = True
 	## x and y are coordinates
 	## img is the path to the z-stack tiff file or a numpy.ndarray from tifffile.py imread function
@@ -94,9 +96,23 @@ def getzGauss(x,y,img,parent=None):
 
 	data_z = img[:,y,x]
 	data = np.array([np.arange(len(data_z)), data_z])
-	popt, pcov = gaussfit(data,parent)
+	poptZ, pcov = gaussfit(data,parent)
 
-	return popt[1]
+	if optimize is False:
+		return poptZ[1]
+	else:
+		print 'gauss optimized'
+		return x, y, poptZ[1]
+		'''
+		pseude code:
+		get image slize poptZ[1] and cut out x-radius, y-radius, x+radius, y+radius
+		fitgauss2D over cutout
+		maybe loop over it to optimize position further?!
+		try to to gauss2D fit on cutout in every plane and plot center to see drift
+		'''
+		poptXY = fitgaussian(data)
+		(height, xopt, yopt, width_x, width_y) = poptXY
+		return xopt, yopt, poptZ[1]
 
 
 def optimize_z(x,y,z,image,n=None):
@@ -145,6 +161,7 @@ def getn(data):
 
 
 def optimize_xy(x,y,z,image,nx=None,ny=None):
+	debug = True
 	## x and y are coordinates, z is the layer in the z-stack tiff file
 	## image can be either the path to the z-stack tiff file or the np.array data of itself
 	## n is the number of points around the max value that are used in the polyfit
@@ -160,7 +177,7 @@ def optimize_xy(x,y,z,image,nx=None,ny=None):
 	data_x = img[z,y,x-samplewidth:x+samplewidth]
 	data_y = img[z,y-samplewidth:y+samplewidth,x]
 
-	f, axarr = plt.subplots(2, sharex=True)
+	if debug is True: f, axarr = plt.subplots(2, sharex=True)
 
 	if nx is None:
 		get_nx = True
@@ -180,8 +197,9 @@ def optimize_xy(x,y,z,image,nx=None,ny=None):
 		data_x_xp_poly, data_x_yp_poly = parabolic.parabolic_polyfit(data_x, np.argmax(data_x), nx)
 		xmaxvals = np.append(xmaxvals,[data_x_xp_poly])
 		c = np.random.rand(3,1)
-		axarr[0].plot(range(0,len(data_x)), data_x, color=c)
-		axarr[0].plot(data_x_xp_poly, data_x_yp_poly, 'o', color=c)
+		if debug is True:
+			axarr[0].plot(range(0,len(data_x)), data_x, color=c)
+			axarr[0].plot(data_x_xp_poly, data_x_yp_poly, 'o', color=c)
 	for offset in range(10):
 		data_x = img[z,y+offset,x-samplewidth:x+samplewidth]
 		if data_x.max() < data_x.mean()*1.1:
@@ -193,10 +211,11 @@ def optimize_xy(x,y,z,image,nx=None,ny=None):
 		data_x_xp_poly, data_x_yp_poly = parabolic.parabolic_polyfit(data_x, np.argmax(data_x), nx)
 		xmaxvals = np.append(xmaxvals,[data_x_xp_poly])
 		c = np.random.rand(3,1)
-		axarr[0].plot(range(0,len(data_x)), data_x, color=c)
-		axarr[0].plot(data_x_xp_poly, data_x_yp_poly, 'o', color=c)
+		if debug is True:
+			axarr[0].plot(range(0,len(data_x)), data_x, color=c)
+			axarr[0].plot(data_x_xp_poly, data_x_yp_poly, 'o', color=c)
 
-	axarr[0].set_title("mid-mean: "+str(xmaxvals.mean()))
+	if debug is True: axarr[0].set_title("mid-mean: "+str(xmaxvals.mean()))
 
 	## optimize y
 	ymaxvals = np.array([], dtype=np.int32)
@@ -211,8 +230,9 @@ def optimize_xy(x,y,z,image,nx=None,ny=None):
 		data_y_xp_poly, data_y_yp_poly = parabolic.parabolic_polyfit(data_y, np.argmax(data_y), ny)
 		ymaxvals = np.append(ymaxvals,[data_y_xp_poly])
 		c = np.random.rand(3,1)
-		axarr[1].plot(range(0,len(data_y)), data_y, color=c)
-		axarr[1].plot(data_y_xp_poly, data_y_yp_poly, 'o', color=c)
+		if debug is True:
+			axarr[1].plot(range(0,len(data_y)), data_y, color=c)
+			axarr[1].plot(data_y_xp_poly, data_y_yp_poly, 'o', color=c)
 
 	for offset in range(10):
 		data_y = img[z,y-samplewidth:y+samplewidth,x+offset]
@@ -225,14 +245,16 @@ def optimize_xy(x,y,z,image,nx=None,ny=None):
 		data_y_xp_poly, data_y_yp_poly = parabolic.parabolic_polyfit(data_y, np.argmax(data_y), ny)
 		ymaxvals = np.append(ymaxvals,[data_y_xp_poly])
 		c = np.random.rand(3,1)
-		axarr[1].plot(range(0,len(data_y)), data_y, color=c)
-		axarr[1].plot(data_y_xp_poly, data_y_yp_poly, 'o', color=c)
+		if debug is True:
+			axarr[1].plot(range(0,len(data_y)), data_y, color=c)
+			axarr[1].plot(data_y_xp_poly, data_y_yp_poly, 'o', color=c)
 
-	axarr[1].set_title("mid-mean: "+str(ymaxvals.mean()))
+	if debug is True: axarr[1].set_title("mid-mean: "+str(ymaxvals.mean()))
 
-	plt.draw()
-	plt.pause(0.5)
-	plt.close()
+	if debug is True:
+		plt.draw()
+		plt.pause(0.5)
+		plt.close()
 	## caculate offset into coordinates
 	x_opt = x+xmaxvals.mean()-samplewidth
 	y_opt = y+ymaxvals.mean()-samplewidth
@@ -240,6 +262,7 @@ def optimize_xy(x,y,z,image,nx=None,ny=None):
 	return x_opt, y_opt
 
 
+## Gaussian 1D fit
 def gauss(x, *p):
 	# A "magnitude"
 	# mu "offset on x axis"
@@ -255,36 +278,35 @@ def gaussfit(data,parent=None):
 	p0 = [data[1].max(), data[1].argmax(), 1]
 	popt, pcov = curve_fit(gauss, data[0], data[1], p0=p0)
 
+	## Draw graphs in GUI
+	x = []
+	y = []
+	for i in np.arange(len(data[0])):
+		x.append(i)
+		y.append(gauss(i,*popt))
+	parent.widget_matplotlib.setupScatterCanvas(width=4,height=4,dpi=52,toolbar=False)
+	parent.widget_matplotlib.xyPlot(data[0], data[1], label='z data',clear=True)
+	parent.widget_matplotlib.xyPlot(x, y, label='gaussian fit',clear=False)
+
 	## DEBUG
 	if clrmsg and debug is True:
 		from scipy.stats import ks_2samp
-		x = []
-		y = []
-		for i in np.arange(len(data[0])):
-			x.append(i)
-			y.append(gauss(i,*popt))
-		# plt.clf()
-		# plt.plot(data[0], data[1], label='z data')
-		# plt.plot(x, y, label='gaussian fit')
-		# plt.legend()
-		# plt.show()
-		parent.widget_matplotlib.setupScatterCanvas(width=4,height=4,dpi=52,toolbar=False)
-		parent.widget_matplotlib.xyPlot(data[0], data[1], label='z data',clear=True)
-		parent.widget_matplotlib.xyPlot(x, y, label='gaussian fit',clear=False)
 		## Get std from the diagonal of the covariance matrix
 		std_height, std_mean, std_sigma = np.sqrt(np.diag(pcov))
-		print clrmsg.DEBUG + ('Height     : %.3f' % popt[0])
-		print clrmsg.DEBUG + ('Center     : %.3f' % popt[1])
-		print clrmsg.DEBUG + ('FWHM       : %.3f' % (popt[2] * 2 * math.sqrt(2 * math.log(2,math.e))))
-		print clrmsg.DEBUG + ('STD Height : %.3f' % std_height)
-		print clrmsg.DEBUG + ('STD Center : %.3f' % std_mean)
-		print clrmsg.DEBUG + ('STD FWHM   : %.3f' % (std_sigma * 2 * math.sqrt(2 * math.log(2,math.e))))
-		print clrmsg.DEBUG + ('Mean dy    : %.6f' % np.absolute(y-data[1]).mean())
+		print clrmsg.DEBUG + '='*15, 'GAUSS FIT', '='*25
+		print clrmsg.DEBUG + 'Amplitude		:', popt[0]
+		print clrmsg.DEBUG + 'Location		:', popt[1]
+		## http://mathworld.wolfram.com/GaussianFunction.html -> sigma * 2 * sqrt(2 * ln(2))
+		print clrmsg.DEBUG + 'FWHM			:', popt[2] * 2 * math.sqrt(2 * math.log(2,math.e))
+		print clrmsg.DEBUG + 'STD Amplitude	:', std_height
+		print clrmsg.DEBUG + 'STD Location	:', std_mean
+		print clrmsg.DEBUG + 'STD FWHM		:', std_sigma * 2 * math.sqrt(2 * math.log(2,math.e))
+		print clrmsg.DEBUG + 'Mean dy		:', np.absolute(y-data[1]).mean()
 		print clrmsg.DEBUG + str(ks_2samp(y, data[1]))
 	return popt, pcov
 
 
-def test(data=None):
+def test1Dgauss(data=None):
 	debug = True
 	if not data:
 		data = np.random.normal(loc=5., size=10000)
@@ -313,3 +335,73 @@ def test(data=None):
 		from scipy.stats import ks_2samp
 		print clrmsg.DEBUG + ('Mean dy : %.6f' % np.absolute(y-data[1]).mean())
 		print clrmsg.DEBUG + str(ks_2samp(y, data[1]))
+
+
+## Gaussian 2D fit from http://scipy.github.io/old-wiki/pages/Cookbook/FittingData
+def gaussian(height, center_x, center_y, width_x, width_y):
+	"""Returns a gaussian function with the given parameters"""
+	width_x = float(width_x)
+	width_y = float(width_y)
+	return lambda x,y: height*np.exp(
+				-(((center_x-x)/width_x)**2+((center_y-y)/width_y)**2)/2)
+
+
+def moments(data):
+	"""Returns (height, x, y, width_x, width_y)
+	the gaussian parameters of a 2D distribution by calculating its
+	moments """
+	total = data.sum()
+	X, Y = np.indices(data.shape)
+	x = (X*data).sum()/total
+	y = (Y*data).sum()/total
+	col = data[:, int(y)]
+	width_x = np.sqrt(abs((np.arange(col.size)-y)**2*col).sum()/col.sum())
+	row = data[int(x), :]
+	width_y = np.sqrt(abs((np.arange(row.size)-x)**2*row).sum()/row.sum())
+	height = data.max()
+	return height, x, y, width_x, width_y
+
+
+def fitgaussian(data):
+	"""Returns (height, x, y, width_x, width_y)
+	the gaussian parameters of a 2D distribution found by a fit"""
+	params = moments(data)
+	errorfunction = lambda p: np.ravel(gaussian(*p)(*np.indices(data.shape)) - data)
+	p, success = leastsq(errorfunction, params)
+	return p
+
+
+def test2Dgauss(data=None):
+	from pylab import *
+	if data is None:
+		# Create the gaussian data
+		Xin, Yin = mgrid[0:201, 0:201]
+		data = gaussian(3, 100, 100, 20, 40)(Xin, Yin) + np.random.random(Xin.shape)
+
+	# data = data-data.min()
+	print data.min(), data.max()
+	low_values_indices = data < data.max()-(data.max()-data.min())*0.6  # Where values are low
+	data[low_values_indices] = 0
+
+	matshow(data, cmap=cm.gist_earth_r)
+
+	params = fitgaussian(data)
+	fit = gaussian(*params)
+
+	contour(fit(*indices(data.shape)), cmap=cm.copper)
+	ax = gca()
+	(height, x, y, width_x, width_y) = params
+
+	text(0.95, 0.05, """
+	x : %.1f
+	y : %.1f
+	width_x : %.1f
+	width_y : %.1f""" % (x, y, width_x, width_y),
+						fontsize=16, horizontalalignment='right',
+						verticalalignment='bottom', transform=ax.transAxes)
+
+	show()
+
+img = tf.imread('/Users/jan/Desktop/dot2.tif')
+print img.shape
+test2Dgauss(img)

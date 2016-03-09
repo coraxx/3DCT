@@ -16,7 +16,7 @@
 # 					: and it will return # [ ERROR ] Error message
 # @Notes			: You can add your own status prefixes.
 # @Python_version	: 2.7.10
-# @Last Modified	: 2016/02/27 by jan
+# @Last Modified	: 2016/02/27
 # ============================================================================
 
 ## Fore: BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE, RESET.

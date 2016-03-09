@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# @Title			: QtCustom{{project_name}}
+# @Title			: QtCustom
 # @Project			: 3DCTv2
 # @Description		: Custom Qt classes
 # @Author			: Jan Arnold
@@ -13,7 +13,7 @@
 # @Usage			: part of 3D Correlation Toolbox
 # @Notes			: Some widgets in QT Designer are promoted to these classes
 # @Python_version	: 2.7.10
-# @Last Modified	: 2016/03/09 by {{author}}
+# @Last Modified	: 2016/03/09
 # ============================================================================
 
 from PyQt4 import QtCore, QtGui
@@ -131,19 +131,23 @@ class QTableViewCustom(QtGui.QTableView):
 			cmDelete.triggered.connect(self.deleteItem)
 			cmGetZpoly = QtGui.QAction('get z poly', self)
 			cmGetZpoly.triggered.connect(self.getz)
+			cmGetZpolyOpt = QtGui.QAction('get z poly optimized', self)
+			cmGetZpolyOpt.triggered.connect(lambda: self.getz(optimize=True))
 			cmGetZgauss = QtGui.QAction('get z gauss', self)
 			cmGetZgauss.triggered.connect(lambda: self.getz(gauss=True))
-			cmGetZopt = QtGui.QAction('get z poly optimized', self)
-			cmGetZopt.triggered.connect(lambda: self.getz(optimize=True))
+			cmGetZgaussOpt = QtGui.QAction('get z gauss optimized', self)
+			cmGetZgaussOpt.triggered.connect(lambda: self.getz(gauss=True,optimize=True))
 			if self.img is None:
 				cmGetZpoly.setEnabled(False)
-				cmGetZopt.setEnabled(False)
+				cmGetZpolyOpt.setEnabled(False)
 				cmGetZgauss.setEnabled(False)
+				cmGetZgaussOpt.setEnabled(False)
 			self.contextMenu = QtGui.QMenu(self)
 			self.contextMenu.addAction(cmDelete)
 			self.contextMenu.addAction(cmGetZpoly)
-			self.contextMenu.addAction(cmGetZopt)
+			self.contextMenu.addAction(cmGetZpolyOpt)
 			self.contextMenu.addAction(cmGetZgauss)
+			self.contextMenu.addAction(cmGetZgaussOpt)
 			self.contextMenu.popup(QtGui.QCursor.pos())
 
 	def getz(self,optimize=False,gauss=False):
@@ -167,19 +171,31 @@ class QTableViewCustom(QtGui.QTableView):
 				y = float(self._model.data(self._model.index(row, 1)).toString())
 
 				if gauss is True:
-					z = bead_pos.getzGauss(x,y,self.img,parent=self.parent)
-					print self.img.shape, z
-					if 0 <= z <= self.img.shape[-3]:
-						self._scene.zValuesDict[activeitems[row]][1] = (0,0,0)
-						self._model.itemFromIndex(self._model.index(row, 2)).setForeground(QtCore.Qt.black)
+					if optimize is False:
+						z = bead_pos.getzGauss(x,y,self.img,parent=self.parent)
+						if self.debug is True: print clrmsg.DEBUG + str(self.img.shape), z
+						if 0 <= z <= self.img.shape[-3]:
+							self._scene.zValuesDict[activeitems[row]][1] = (0,0,0)
+							self._model.itemFromIndex(self._model.index(row, 2)).setForeground(QtCore.Qt.black)
+						else:
+							self._scene.zValuesDict[activeitems[row]][1] = (255,0,0)
+							self._model.itemFromIndex(self._model.index(row, 2)).setForeground(QtCore.Qt.red)
+						self._model.itemFromIndex(self._model.index(row, 2)).setText(str(z))
 					else:
-						self._scene.zValuesDict[activeitems[row]][1] = (255,0,0)
-						self._model.itemFromIndex(self._model.index(row, 2)).setForeground(QtCore.Qt.red)
-					self._model.itemFromIndex(self._model.index(row, 2)).setText(str(z))
+						x,y,z = bead_pos.getzGauss(x,y,self.img,parent=self.parent,optimize=True)
+						if self.debug is True: print clrmsg.DEBUG + str(self.img.shape), x,y,z
+						if 0 <= x <= self.img.shape[-1] and 0 <= y <= self.img.shape[-2] and 0 <= z <= self.img.shape[-3]:
+							self._scene.zValuesDict[activeitems[row]][1] = (255,0,0)
+							self._model.itemFromIndex(self._model.index(row, 2)).setForeground(QtCore.Qt.black)
+						else:
+							self._scene.zValuesDict[activeitems[row]][1] = (0,0,0)
+							self._model.itemFromIndex(self._model.index(row, 2)).setForeground(QtCore.Qt.red)
+						self._model.itemFromIndex(self._model.index(row, 0)).setText(str(x))
+						self._model.itemFromIndex(self._model.index(row, 1)).setText(str(y))
+						self._model.itemFromIndex(self._model.index(row, 2)).setText(str(z))
 				elif optimize is False:
 					z = bead_pos.getzPoly(x,y,self.img,n=None)
-					# z = 45
-					print self.img.shape, z
+					if self.debug is True: print clrmsg.DEBUG + str(self.img.shape), z
 					if 0 <= z <= self.img.shape[-3]:
 						self._scene.zValuesDict[activeitems[row]][1] = (0,0,0)
 						self._model.itemFromIndex(self._model.index(row, 2)).setForeground(QtCore.Qt.black)
@@ -189,8 +205,7 @@ class QTableViewCustom(QtGui.QTableView):
 					self._model.itemFromIndex(self._model.index(row, 2)).setText(str(z))
 				elif optimize is True:
 					x,y,z = bead_pos.getzPoly(x,y,self.img,n=None,optimize=True)
-					# x,y,z = 50,50,90
-					print self.img.shape, x,y,z
+					if self.debug is True: print clrmsg.DEBUG + str(self.img.shape), x,y,z
 					if 0 <= x <= self.img.shape[-1] and 0 <= y <= self.img.shape[-2] and 0 <= z <= self.img.shape[-3]:
 						self._scene.zValuesDict[activeitems[row]][1] = (255,0,0)
 						self._model.itemFromIndex(self._model.index(row, 2)).setForeground(QtCore.Qt.black)
@@ -470,8 +485,12 @@ class MatplotlibWidgetCustom(QtGui.QWidget):
 		# self.figure.set_dpi(200)
 		self.canvas.draw()
 
-	def xyPlot(self,x,y,label="",clear=False):
+	def xyPlot(self,*args,**kwargs):
+		try:
+			clear = kwargs.pop('clear')
+		except:
+			clear = False
 		if clear is True:
 			self.axScatter.clear()
-		self.axScatter.plot(x, y)
+		self.axScatter.plot(*args,**kwargs)
 		self.canvas.draw()

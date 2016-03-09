@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# @Title			: correlation_widget{{project_name}}
+# @Title			: correlation_widget
 # @Project			: 3DCTv2
 # @Description		: Extracting 2D and 3D points for 2D to 3D correlation
 # @Author			: Jan Arnold
@@ -13,7 +13,7 @@
 # @Usage			: part of 3D Correlation Toolbox
 # @Notes			:
 # @Python_version	: 2.7.10
-# @Last Modified	: 2016/03/08 by {{author}}
+# @Last Modified	: 2016/03/09
 # ============================================================================
 
 import sys

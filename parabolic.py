@@ -13,7 +13,7 @@
 # @Usage			:
 # @Notes			:
 # @Python_version	: 2.7.10
-# @Last Modified	: 2015/12/11 by jan
+# @Last Modified	: 2015/12/11
 # ============================================================================
 
 from __future__ import division
