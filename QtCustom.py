@@ -402,7 +402,6 @@ class MatplotlibWidgetCustom(QtGui.QWidget):
 	def setupScatterCanvas(self,width=5,height=5,dpi=72,toolbar=False):
 		if self._setup is False:
 			self.figure = Figure(figsize=(width,height),dpi=dpi)
-			self.axScatter = self.figure.add_subplot(111)
 			self.canvas = FigureCanvas(self.figure)
 			layout = QtGui.QVBoxLayout()
 			layout.addWidget(self.canvas)
@@ -419,6 +418,7 @@ class MatplotlibWidgetCustom(QtGui.QWidget):
 
 	def clearAll(self):
 		QtGui.QWidget().setLayout(self.layout())
+		self._setup = False
 
 	def scatterPlot(self,x='random',y='random',frame=False,framesize=None,xlabel="",ylabel=""):
 		if x == 'random' or y == 'random':
@@ -426,29 +426,31 @@ class MatplotlibWidgetCustom(QtGui.QWidget):
 			x = np.random.randn(1000)
 			y = np.random.randn(1000)
 		# the scatter plot:
-		self.axScatter.clear()
-		self.axScatter.scatter(x, y)
-		self.axScatter.set_aspect(1.)
+		# if not hasattr(self,'subplotScatter'):
+		self.subplotScatter = self.figure.add_subplot(111)
+		self.subplotScatter.clear()
+		self.subplotScatter.scatter(x, y)
+		self.subplotScatter.set_aspect(1.)
 		print x.min(), x.max(), y.min(), y.max()
 		limit = max([abs(x.min()), abs(x.max()), abs(y.min()), abs(y.max())]) + 0.2
 		print limit
-		self.axScatter.set_xlim(-limit, limit)
-		self.axScatter.set_ylim(-limit, limit)
-		self.axScatter.set_xlabel(xlabel)
-		self.axScatter.set_ylabel(ylabel)
-		self.axScatter.xaxis.set_label_coords(0.1,0.08)
-		self.axScatter.yaxis.set_label_coords(0.08,0.12)
-		self.axScatter.plot([0], '+', mew=1, ms=10, c="red")
+		self.subplotScatter.set_xlim(-limit, limit)
+		self.subplotScatter.set_ylim(-limit, limit)
+		self.subplotScatter.set_xlabel(xlabel)
+		self.subplotScatter.set_ylabel(ylabel)
+		self.subplotScatter.xaxis.set_label_coords(0.1,0.08)
+		self.subplotScatter.yaxis.set_label_coords(0.08,0.12)
+		self.subplotScatter.plot([0], '+', mew=1, ms=10, c="red")
 
 		if frame is True and framesize is not None:
-			self.axScatter.add_patch(patches.Rectangle((-framesize*0.5, -framesize*0.5), framesize, framesize, fill=False, edgecolor="red"))
+			self.subplotScatter.add_patch(patches.Rectangle((-framesize*0.5, -framesize*0.5), framesize, framesize, fill=False, edgecolor="red"))
 		elif frame is True and framesize is None:
 			print "Please specify frame size in px as e.g. framesize=1.86"
 
 		# create new axes on the right and on the top of the current axes
 		# The first argument of the new_vertical(new_horizontal) method is
 		# the height (width) of the axes to be created in inches.
-		self.divider = make_axes_locatable(self.axScatter)
+		self.divider = make_axes_locatable(self.subplotScatter)
 		self.axHistx = self.divider.append_axes("top", size="25%", pad=0.1)
 		self.axHisty = self.divider.append_axes("right", size="25%", pad=0.1)
 
@@ -468,7 +470,7 @@ class MatplotlibWidgetCustom(QtGui.QWidget):
 		self.axHistx.hist(x, bins=bins)
 		self.axHisty.hist(y, bins=bins, orientation='horizontal')
 
-		# the xaxis of self.axHistx and yaxis of self.axHisty are shared with self.axScatter,
+		# the xaxis of self.axHistx and yaxis of self.axHisty are shared with self.subplotScatter,
 		# thus there is no need to manually adjust the xlim and ylim of these
 		# axis.
 
@@ -486,11 +488,32 @@ class MatplotlibWidgetCustom(QtGui.QWidget):
 		self.canvas.draw()
 
 	def xyPlot(self,*args,**kwargs):
+		self.subplotXY = self.figure.add_subplot(111)
 		try:
 			clear = kwargs.pop('clear')
 		except:
 			clear = False
 		if clear is True:
-			self.axScatter.clear()
-		self.axScatter.plot(*args,**kwargs)
+			self.subplotXY.clear()
+		self.subplotXY.plot(*args,**kwargs)
+		leg = self.subplotXY.legend(fontsize='small')
+		leg.get_frame().set_alpha(0.5)
+		self.canvas.draw()
+
+	def matshowPlot(self,mat=None,contour=None,labelContour=''):
+		import tifffile as tf
+		n = len(self.figure.axes)
+		for i in range(n):
+			self.figure.axes[i].change_geometry(n+1, 1, i+1)
+		# self.figure.subplots_adjust(hspace=0.5)
+		self.figure.tight_layout()
+		self.subplotMat = self.figure.add_subplot(n+1, 1, n+1)
+		# self.subplotMat.plot(np.arange(100),np.random.random(100)*10)
+		mat = tf.imread('/Users/jan/Desktop/dot2.tif')
+		self.subplotMat.matshow(mat)
+		self.subplotMat.contour(contour, cmap='Greys')
+		self.subplotMat.text(
+							0.95, 0.03, labelContour, fontsize=12, horizontalalignment='right',
+							verticalalignment='bottom', transform=self.figure.transFigure)
+		self.subplotMat.set_anchor('W')
 		self.canvas.draw()

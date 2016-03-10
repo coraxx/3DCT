@@ -79,7 +79,7 @@ def getzPoly(x,y,img,n=None,optimize=False):
 		return data_z_xp_poly
 
 
-def getzGauss(x,y,img,parent=None,optimize=False):
+def getzGauss(x,y,img,parent=None,optimize=False,threshold=None):
 	debug = True
 	## x and y are coordinates
 	## img is the path to the z-stack tiff file or a numpy.ndarray from tifffile.py imread function
@@ -102,7 +102,6 @@ def getzGauss(x,y,img,parent=None,optimize=False):
 		return poptZ[1]
 	else:
 		print 'gauss optimized'
-		return x, y, poptZ[1]
 		'''
 		pseude code:
 		get image slize poptZ[1] and cut out x-radius, y-radius, x+radius, y+radius
@@ -110,7 +109,12 @@ def getzGauss(x,y,img,parent=None,optimize=False):
 		maybe loop over it to optimize position further?!
 		try to to gauss2D fit on cutout in every plane and plot center to see drift
 		'''
-		poptXY = fitgaussian(data)
+		data = tf.imread('/Users/jan/Desktop/dot2.tif')
+		if threshold is not None:
+			threshold = data < data.max()-(data.max()-data.min())*0.6
+			data[threshold] = 0
+		poptXY = fitgaussian(data,parent)
+		return x, y, poptZ[1]
 		(height, xopt, yopt, width_x, width_y) = poptXY
 		return xopt, yopt, poptZ[1]
 
@@ -278,15 +282,16 @@ def gaussfit(data,parent=None):
 	p0 = [data[1].max(), data[1].argmax(), 1]
 	popt, pcov = curve_fit(gauss, data[0], data[1], p0=p0)
 
-	## Draw graphs in GUI
-	x = []
-	y = []
-	for i in np.arange(len(data[0])):
-		x.append(i)
-		y.append(gauss(i,*popt))
-	parent.widget_matplotlib.setupScatterCanvas(width=4,height=4,dpi=52,toolbar=False)
-	parent.widget_matplotlib.xyPlot(data[0], data[1], label='z data',clear=True)
-	parent.widget_matplotlib.xyPlot(x, y, label='gaussian fit',clear=False)
+	if parent is not None:
+		## Draw graphs in GUI
+		x = []
+		y = []
+		for i in np.arange(len(data[0])):
+			x.append(i)
+			y.append(gauss(i,*popt))
+		parent.widget_matplotlib.setupScatterCanvas(width=4,height=4,dpi=52,toolbar=False)
+		parent.widget_matplotlib.xyPlot(data[0], data[1], label='z data',clear=True)
+		parent.widget_matplotlib.xyPlot(x, y, label='gaussian fit',clear=False)
 
 	## DEBUG
 	if clrmsg and debug is True:
@@ -362,12 +367,28 @@ def moments(data):
 	return height, x, y, width_x, width_y
 
 
-def fitgaussian(data):
+def fitgaussian(data,parent=None):
 	"""Returns (height, x, y, width_x, width_y)
 	the gaussian parameters of a 2D distribution found by a fit"""
+
+	def errorfunction(p):
+		return np.ravel(gaussian(*p)(*np.indices(data.shape)) - data)
+
 	params = moments(data)
-	errorfunction = lambda p: np.ravel(gaussian(*p)(*np.indices(data.shape)) - data)
 	p, success = leastsq(errorfunction, params)
+
+	if parent is not None:
+		## Draw graphs in GUI
+		fit = gaussian(*p)
+		contour = fit(*np.indices(data.shape))
+		(height, x, y, width_x, width_y) = p
+		labelContour = (
+						"      x : %.1f\n"
+						"      y : %.1f\n"
+						"width_x : %.1f\n"
+						"width_y : %.1f") % (x, y, width_x, width_y)
+		parent.widget_matplotlib.matshowPlot(mat=data,contour=contour,labelContour=labelContour)
+
 	return p
 
 
@@ -380,8 +401,8 @@ def test2Dgauss(data=None):
 
 	# data = data-data.min()
 	print data.min(), data.max()
-	low_values_indices = data < data.max()-(data.max()-data.min())*0.6  # Where values are low
-	data[low_values_indices] = 0
+	threshold = data < data.max()-(data.max()-data.min())*0.6
+	data[threshold] = 0
 
 	matshow(data, cmap=cm.gist_earth_r)
 
@@ -392,16 +413,16 @@ def test2Dgauss(data=None):
 	ax = gca()
 	(height, x, y, width_x, width_y) = params
 
-	text(0.95, 0.05, """
+	text(0.85, 0.05, """
 	x : %.1f
 	y : %.1f
 	width_x : %.1f
 	width_y : %.1f""" % (x, y, width_x, width_y),
-						fontsize=16, horizontalalignment='right',
+						fontsize=12, horizontalalignment='right',
 						verticalalignment='bottom', transform=ax.transAxes)
 
 	show()
 
-img = tf.imread('/Users/jan/Desktop/dot2.tif')
-print img.shape
-test2Dgauss(img)
+# img = tf.imread('/Users/jan/Desktop/dot2.tif')
+# print img.shape
+# test2Dgauss(img)
