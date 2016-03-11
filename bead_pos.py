@@ -79,7 +79,7 @@ def getzPoly(x,y,img,n=None,optimize=False):
 		return data_z_xp_poly
 
 
-def getzGauss(x,y,img,parent=None,optimize=False,threshold=None):
+def getzGauss(x,y,img,parent=None,optimize=False,threshold=None,cutout=15):
 	debug = True
 	## x and y are coordinates
 	## img is the path to the z-stack tiff file or a numpy.ndarray from tifffile.py imread function
@@ -101,7 +101,7 @@ def getzGauss(x,y,img,parent=None,optimize=False,threshold=None):
 	if optimize is False:
 		return poptZ[1]
 	else:
-		print 'gauss optimized'
+		print 'gauss optimized running'
 		'''
 		pseude code:
 		get image slize poptZ[1] and cut out x-radius, y-radius, x+radius, y+radius
@@ -109,14 +109,23 @@ def getzGauss(x,y,img,parent=None,optimize=False,threshold=None):
 		maybe loop over it to optimize position further?!
 		try to to gauss2D fit on cutout in every plane and plot center to see drift
 		'''
-		data = tf.imread('/Users/jan/Desktop/dot2.tif')
+		if clrmsg and debug is True: print clrmsg.DEBUG, round(poptZ[1])
+		data = np.copy(img[
+					round(poptZ[1]),
+					y-cutout:y+cutout,
+					x-cutout:x+cutout])
+		tf.imsave('/Users/jan/Desktop/cutout_test.tif',data)
+		# data = tf.imread('/Users/jan/Desktop/dot2.tif')
 		if threshold is not None:
 			threshold = data < data.max()-(data.max()-data.min())*0.6
 			data[threshold] = 0
 		poptXY = fitgaussian(data,parent)
-		return x, y, poptZ[1]
+		if poptXY is None:
+			return x, y, poptZ[1]
 		(height, xopt, yopt, width_x, width_y) = poptXY
-		return xopt, yopt, poptZ[1]
+		xopt = y-cutout+xopt
+		yopt = x-cutout+yopt
+		return yopt, xopt, poptZ[1]
 
 
 def optimize_z(x,y,z,image,n=None):
@@ -376,7 +385,9 @@ def fitgaussian(data,parent=None):
 
 	params = moments(data)
 	p, success = leastsq(errorfunction, params)
-
+	if np.isnan(p).any():
+		parent.widget_matplotlib.matshowPlot(mat=data,contour=np.ones(data.shape),labelContour="XY optimization failed\nTry reducing the marker size")
+		return None
 	if parent is not None:
 		## Draw graphs in GUI
 		fit = gaussian(*p)
@@ -388,40 +399,39 @@ def fitgaussian(data,parent=None):
 						"width_x : %.1f\n"
 						"width_y : %.1f") % (x, y, width_x, width_y)
 		parent.widget_matplotlib.matshowPlot(mat=data,contour=contour,labelContour=labelContour)
-
 	return p
 
 
-def test2Dgauss(data=None):
-	from pylab import *
-	if data is None:
-		# Create the gaussian data
-		Xin, Yin = mgrid[0:201, 0:201]
-		data = gaussian(3, 100, 100, 20, 40)(Xin, Yin) + np.random.random(Xin.shape)
+# def test2Dgauss(data=None):
+# 	from pylab import *
+# 	if data is None:
+# 		# Create the gaussian data
+# 		Xin, Yin = mgrid[0:201, 0:201]
+# 		data = gaussian(3, 100, 100, 20, 40)(Xin, Yin) + np.random.random(Xin.shape)
 
-	# data = data-data.min()
-	print data.min(), data.max()
-	threshold = data < data.max()-(data.max()-data.min())*0.6
-	data[threshold] = 0
+# 	# data = data-data.min()
+# 	print data.min(), data.max()
+# 	threshold = data < data.max()-(data.max()-data.min())*0.6
+# 	data[threshold] = 0
 
-	matshow(data, cmap=cm.gist_earth_r)
+# 	matshow(data, cmap=cm.gist_earth_r)
 
-	params = fitgaussian(data)
-	fit = gaussian(*params)
+# 	params = fitgaussian(data)
+# 	fit = gaussian(*params)
 
-	contour(fit(*indices(data.shape)), cmap=cm.copper)
-	ax = gca()
-	(height, x, y, width_x, width_y) = params
+# 	contour(fit(*indices(data.shape)), cmap=cm.copper)
+# 	ax = gca()
+# 	(height, x, y, width_x, width_y) = params
 
-	text(0.85, 0.05, """
-	x : %.1f
-	y : %.1f
-	width_x : %.1f
-	width_y : %.1f""" % (x, y, width_x, width_y),
-						fontsize=12, horizontalalignment='right',
-						verticalalignment='bottom', transform=ax.transAxes)
+# 	text(0.85, 0.05, """
+# 	x : %.1f
+# 	y : %.1f
+# 	width_x : %.1f
+# 	width_y : %.1f""" % (x, y, width_x, width_y),
+# 						fontsize=12, horizontalalignment='right',
+# 						verticalalignment='bottom', transform=ax.transAxes)
 
-	show()
+# 	show()
 
 # img = tf.imread('/Users/jan/Desktop/dot2.tif')
 # print img.shape

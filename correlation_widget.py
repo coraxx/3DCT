@@ -48,7 +48,7 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 		Ui_WidgetWindow.__init__(self)
 		self.setupUi(self)
 		self.counter = 0		# Just for testing (loop counter for test button)
-		self.gauss2Dcutout = 30
+		self.gauss2Dcutout = 15
 
 		## Stylesheet colors:
 		self.stylesheet_orange = "color: rgb(255, 120,   0);"

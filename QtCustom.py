@@ -172,49 +172,50 @@ class QTableViewCustom(QtGui.QTableView):
 
 				if gauss is True:
 					if optimize is False:
-						z = bead_pos.getzGauss(x,y,self.img,parent=self.parent)
-						if self.debug is True: print clrmsg.DEBUG + str(self.img.shape), z
-						if 0 <= z <= self.img.shape[-3]:
+						zopt = bead_pos.getzGauss(x,y,self.img,parent=self.parent)
+						if self.debug is True: print clrmsg.DEBUG + str(self.img.shape), zopt
+						if 0 <= zopt <= self.img.shape[-3]:
 							self._scene.zValuesDict[activeitems[row]][1] = (0,0,0)
 							self._model.itemFromIndex(self._model.index(row, 2)).setForeground(QtCore.Qt.black)
 						else:
 							self._scene.zValuesDict[activeitems[row]][1] = (255,0,0)
 							self._model.itemFromIndex(self._model.index(row, 2)).setForeground(QtCore.Qt.red)
-						self._model.itemFromIndex(self._model.index(row, 2)).setText(str(z))
+						self._model.itemFromIndex(self._model.index(row, 2)).setText(str(zopt))
 					else:
-						x,y,z = bead_pos.getzGauss(x,y,self.img,parent=self.parent,optimize=True)
-						if self.debug is True: print clrmsg.DEBUG + str(self.img.shape), x,y,z
-						if 0 <= x <= self.img.shape[-1] and 0 <= y <= self.img.shape[-2] and 0 <= z <= self.img.shape[-3]:
+						xopt,yopt,zopt = bead_pos.getzGauss(x,y,self.img,parent=self.parent,optimize=True,threshold=True,cutout=self._scene.markerSize)
+						if self.debug is True: print clrmsg.DEBUG + str(self.img.shape), xopt,yopt,zopt
+						if abs(x-xopt) <= 2*self._scene.markerSize and abs(y-yopt) <= 2*self._scene.markerSize and 0 <= zopt <= self.img.shape[-3]:
 							self._scene.zValuesDict[activeitems[row]][1] = (255,0,0)
 							self._model.itemFromIndex(self._model.index(row, 2)).setForeground(QtCore.Qt.black)
 						else:
 							self._scene.zValuesDict[activeitems[row]][1] = (0,0,0)
 							self._model.itemFromIndex(self._model.index(row, 2)).setForeground(QtCore.Qt.red)
-						self._model.itemFromIndex(self._model.index(row, 0)).setText(str(x))
-						self._model.itemFromIndex(self._model.index(row, 1)).setText(str(y))
-						self._model.itemFromIndex(self._model.index(row, 2)).setText(str(z))
+							xopt, yopt = x, y
+						self._model.itemFromIndex(self._model.index(row, 0)).setText(str(xopt))
+						self._model.itemFromIndex(self._model.index(row, 1)).setText(str(yopt))
+						self._model.itemFromIndex(self._model.index(row, 2)).setText(str(zopt))
 				elif optimize is False:
-					z = bead_pos.getzPoly(x,y,self.img,n=None)
-					if self.debug is True: print clrmsg.DEBUG + str(self.img.shape), z
-					if 0 <= z <= self.img.shape[-3]:
+					zopt = bead_pos.getzPoly(x,y,self.img,n=None)
+					if self.debug is True: print clrmsg.DEBUG + str(self.img.shape), zopt
+					if 0 <= zopt <= self.img.shape[-3]:
 						self._scene.zValuesDict[activeitems[row]][1] = (0,0,0)
 						self._model.itemFromIndex(self._model.index(row, 2)).setForeground(QtCore.Qt.black)
 					else:
 						self._scene.zValuesDict[activeitems[row]][1] = (255,0,0)
 						self._model.itemFromIndex(self._model.index(row, 2)).setForeground(QtCore.Qt.red)
-					self._model.itemFromIndex(self._model.index(row, 2)).setText(str(z))
+					self._model.itemFromIndex(self._model.index(row, 2)).setText(str(zopt))
 				elif optimize is True:
-					x,y,z = bead_pos.getzPoly(x,y,self.img,n=None,optimize=True)
-					if self.debug is True: print clrmsg.DEBUG + str(self.img.shape), x,y,z
-					if 0 <= x <= self.img.shape[-1] and 0 <= y <= self.img.shape[-2] and 0 <= z <= self.img.shape[-3]:
+					xopt,yopt,zopt = bead_pos.getzPoly(x,y,self.img,n=None,optimize=True)
+					if self.debug is True: print clrmsg.DEBUG + str(self.img.shape), xopt,yopt,zopt
+					if 0 <= xopt <= self.img.shape[-1] and 0 <= yopt <= self.img.shape[-2] and 0 <= zopt <= self.img.shape[-3]:
 						self._scene.zValuesDict[activeitems[row]][1] = (255,0,0)
 						self._model.itemFromIndex(self._model.index(row, 2)).setForeground(QtCore.Qt.black)
 					else:
 						self._scene.zValuesDict[activeitems[row]][1] = (0,0,0)
 						self._model.itemFromIndex(self._model.index(row, 2)).setForeground(QtCore.Qt.red)
-					self._model.itemFromIndex(self._model.index(row, 0)).setText(str(x))
-					self._model.itemFromIndex(self._model.index(row, 1)).setText(str(y))
-					self._model.itemFromIndex(self._model.index(row, 2)).setText(str(z))
+					self._model.itemFromIndex(self._model.index(row, 0)).setText(str(xopt))
+					self._model.itemFromIndex(self._model.index(row, 1)).setText(str(yopt))
+					self._model.itemFromIndex(self._model.index(row, 2)).setText(str(zopt))
 
 												##################### END #####################
 												#######          Update items           #######
@@ -501,7 +502,7 @@ class MatplotlibWidgetCustom(QtGui.QWidget):
 		self.canvas.draw()
 
 	def matshowPlot(self,mat=None,contour=None,labelContour=''):
-		import tifffile as tf
+		# import tifffile as tf
 		n = len(self.figure.axes)
 		for i in range(n):
 			self.figure.axes[i].change_geometry(n+1, 1, i+1)
@@ -509,7 +510,7 @@ class MatplotlibWidgetCustom(QtGui.QWidget):
 		self.figure.tight_layout()
 		self.subplotMat = self.figure.add_subplot(n+1, 1, n+1)
 		# self.subplotMat.plot(np.arange(100),np.random.random(100)*10)
-		mat = tf.imread('/Users/jan/Desktop/dot2.tif')
+		# mat = tf.imread('/Users/jan/Desktop/dot2.tif')
 		self.subplotMat.matshow(mat)
 		self.subplotMat.contour(contour, cmap='Greys')
 		self.subplotMat.text(
