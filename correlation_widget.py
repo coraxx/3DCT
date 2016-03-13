@@ -48,7 +48,7 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 		Ui_WidgetWindow.__init__(self)
 		self.setupUi(self)
 		self.counter = 0		# Just for testing (loop counter for test button)
-		self.gauss2Dcutout = 15
+		self.refreshUI = app.processEvents
 
 		## Stylesheet colors:
 		self.stylesheet_orange = "color: rgb(255, 120,   0);"
@@ -88,6 +88,14 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 		# SpinBoxes
 		self.spinBox_rot.valueChanged.connect(self.rotateImage)
 		self.spinBox_markerSize.valueChanged.connect(self.changeMarkerSize)
+		self.doubleSpinBox_scatterPlotFrameSize.valueChanged.connect(lambda: self.displayResults(
+																frame=self.checkBox_scatterPlotFrame.isChecked(),
+																framesize=self.doubleSpinBox_scatterPlotFrameSize.value()))
+
+		## Checkboxes
+		self.checkBox_scatterPlotFrame.stateChanged.connect(lambda: self.displayResults(
+																frame=self.checkBox_scatterPlotFrame.isChecked(),
+																framesize=self.doubleSpinBox_scatterPlotFrameSize.value()))
 
 		## Buttons
 		self.toolButton_rotcw.clicked.connect(lambda: self.rotateImage45(direction='cw'))
@@ -237,13 +245,46 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 		self.toolButton_importPoints.setEnabled(not status)
 		self.toolButton_exportPoints.setEnabled(not status)
 
+	def colorModels(self):
+		rowsLeft = self.modelLleft.rowCount()
+		rowsRight = self.modelRight.rowCount()
+		alpha = 100
+		for row in range(min([rowsLeft,rowsRight])):
+			color_correlate = (50,220,175,alpha)
+			if rowsLeft != 0:
+				self.modelLleft.item(row, 0).setBackground(QtGui.QColor(*color_correlate))
+				self.modelLleft.item(row, 1).setBackground(QtGui.QColor(*color_correlate))
+				self.modelLleft.item(row, 2).setBackground(QtGui.QColor(*color_correlate))
+			if rowsRight != 0:
+				self.modelRight.item(row, 0).setBackground(QtGui.QColor(*color_correlate))
+				self.modelRight.item(row, 1).setBackground(QtGui.QColor(*color_correlate))
+				self.modelRight.item(row, 2).setBackground(QtGui.QColor(*color_correlate))
+		if rowsLeft > rowsRight:
+			if '{0:b}'.format(self.sceneLeft.imagetype)[-1] == '0':
+				color_overflow = (105,220,0,alpha)  # green if entries are used as POIs
+			else:
+				color_overflow = (220,25,105,alpha)  # red(ish) color to indicate unballanced amount of markers for correlation
+			for row in range(rowsRight,rowsLeft):
+				self.modelLleft.item(row, 0).setBackground(QtGui.QColor(*color_overflow))
+				self.modelLleft.item(row, 1).setBackground(QtGui.QColor(*color_overflow))
+				self.modelLleft.item(row, 2).setBackground(QtGui.QColor(*color_overflow))
+		elif rowsLeft < rowsRight:
+			if '{0:b}'.format(self.sceneRight.imagetype)[-1] == '0':
+				color_overflow = (105,220,0,alpha)  # green if entries are used as POIs
+			else:
+				color_overflow = (220,25,105,alpha)  # red(ish) color to indicate unballanced amount of markers for correlation
+			for row in range(rowsLeft,rowsRight):
+				self.modelRight.item(row, 0).setBackground(QtGui.QColor(*color_overflow))
+				self.modelRight.item(row, 1).setBackground(QtGui.QColor(*color_overflow))
+				self.modelRight.item(row, 2).setBackground(QtGui.QColor(*color_overflow))
+
 												###############################################
 												###### Image initialization and rotation ######
 												#################### START ####################
 	def initImageLeft(self):
 		if self.left is not None:
 			## Changed GraphicsSceneLeft(self) to QtCustom.QGraphicsSceneCustom(self.graphicsView_left) to reuse class for both scenes
-			self.sceneLeft = QtCustom.QGraphicsSceneCustom(self.graphicsView_left,side='left',model=self.modelLleft)
+			self.sceneLeft = QtCustom.QGraphicsSceneCustom(self.graphicsView_left,mainWidget=self,side='left',model=self.modelLleft)
 			## set pen color yellow
 			self.sceneLeft.pen = QtGui.QPen(QtCore.Qt.red)
 			## Splash screen message
@@ -275,7 +316,7 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 
 	def initImageRight(self):
 		if self.right is not None:
-			self.sceneRight = QtCustom.QGraphicsSceneCustom(self.graphicsView_right,side='right',model=self.modelRight)
+			self.sceneRight = QtCustom.QGraphicsSceneCustom(self.graphicsView_right,mainWidget=self,side='right',model=self.modelRight)
 			## set pen color yellow
 			self.sceneRight.pen = QtGui.QPen(QtCore.Qt.yellow)
 			## Splash screen message
@@ -401,6 +442,7 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 				self.label_markerSizeNanoUnit.setText('')
 
 	def setCustomRotCenter(self,maxdim):
+		## The default value is set as the center of a cube with an edge length equal to the longest edge of the image volume
 		halfmaxdim = 0.5 * maxdim
 		self.doubleSpinBox_custom_rot_center_x.setValue(halfmaxdim)
 		self.doubleSpinBox_custom_rot_center_y.setValue(halfmaxdim)
@@ -703,7 +745,11 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 		nrRowsModel2D = model2D.rowCount()
 		nrRowsmodel3D = model3D.rowCount()
 		# self.rotation_center = [self.doubleSpinBox_psi.value(),self.doubleSpinBox_phi.value(),self.doubleSpinBox_theta.value()]
-		self.rotation_center = [670, 670, 670]
+		# self.rotation_center = [670, 670, 670]
+		self.rotation_center = [
+								self.doubleSpinBox_custom_rot_center_x.value(),
+								self.doubleSpinBox_custom_rot_center_y.value(),
+								self.doubleSpinBox_custom_rot_center_z.value()]
 
 		## create model for poi (QtModel for consistency in handling data between functions. Can also be extended in the future for multiple POIs)
 		# if self.checkBox_poi.isChecked() is True:
@@ -761,8 +807,8 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 				cv2.circle(img, (int(round(calc_spots_2d[0,i])), int(round(calc_spots_2d[1,i]))), 1, (0,0,255), -1)
 		cv2.imwrite(os.path.join(workingdir,timestamp+"_correlated.tif"), img)
 
-		self.displayResults(frame=False,framesize=None)
-		# self.displayResults(frame=True,framesize=1.8)
+		# self.displayResults(frame=False,framesize=None)
+		self.displayResults(frame=self.checkBox_scatterPlotFrame.isChecked(),framesize=self.doubleSpinBox_scatterPlotFrameSize.value())
 
 	def displayResults(self,frame=False,framesize=None):
 		if self.correlation_results:

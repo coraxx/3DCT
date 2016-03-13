@@ -37,9 +37,8 @@ class QTableViewCustom(QtGui.QTableView):
 	def __init__(self, parent=None,):
 		## parent is mainWidget
 		QtGui.QTableView.__init__(self,parent)
-		self.parent = parent
-		if hasattr(parent, "debug"):
-			self.debug = parent.debug
+		if hasattr(self.parent(), "debug"):
+			self.debug = self.parent().debug
 			if self.debug is True: print clrmsg.DEBUG + 'Debug bool inherited'
 		else:
 			self.debug = True
@@ -89,6 +88,7 @@ class QTableViewCustom(QtGui.QTableView):
 												self._model.data(self._model.index(row, 2)).toString(),
 												self._model.itemFromIndex(self._model.index(row, 2)).foreground().color().getRgb()]
 				row += 1
+		self.parent().colorModels()
 
 	def showSelectedItem(self):
 		indices = self.selectedIndexes()
@@ -172,7 +172,7 @@ class QTableViewCustom(QtGui.QTableView):
 
 				if gauss is True:
 					if optimize is False:
-						zopt = bead_pos.getzGauss(x,y,self.img,parent=self.parent)
+						zopt = bead_pos.getzGauss(x,y,self.img,parent=self.parent())
 						if self.debug is True: print clrmsg.DEBUG + str(self.img.shape), zopt
 						if 0 <= zopt <= self.img.shape[-3]:
 							self._scene.zValuesDict[activeitems[row]][1] = (0,0,0)
@@ -182,7 +182,9 @@ class QTableViewCustom(QtGui.QTableView):
 							self._model.itemFromIndex(self._model.index(row, 2)).setForeground(QtCore.Qt.red)
 						self._model.itemFromIndex(self._model.index(row, 2)).setText(str(zopt))
 					else:
-						xopt,yopt,zopt = bead_pos.getzGauss(x,y,self.img,parent=self.parent,optimize=True,threshold=True,cutout=self._scene.markerSize)
+						xopt,yopt,zopt = bead_pos.getzGauss(
+															x,y,self.img,parent=self.parent(),optimize=True,threshold=True,
+															threshVal=self.parent().doubleSpinBox_treshVal.value(),cutout=self._scene.markerSize)
 						if self.debug is True: print clrmsg.DEBUG + str(self.img.shape), xopt,yopt,zopt
 						if abs(x-xopt) <= 2*self._scene.markerSize and abs(y-yopt) <= 2*self._scene.markerSize and 0 <= zopt <= self.img.shape[-3]:
 							self._scene.zValuesDict[activeitems[row]][1] = (255,0,0)
@@ -228,7 +230,6 @@ class QTableViewCustom(QtGui.QTableView):
 class QStandardItemModelCustom(QtGui.QStandardItemModel):
 	def __init__(self, parent=None):
 		QtGui.QStandardItemModel.__init__(self,parent)
-		self.parent = parent
 
 	def dropMimeData(self,data,action,row,column,parent):
 		return QtGui.QStandardItemModel.dropMimeData(self,data,action,row,0,parent)
@@ -238,13 +239,13 @@ class QStandardItemModelCustom(QtGui.QStandardItemModel):
 ## QGraphicsSceneCustom
 
 class QGraphicsSceneCustom(QtGui.QGraphicsScene):
-	def __init__(self, parent=None,side=None,model=None):
+	def __init__(self,parent=None,mainWidget=None,side=None,model=None):
 		## parent is QGraphicsView
 		QtGui.QGraphicsScene.__init__(self,parent)
-		self.parent = parent
+		self.mainWidget = mainWidget
 		self.side = side
 		self._model = model
-		self.parent.setDragMode(QtGui.QGraphicsView.NoDrag)
+		self.parent().setDragMode(QtGui.QGraphicsView.NoDrag)
 		## set standard pen color
 		self.pen = QtGui.QPen(QtCore.Qt.red)
 		## Initialize variables
@@ -263,24 +264,24 @@ class QGraphicsSceneCustom(QtGui.QGraphicsScene):
 			scalingFactor = 1.15
 		else:
 			scalingFactor = 1 / 1.15
-		self.parent.scale(scalingFactor, scalingFactor)
+		self.parent().scale(scalingFactor, scalingFactor)
 		## Center on mouse pos only if mouse moved mor then 25px
 		if (event.screenPos()-self.lastScreenPos).manhattanLength() > 25:
-			self.parent.centerOn(event.scenePos().x(), event.scenePos().y())
+			self.parent().centerOn(event.scenePos().x(), event.scenePos().y())
 			self.lastScenePos = event.scenePos()
 		else:
-			self.parent.centerOn(self.lastScenePos.x(), self.lastScenePos.y())
+			self.parent().centerOn(self.lastScenePos.x(), self.lastScenePos.y())
 		## Save pos for precise scrolling, i.e. centering view only when mouse moved
 		self.lastScreenPos = event.screenPos()
 
 	def mousePressEvent(self, event):
 		modifiers = QtGui.QApplication.keyboardModifiers()
 		if event.button() == QtCore.Qt.LeftButton and modifiers != QtCore.Qt.ControlModifier:
-			self.parent.setDragMode(QtGui.QGraphicsView.ScrollHandDrag)
+			self.parent().setDragMode(QtGui.QGraphicsView.ScrollHandDrag)
 			## Model does not to be refreshed every time while navigating
 			return
 		elif event.button() == QtCore.Qt.LeftButton and modifiers == QtCore.Qt.ControlModifier:
-			self.parent.setDragMode(QtGui.QGraphicsView.RubberBandDrag)
+			self.parent().setDragMode(QtGui.QGraphicsView.RubberBandDrag)
 			self.selectionmode = True
 			## Model does not have to be refreshed every time while selecting
 			return
@@ -304,7 +305,7 @@ class QGraphicsSceneCustom(QtGui.QGraphicsScene):
 					self.zValuesDict[item] = [self.zValuesDict[item][0],(255, 190, 0)]  # orange
 			self.clearSelection()
 			self.itemsToModel()
-		self.parent.setDragMode(QtGui.QGraphicsView.NoDrag)
+		self.parent().setDragMode(QtGui.QGraphicsView.NoDrag)
 		self.selectionmode = False
 
 	def keyPressEvent(self, event):
@@ -314,9 +315,9 @@ class QGraphicsSceneCustom(QtGui.QGraphicsScene):
 			self.itemsToModel()
 		## Zoom in/out with +/- keys
 		elif event.key() == QtCore.Qt.Key_Plus:
-			self.parent.scale(1.15, 1.15)
+			self.parent().scale(1.15, 1.15)
 		elif event.key() == QtCore.Qt.Key_Minus:
-			self.parent.scale(1/1.15, 1/1.15)
+			self.parent().scale(1/1.15, 1/1.15)
 
 	def addCircle(self,x,y,z=0.0):
 		## First add at 0,0 then move to get position from item.scenePos() or .x() and y.()
@@ -376,6 +377,9 @@ class QGraphicsSceneCustom(QtGui.QGraphicsScene):
 				x_item = QtGui.QStandardItem(str(item.x()))
 				y_item = QtGui.QStandardItem(str(item.y()))
 				z_item = QtGui.QStandardItem(str(self.zValuesDict[item][0]))
+				# x_item.setBackground(QtGui.QColor(220,25,105))
+				# y_item.setBackground(QtGui.QColor(50,220,175))
+				# z_item.setBackground(QtGui.QColor(220,25,105))
 
 				z_item.setForeground(QtGui.QColor(*self.zValuesDict[item][1]))
 
@@ -387,6 +391,8 @@ class QGraphicsSceneCustom(QtGui.QGraphicsScene):
 				self._model.setHeaderData(0, QtCore.Qt.Horizontal,'x')
 				self._model.setHeaderData(1, QtCore.Qt.Horizontal,'y')
 				self._model.setHeaderData(2, QtCore.Qt.Horizontal,'z')
+		self.mainWidget.colorModels()
+		print 'color models fired...'
 
 
 ##############################
@@ -504,13 +510,15 @@ class MatplotlibWidgetCustom(QtGui.QWidget):
 	def matshowPlot(self,mat=None,contour=None,labelContour=''):
 		# import tifffile as tf
 		n = len(self.figure.axes)
-		for i in range(n):
-			self.figure.axes[i].change_geometry(n+1, 1, i+1)
-		# self.figure.subplots_adjust(hspace=0.5)
-		self.figure.tight_layout()
-		self.subplotMat = self.figure.add_subplot(n+1, 1, n+1)
+		if n < 2:
+			for i in range(n):
+				self.figure.axes[i].change_geometry(n+1, 1, i+1)
+			# self.figure.subplots_adjust(hspace=0.5)
+			self.figure.tight_layout()
+			self.subplotMat = self.figure.add_subplot(n+1, 1, n+1)
 		# self.subplotMat.plot(np.arange(100),np.random.random(100)*10)
 		# mat = tf.imread('/Users/jan/Desktop/dot2.tif')
+		self.subplotMat.clear()
 		self.subplotMat.matshow(mat)
 		self.subplotMat.contour(contour, cmap='Greys')
 		self.subplotMat.text(

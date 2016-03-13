@@ -19,6 +19,7 @@
 # @Last Modified	: 2016/03/09
 # ============================================================================
 
+import time
 import math
 import numpy as np
 from scipy.optimize import curve_fit, leastsq
@@ -31,6 +32,8 @@ try:
 except:
 	pass
 
+repeat = 0
+
 
 def getzPoly(x,y,img,n=None,optimize=False):
 	debug = True
@@ -38,7 +41,7 @@ def getzPoly(x,y,img,n=None,optimize=False):
 	## img is the path to the z-stack tiff file or a numpy.ndarray from tifffile.py imread function
 	## n is the number of points around the max value that are used in the polyfit
 	## leave n to use the maximum amount of points
-	## If optimize is set ti True, the algorythm will try to optimize the x,y,z position
+	## If optimize is set to True, the algorithm will try to optimize the x,y,z position
 	## !! if optimize is True, 3 values are returned: x,y,z
 
 	if not isinstance(img, str) and not isinstance(img, np.ndarray):
@@ -79,14 +82,13 @@ def getzPoly(x,y,img,n=None,optimize=False):
 		return data_z_xp_poly
 
 
-def getzGauss(x,y,img,parent=None,optimize=False,threshold=None,cutout=15):
+def getzGauss(x,y,img,parent=None,optimize=False,threshold=None,threshVal=0.6,cutout=15):
 	debug = True
 	## x and y are coordinates
 	## img is the path to the z-stack tiff file or a numpy.ndarray from tifffile.py imread function
-	## n is the number of points around the max value that are used in the polyfit
-	## leave n to use the maximum amount of points
-	## If optimize is set ti True, the algorythm will try to optimize the x,y,z position
-	## !! if optimize is True, 3 values are returned: x,y,z
+	## optimize == True kicks off the 2D Gaussian fit and this function will return x,y,z
+	## threshold == True filters the image where it cuts off at max - min * threshVal (threshVal between 0.1 and 1)
+	## cutout specifies the FOV for the 2D Gaussian fit
 
 	if not isinstance(img, str) and not isinstance(img, np.ndarray):
 		if clrmsg and debug is True: print clrmsg.ERROR
@@ -101,31 +103,29 @@ def getzGauss(x,y,img,parent=None,optimize=False,threshold=None,cutout=15):
 	if optimize is False:
 		return poptZ[1]
 	else:
-		print 'gauss optimized running'
-		'''
-		pseude code:
-		get image slize poptZ[1] and cut out x-radius, y-radius, x+radius, y+radius
-		fitgauss2D over cutout
-		maybe loop over it to optimize position further?!
-		try to to gauss2D fit on cutout in every plane and plot center to see drift
-		'''
-		if clrmsg and debug is True: print clrmsg.DEBUG, round(poptZ[1])
-		data = np.copy(img[
-					round(poptZ[1]),
-					y-cutout:y+cutout,
-					x-cutout:x+cutout])
-		tf.imsave('/Users/jan/Desktop/cutout_test.tif',data)
-		# data = tf.imread('/Users/jan/Desktop/dot2.tif')
-		if threshold is not None:
-			threshold = data < data.max()-(data.max()-data.min())*0.6
-			data[threshold] = 0
-		poptXY = fitgaussian(data,parent)
-		if poptXY is None:
-			return x, y, poptZ[1]
-		(height, xopt, yopt, width_x, width_y) = poptXY
-		xopt = y-cutout+xopt
-		yopt = x-cutout+yopt
-		return yopt, xopt, poptZ[1]
+		repeats = 5
+		if clrmsg and debug is True: print clrmsg.DEBUG + '2D Gaussian xy optimization running %.f at z = %.f' % (repeats,round(poptZ[1]))
+		for repeat in range(repeats):
+			data = np.copy(img[
+						round(poptZ[1]),
+						y-cutout:y+cutout,
+						x-cutout:x+cutout])
+			if threshold is not None:
+				threshold = data < data.max()-(data.max()-data.min())*threshVal
+				data[threshold] = 0
+			poptXY = fitgaussian(data,parent)
+			if poptXY is None:
+				return x, y, poptZ[1]
+			(height, xopt, yopt, width_x, width_y) = poptXY
+			## x and y are switched when applying the offset
+			x = x-cutout+yopt
+			y = y-cutout+xopt
+			data_z = img[:,y,x]
+			data = np.array([np.arange(len(data_z)), data_z])
+			poptZ, pcov = gaussfit(data,parent,hold=True)
+			parent.refreshUI()
+			time.sleep(0.05)
+		return x, y, poptZ[1]
 
 
 def optimize_z(x,y,z,image,n=None):
@@ -163,7 +163,7 @@ def optimize_z(x,y,z,image,n=None):
 
 
 def getn(data):
-	## this funktion is used to determine the maximum amount of data points for the polyfit function
+	## this function is used to determine the maximum amount of data points for the polyfit function
 	## data is a numpy array of values
 
 	if len(data)-np.argmax(data) <= np.argmax(data):
@@ -185,7 +185,7 @@ def optimize_xy(x,y,z,image,nx=None,ny=None):
 		img = tf.imread(image)
 	elif type(image) == np.ndarray:
 		img = image
-	## amount of datapoints around coordinate
+	## amount of data points around coordinate
 	samplewidth = 10
 	data_x = img[z,y,x-samplewidth:x+samplewidth]
 	data_y = img[z,y-samplewidth:y+samplewidth,x]
@@ -268,7 +268,7 @@ def optimize_xy(x,y,z,image,nx=None,ny=None):
 		plt.draw()
 		plt.pause(0.5)
 		plt.close()
-	## caculate offset into coordinates
+	## calculate offset into coordinates
 	x_opt = x+xmaxvals.mean()-samplewidth
 	y_opt = y+ymaxvals.mean()-samplewidth
 
@@ -284,7 +284,7 @@ def gauss(x, *p):
 	return A*np.exp(-(x-mu)**2/(2.*sigma**2))
 
 
-def gaussfit(data,parent=None):
+def gaussfit(data,parent=None,hold=False):
 	debug = True
 	## Fitting gaussian to data
 	data[1] = data[1]-data[1].min()
@@ -298,7 +298,8 @@ def gaussfit(data,parent=None):
 		for i in np.arange(len(data[0])):
 			x.append(i)
 			y.append(gauss(i,*popt))
-		parent.widget_matplotlib.setupScatterCanvas(width=4,height=4,dpi=52,toolbar=False)
+		if hold is False:
+			parent.widget_matplotlib.setupScatterCanvas(width=4,height=4,dpi=52,toolbar=False)
 		parent.widget_matplotlib.xyPlot(data[0], data[1], label='z data',clear=True)
 		parent.widget_matplotlib.xyPlot(x, y, label='gaussian fit',clear=False)
 
@@ -353,7 +354,7 @@ def test1Dgauss(data=None):
 
 ## Gaussian 2D fit from http://scipy.github.io/old-wiki/pages/Cookbook/FittingData
 def gaussian(height, center_x, center_y, width_x, width_y):
-	"""Returns a gaussian function with the given parameters"""
+	"""Returns a Gaussian function with the given parameters"""
 	width_x = float(width_x)
 	width_y = float(width_y)
 	return lambda x,y: height*np.exp(
@@ -362,7 +363,7 @@ def gaussian(height, center_x, center_y, width_x, width_y):
 
 def moments(data):
 	"""Returns (height, x, y, width_x, width_y)
-	the gaussian parameters of a 2D distribution by calculating its
+	the Gaussian parameters of a 2D distribution by calculating its
 	moments """
 	total = data.sum()
 	X, Y = np.indices(data.shape)
@@ -378,7 +379,7 @@ def moments(data):
 
 def fitgaussian(data,parent=None):
 	"""Returns (height, x, y, width_x, width_y)
-	the gaussian parameters of a 2D distribution found by a fit"""
+	the Gaussian parameters of a 2D distribution found by a fit"""
 
 	def errorfunction(p):
 		return np.ravel(gaussian(*p)(*np.indices(data.shape)) - data)
@@ -386,7 +387,9 @@ def fitgaussian(data,parent=None):
 	params = moments(data)
 	p, success = leastsq(errorfunction, params)
 	if np.isnan(p).any():
-		parent.widget_matplotlib.matshowPlot(mat=data,contour=np.ones(data.shape),labelContour="XY optimization failed\nTry reducing the marker size")
+		parent.widget_matplotlib.matshowPlot(
+			mat=data,contour=np.ones(data.shape),labelContour="XY optimization failed\n" +
+			"Try reducing the\nmarker size (equates to\nFOV for gaussian fit)")
 		return None
 	if parent is not None:
 		## Draw graphs in GUI
@@ -405,7 +408,7 @@ def fitgaussian(data,parent=None):
 # def test2Dgauss(data=None):
 # 	from pylab import *
 # 	if data is None:
-# 		# Create the gaussian data
+# 		# Create the Gaussian data
 # 		Xin, Yin = mgrid[0:201, 0:201]
 # 		data = gaussian(3, 100, 100, 20, 40)(Xin, Yin) + np.random.random(Xin.shape)
 
