@@ -124,7 +124,7 @@ def getzGauss(x,y,img,parent=None,optimize=False,threshold=None,threshVal=0.6,cu
 			data = np.array([np.arange(len(data_z)), data_z])
 			poptZ, pcov = gaussfit(data,parent,hold=True)
 			parent.refreshUI()
-			time.sleep(0.05)
+			time.sleep(0.01)
 		return x, y, poptZ[1]
 
 

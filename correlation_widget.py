@@ -145,7 +145,7 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 			self.widget_matplotlib.setupScatterCanvas(width=4,height=4,dpi=72,toolbar=True)
 			self.widget_matplotlib.scatterPlot(x='random',y='random',frame=True,framesize=6,xlabel="lol",ylabel="rofl")
 		itemlistL = csv_handler.csv2list(testpath+'correlation_test_dataset/FIB_coordinates.txt',delimiter="\t",parent=self,sniff=True)
-		itemlistR = csv_handler.csv2list(testpath+'correlation_test_dataset/LM_coordinates4FIB.txt',delimiter="\t",parent=self,sniff=True)
+		itemlistR = csv_handler.csv2list(testpath+'correlation_test_dataset/LM_coordinates4FIB_POI.txt',delimiter="\t",parent=self,sniff=True)
 		for item in itemlistL: self.sceneLeft.addCircle(
 				float(item[0]),
 				float(item[1]),
@@ -295,6 +295,7 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 			self.sceneLeft.pixelSizeUnit = 'um'
 			## Load image, assign it to scene and store image type information
 			self.img_left,self.sceneLeft.imagetype,self.imgstack_left = self.imread(self.left)
+			self.img_left_displayed = np.copy(self.img_left)
 			## link image to QTableview for determining z
 			self.tableView_left.img = self.imgstack_left
 			## check if coloring z values in table is needed (correlation needs z=0 in 2D image, so no checking for valid z with 2D images needed)
@@ -304,7 +305,7 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 				self.sceneLeft._z = True
 				self.setCustomRotCenter(max(self.imgstack_left.shape))
 			# self.pixmap_left = QtGui.QPixmap(self.left)
-			self.pixmap_left = self.cv2Qimage(self.img_left)
+			self.pixmap_left = self.cv2Qimage(self.img_left_displayed)
 			self.pixmap_item_left = QtGui.QGraphicsPixmapItem(self.pixmap_left, None, self.sceneLeft)
 			## connect scenes to gui elements
 			self.graphicsView_left.setScene(self.sceneLeft)
@@ -327,6 +328,7 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 			self.sceneRight.pixelSizeUnit = 'um'
 			## Load image, assign it to scene and store image type information
 			self.img_right,self.sceneRight.imagetype,self.imgstack_right = self.imread(self.right)
+			self.img_right_displayed = np.copy(self.img_right)
 			## link image to QTableview for determining z
 			self.tableView_right.img = self.imgstack_right
 			## check if coloring z values in table is needed (correlation needs z=0 in 2D image, so no checking for valid z with 2D images needed)
@@ -336,7 +338,7 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 				self.sceneRight._z = True
 				self.setCustomRotCenter(max(self.imgstack_right.shape))
 			# self.pixmap_right = QtGui.QPixmap(self.right)
-			self.pixmap_right = self.cv2Qimage(self.img_right)
+			self.pixmap_right = self.cv2Qimage(self.img_right_displayed)
 			self.pixmap_item_right = QtGui.QGraphicsPixmapItem(self.pixmap_right, None, self.sceneRight)
 			## connect scenes to gui elements
 			self.graphicsView_right.setScene(self.sceneRight)
@@ -555,7 +557,7 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 			## Remove image (item)
 			self.sceneLeft.removeItem(self.pixmap_item_left)
 			## Load replacement
-			img_adj = np.copy(self.img_left)
+			img_adj = np.copy(self.img_left_displayed)
 			## Load contrast value (Slider value between 0 and 100)
 			contr = self.contrast_left*0.1
 			## Adjusting contrast
@@ -581,7 +583,7 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 			## Remove image (item)
 			self.sceneRight.removeItem(self.pixmap_item_right)
 			## Load replacement
-			img_adj = np.copy(self.img_right)
+			img_adj = np.copy(self.img_right_displayed)
 			## Load contrast value (Slider value between 0 and 100)
 			contr = self.contrast_right*0.1
 			## Adjusting contrast
@@ -714,9 +716,9 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 												######            Correlation           #######
 												#################### START ####################
 
-	def model2np(self,model):
+	def model2np(self,model,rows):
 		listarray = []
-		for rowNumber in range(model.rowCount()):
+		for rowNumber in range(*rows):
 			fields = [
 					model.data(model.index(rowNumber, columnNumber), QtCore.Qt.DisplayRole).toFloat()[0]
 					for columnNumber in range(model.columnCount())]
@@ -741,9 +743,10 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 				raise ValueError('Both datasets contain only 3D information. I need one 3D and one 2D dataset')
 			else:
 				raise ValueError('Cannot determine if datasets are 2D or 3D')
-		## variables for dataset validation
+		## variables for dataset validation. The amount of markers from the 2D and 3D model have to be in corresponding order.
+		## All extra rows in the 3D model are used as POIs.
 		nrRowsModel2D = model2D.rowCount()
-		nrRowsmodel3D = model3D.rowCount()
+		nrRowsModel3D = model3D.rowCount()
 		# self.rotation_center = [self.doubleSpinBox_psi.value(),self.doubleSpinBox_phi.value(),self.doubleSpinBox_theta.value()]
 		# self.rotation_center = [670, 670, 670]
 		self.rotation_center = [
@@ -751,51 +754,22 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 								self.doubleSpinBox_custom_rot_center_y.value(),
 								self.doubleSpinBox_custom_rot_center_z.value()]
 
-		## create model for poi (QtModel for consistency in handling data between functions. Can also be extended in the future for multiple POIs)
-		# if self.checkBox_poi.isChecked() is True:
-		# 	self.model_pois = QtGui.QStandardItemModel()
-		# 	items = ([
-		# 			QtGui.QStandardItem(str(self.doubleSpinBox_poi_x.value())),
-		# 			QtGui.QStandardItem(str(self.doubleSpinBox_poi_y.value())),
-		# 			QtGui.QStandardItem(str(self.doubleSpinBox_poi_z.value()))])
-		# 	self.model_pois.appendRow(items)
-		# else:
-		# 	self.model_pois = QtGui.QStandardItemModel()
-
-		if True is True:
-			model_pois = QtGui.QStandardItemModel()
-			items = ([
-					QtGui.QStandardItem('666'),
-					QtGui.QStandardItem('758'),
-					QtGui.QStandardItem('51')])
-			model_pois.appendRow(items)
-			items = ([
-					QtGui.QStandardItem('660'),
-					QtGui.QStandardItem('750'),
-					QtGui.QStandardItem('45')])
-			model_pois.appendRow(items)
-			items = ([
-					QtGui.QStandardItem('670'),
-					QtGui.QStandardItem('765'),
-					QtGui.QStandardItem('55')])
-			model_pois.appendRow(items)
-		else:
-			model_pois = QtGui.QStandardItemModel()
-
 		if nrRowsModel2D >= 3:
-			if nrRowsModel2D == nrRowsmodel3D:
+			if nrRowsModel2D <= nrRowsModel3D:
 				timestamp = time.strftime("%Y-%m-%d_%H-%M-%S")
 				self.correlation_results = correlation.main(
-														markers_3d=self.model2np(model3D),
-														markers_2d=self.model2np(model2D),
-														spots_3d=self.model2np(model_pois),
+														markers_3d=self.model2np(model3D,[0,nrRowsModel2D]),
+														markers_2d=self.model2np(model2D,[0,nrRowsModel2D]),
+														spots_3d=self.model2np(model3D,[nrRowsModel2D,nrRowsModel3D]),
 														rotation_center=self.rotation_center,
 														results_file=''.join([workingdir,'/',timestamp, '_correlation.txt'])
 														)
 			else:
 				QtGui.QMessageBox.critical(self, "Data Structur", "The two datasets do not contain the same amount of markers!")
+				return
 		else:
 			QtGui.QMessageBox.critical(self, "Data Structur",'At least THREE markers are needed to do the correlation')
+			return
 
 		transf_3d = self.correlation_results[1]
 		for i in range(transf_3d.shape[1]):
@@ -806,9 +780,30 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 			for i in range(calc_spots_2d.shape[1]):
 				cv2.circle(img, (int(round(calc_spots_2d[0,i])), int(round(calc_spots_2d[1,i]))), 1, (0,0,255), -1)
 		cv2.imwrite(os.path.join(workingdir,timestamp+"_correlated.tif"), img)
+		img = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
+		## Display image
+		if '{0:b}'.format(self.sceneLeft.imagetype)[-1] == '1':
+			self.img_left_displayed = np.copy(img)
+			## Remove image (item)
+			self.sceneLeft.removeItem(self.pixmap_item_left)
+			self.pixmap_left = self.cv2Qimage(img)
+			self.pixmap_item_left = QtGui.QGraphicsPixmapItem(self.pixmap_left, None, self.sceneLeft)
+			## Put exchanged image into background
+			QtGui.QGraphicsItem.stackBefore(self.pixmap_item_left, self.sceneLeft.items()[-1])
+		else:
+			self.img_right_displayed = np.copy(img)
+			## Remove image (item)
+			self.sceneRight.removeItem(self.pixmap_item_right)
+			self.pixmap_right = self.cv2Qimage(img)
+			self.pixmap_item_right = QtGui.QGraphicsPixmapItem(self.pixmap_right, None, self.sceneRight)
+			## Put exchanged image into background
+			QtGui.QGraphicsItem.stackBefore(self.pixmap_item_right, self.sceneRight.items()[-1])
 
 		# self.displayResults(frame=False,framesize=None)
 		self.displayResults(frame=self.checkBox_scatterPlotFrame.isChecked(),framesize=self.doubleSpinBox_scatterPlotFrameSize.value())
+		model2D.tableview._scene.deleteArrows()
+		for i in range(nrRowsModel2D):
+			model2D.tableview._scene.addArrow(self.model2np(model2D,[0,nrRowsModel2D])[i,:2],self.correlation_results[1][:2,i],arrowangle=45,color=QtCore.Qt.red)
 
 	def displayResults(self,frame=False,framesize=None):
 		if self.correlation_results:

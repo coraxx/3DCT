@@ -240,6 +240,7 @@ class QStandardItemModelCustom(QtGui.QStandardItemModel):
 
 class QGraphicsSceneCustom(QtGui.QGraphicsScene):
 	def __init__(self,parent=None,mainWidget=None,side=None,model=None):
+		self.debug = True
 		## parent is QGraphicsView
 		QtGui.QGraphicsScene.__init__(self,parent)
 		self.mainWidget = mainWidget
@@ -335,6 +336,48 @@ class QGraphicsSceneCustom(QtGui.QGraphicsScene):
 		QtGui.QGraphicsItem.stackBefore(circle, self.items()[-2])
 		self.enumeratePoints()
 
+		## Arrow test code
+		# import time
+		# def PointsInCircum(r,n=100):
+		# 	return [(math.cos(2*math.pi/n*x)*r,math.sin(2*math.pi/n*x)*r) for x in xrange(0,n+1)]
+		# loopcounter = 0
+		# for i in PointsInCircum(3,n=10):
+		# 	if loopcounter % 2 == 0:
+		# 		color = QtCore.Qt.red
+		# 	else:
+		# 		color = QtCore.Qt.blue
+		# 	self.addArrow((500,500),map(lambda a,b: a+b, i, (500,500)),arrowangle=25,color=color)
+		# 	time.sleep(0.2)
+		# 	self.parent().parent().refreshUI()
+		# 	loopcounter += 1
+
+	def addArrow(self,start,end,arrowangle=45,color=QtCore.Qt.red):
+		dx, dy = map(lambda a,b: a-b, end, start)
+		length = math.hypot(dx,dy)
+		angle = -(math.asin(dy/length))
+		if dx < 0:
+			angle = math.radians(180) - angle
+		if clrmsg and self.debug is True: print clrmsg.DEBUG + 'Radians:', angle, 'Degree', math.degrees(angle)
+		path = QtGui.QPainterPath()
+		path.moveTo(*start)
+		path.lineTo(*end)
+		path.arcMoveTo(
+			end[0]-0.25*length, end[1]-0.25*length,
+			0.5*length, 0.5*length,
+			180-arrowangle+math.degrees(angle))
+		path.lineTo(*end)
+		path.arcMoveTo(
+			end[0]-0.25*length, end[1]-0.25*length,
+			0.5*length, 0.5*length,
+			180+arrowangle+math.degrees(angle))
+		path.lineTo(*end)
+		self.addPath(path,QtGui.QPen(color))
+
+	def deleteArrows(self):
+		for item in self.items():
+			if isinstance(item, QtGui.QGraphicsPathItem):
+				self.removeItem(item)
+
 	def enumeratePoints(self):
 		## Remove numbering
 		for item in self.items():
@@ -392,7 +435,6 @@ class QGraphicsSceneCustom(QtGui.QGraphicsScene):
 				self._model.setHeaderData(1, QtCore.Qt.Horizontal,'y')
 				self._model.setHeaderData(2, QtCore.Qt.Horizontal,'z')
 		self.mainWidget.colorModels()
-		print 'color models fired...'
 
 
 ##############################
