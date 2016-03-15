@@ -171,11 +171,12 @@ def main(markers_3d,markers_2d,spots_3d,rotation_center,results_file):
 	# print 'modified_translation: ', modified_translation
 
 	# write transformation params and correlation
-	write_results(
-		transf=transf, res_file_name=results_file,
-		spots_3d=spots_3d, spots_2d=spots_2d,
-		markers_3d=mark_3d, transformed_3d=transf_3d, markers_2d=mark_2d,
-		rotation_center=rotation_center, modified_translation=modified_translation)
+	if results_file != '':
+		write_results(
+			transf=transf, res_file_name=results_file,
+			spots_3d=spots_3d, spots_2d=spots_2d,
+			markers_3d=mark_3d, transformed_3d=transf_3d, markers_2d=mark_2d,
+			rotation_center=rotation_center, modified_translation=modified_translation)
 	cm_3D_markers = mark_3d.mean(axis=-1).tolist()
 
 	# delta calc,real

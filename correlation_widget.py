@@ -36,7 +36,7 @@ execdir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(execdir)
 workingdir = execdir
 
-qtCreatorFile_main = os.path.join(execdir, "TDCT_correlation.ui")
+qtCreatorFile_main = os.path.join(execdir, "TDCT_correlation_dynamic.ui")
 Ui_WidgetWindow, QtBaseClass = uic.loadUiType(qtCreatorFile_main)
 
 
@@ -63,6 +63,8 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 		self.modelRight = QtCustom.QStandardItemModelCustom(self)
 		self.tableView_right.setModel(self.modelRight)
 		self.modelRight.tableview = self.tableView_right
+		self.modelResults = QtGui.QStandardItemModel(self)
+		self.tableView_results.setModel(self.modelResults)
 
 		## store parameters for resizing
 		self.parent = parent
@@ -84,6 +86,8 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 		self.modelRight.itemChanged.connect(self.tableView_right.updateItems)
 		self.tableView_left.selectionModel().selectionChanged.connect(self.tableView_left.showSelectedItem)
 		self.tableView_right.selectionModel().selectionChanged.connect(self.tableView_right.showSelectedItem)
+		self.tableView_results.selectionModel().selectionChanged.connect(self.showSelectedResidual)
+		self.tableView_results.doubleClicked.connect(lambda: self.showSelectedResidual(doubleclick=True))
 
 		# SpinBoxes
 		self.spinBox_rot.valueChanged.connect(self.rotateImage)
@@ -762,7 +766,7 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 														markers_2d=self.model2np(model2D,[0,nrRowsModel2D]),
 														spots_3d=self.model2np(model3D,[nrRowsModel2D,nrRowsModel3D]),
 														rotation_center=self.rotation_center,
-														results_file=''.join([workingdir,'/',timestamp, '_correlation.txt'])
+														results_file=''.join([workingdir,'/',timestamp, '_correlation.txt'] if self.checkBox_writeReport.isChecked() else '')
 														)
 			else:
 				QtGui.QMessageBox.critical(self, "Data Structur", "The two datasets do not contain the same amount of markers!")
@@ -779,7 +783,8 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 			# draw POI cv2.circle(img, (center x, center y), radius, [b,g,r], thickness(-1 for filled))
 			for i in range(calc_spots_2d.shape[1]):
 				cv2.circle(img, (int(round(calc_spots_2d[0,i])), int(round(calc_spots_2d[1,i]))), 1, (0,0,255), -1)
-		cv2.imwrite(os.path.join(workingdir,timestamp+"_correlated.tif"), img)
+		if self.checkBox_writeReport.isChecked():
+			cv2.imwrite(os.path.join(workingdir,timestamp+"_correlated.tif"), img)
 		img = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
 		## Display image
 		if '{0:b}'.format(self.sceneLeft.imagetype)[-1] == '1':
@@ -859,8 +864,58 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 			self.widget_matplotlib.setupScatterCanvas(width=4,height=4,dpi=52,toolbar=False)
 			self.widget_matplotlib.scatterPlot(x=delta2D[0,:],y=delta2D[1,:],frame=frame,framesize=framesize,xlabel="px",ylabel="px")
 
+			## Populate tableView_results
+			self.modelResults.removeRows(0,self.modelResults.rowCount())
+			for i in range(delta2D.shape[1]):
+				item = [QtGui.QStandardItem(str(i+1)),QtGui.QStandardItem('{0:.5f}'.format(abs(delta2D[0,i]))),QtGui.QStandardItem('{0:.5f}'.format(abs(delta2D[1,i])))]
+				self.modelResults.appendRow(item)
+			self.modelResults.setHeaderData(0, QtCore.Qt.Horizontal,'Nr.')
+			self.modelResults.setHeaderData(1, QtCore.Qt.Horizontal,'abs(dx)')
+			self.modelResults.setHeaderData(1, QtCore.Qt.Horizontal,'abs(dx)')
+			self.modelResults.setHeaderData(2, QtCore.Qt.Horizontal,'abs(dy)')
+			self.tableView_results.setColumnWidth(1, 86)
+			self.tableView_results.setColumnWidth(2, 86)
+
 		else:
 			QtGui.QMessageBox.critical(self, "Error", "No data to display!")
+
+	def showSelectedResidual(self,doubleclick=False):
+		indices = self.tableView_results.selectedIndexes()
+		if '{0:b}'.format(self.sceneLeft.imagetype)[-1] == '1':
+			tableView1 = self.tableView_left
+			tableView2 = self.tableView_right
+			graphicsView = self.graphicsView_left
+		else:
+			tableView2 = self.tableView_left
+			tableView1 = self.tableView_right
+			graphicsView = self.graphicsView_right
+		if indices:
+			## Filter selected rows
+			rows = set(index.row() for index in indices)
+			## Select rows (only one row selectable in the results table)
+			for row in rows:
+				markerNr = int(self.modelResults.data(self.modelResults.index(row, 0)).toString())-1
+				tableView1.selectRow(markerNr)
+				tableView2.selectRow(markerNr)
+		if doubleclick is True:
+			print 'double click'
+			print graphicsView.transform().m11(), graphicsView.transform().m22()
+			graphicsView.setTransform(QtGui.QTransform(
+				20,  # m11
+				graphicsView.transform().m12(),
+				graphicsView.transform().m13(),
+				graphicsView.transform().m21(),
+				20,  # m22
+				graphicsView.transform().m23(),
+				graphicsView.transform().m31(),
+				graphicsView.transform().m32(),
+				graphicsView.transform().m33(),
+				))
+			print graphicsView.transform().m11(), graphicsView.transform().m22()
+			## Center on coordinate
+			graphicsView.centerOn(
+				float(tableView1._model.data(tableView1._model.index(markerNr, 0)).toString()),
+				float(tableView1._model.data(tableView1._model.index(markerNr, 1)).toString()))
 
 												##################### END #####################
 												######            Correlation           #######

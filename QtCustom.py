@@ -300,10 +300,12 @@ class QGraphicsSceneCustom(QtGui.QGraphicsScene):
 		super(QGraphicsSceneCustom, self).mouseReleaseEvent(event)
 		## Only update position when single item is drag and dropped
 		if self.selectedItems() and self.selectionmode is False:
-			# print 'New pos:', self.selectedItems()[0].x(), self.selectedItems()[0].y()
-			for item in self.selectedItems():
-				if isinstance(item, QtGui.QGraphicsEllipseItem):
-					self.zValuesDict[item] = [self.zValuesDict[item][0],(255, 190, 0)]  # orange
+			if clrmsg and self.debug is True: print clrmsg.DEBUG + 'New pos:', self.selectedItems()[0].x(), self.selectedItems()[0].y()
+			## Only change color to orange when marker is moved in the 3D image (in order to remind reacquiring z coordinate)
+			if '{0:b}'.format(self.imagetype)[-1] == '0':
+				for item in self.selectedItems():
+					if isinstance(item, QtGui.QGraphicsEllipseItem):
+						self.zValuesDict[item] = [self.zValuesDict[item][0],(255, 190, 0)]  # orange
 			self.clearSelection()
 			self.itemsToModel()
 		self.parent().setDragMode(QtGui.QGraphicsView.NoDrag)
