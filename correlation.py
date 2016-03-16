@@ -8,7 +8,7 @@
 # @Credits			:
 # @Maintainer		: Vladan Lucic
 # @Date				: 2015/10
-# @Version			: 0.2
+# @Version			: 3DCT 2.0.0 module rev. 3
 # @Status			: stable
 # @Usage			: import correlation.py and call main(markers_3d,markers_2d,spots_3d,rotation_center,results_file)
 # 					: "markers_3d", "markers_2d" and "spots_3d" are numpy arrays. Those contain 3D coordinates

@@ -8,7 +8,7 @@
 # @Credits			:
 # @Maintainer		: Jan Arnold
 # @Date				: 2016/01
-# @Version			: 0.1
+# @Version			: 3DCT 2.0.0 module rev. 1
 # @Status			: stable
 # @Usage			: Can be used as standalone application, i.e. run python -u stack_processing.py
 # 					: or import stack_processing.py and use main function like:

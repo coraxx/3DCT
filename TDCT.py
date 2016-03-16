@@ -11,7 +11,7 @@
 # 					  Max-Planck-Instute of Biochemistry
 # 					  Department of Molecular Structural Biology
 # @Date				: 2015/08
-# @Version			: 2.0
+# @Version			: 3DCT 2.0.0
 # @Status			: developement
 # @Usage			: python -u TDCT.py
 # @Notes			:

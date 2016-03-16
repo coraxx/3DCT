@@ -8,7 +8,7 @@
 # @Credits			:
 # @Maintainer		: Jan Arnold
 # @Date				: 2015/09
-# @Version			: 0.3
+# @Version			: 3DCT 2.0.0 module rev. 3
 # @Status			: stable
 # @Usage			: import csv_handler
 # 					: e.g. import: >>> model = csv_handler.csv2model('test.csv',delimiter="\t",sniff=False,parent=None)

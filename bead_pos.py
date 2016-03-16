@@ -9,7 +9,7 @@
 # 					  2D Gaussian fit from http://scipy.github.io/old-wiki/pages/Cookbook/FittingData
 # @Maintainer		: Jan Arnold
 # @Date				: 2015/12
-# @Version			: 0.2
+# @Version			: 3DCT 2.0.0 module rev. 2
 # @Status			: stable
 # @Usage			: import bead_pos.py and call z = bead_pos.getz(x,y,img,n=None,optimize=False) to get z position
 # 					  at the given x and y pixel coordinate or call x,y,z = bead_pos.getz(x,y,img,n=None,optimize=True)

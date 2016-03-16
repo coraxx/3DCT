@@ -8,7 +8,7 @@
 # @Credits			:
 # @Maintainer		: Jan Arnold
 # @Date				: 2016/01
-# @Version			: 0.1
+# @Version			: 3DCT 2.0.0 module rev. 1
 # @Status			: developement
 # @Usage			: part of 3D Correlation Toolbox
 # @Notes			:
@@ -60,11 +60,15 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 		self.modelLleft = QtCustom.QStandardItemModelCustom(self)
 		self.tableView_left.setModel(self.modelLleft)
 		self.modelLleft.tableview = self.tableView_left
+
 		self.modelRight = QtCustom.QStandardItemModelCustom(self)
 		self.tableView_right.setModel(self.modelRight)
 		self.modelRight.tableview = self.tableView_right
+
 		self.modelResults = QtGui.QStandardItemModel(self)
-		self.tableView_results.setModel(self.modelResults)
+		self.modelResultsProxy = QtCustom.NumberSortModel()
+		self.modelResultsProxy.setSourceModel(self.modelResults)
+		self.tableView_results.setModel(self.modelResultsProxy)
 
 		## store parameters for resizing
 		self.parent = parent
@@ -100,6 +104,9 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 		self.checkBox_scatterPlotFrame.stateChanged.connect(lambda: self.displayResults(
 																frame=self.checkBox_scatterPlotFrame.isChecked(),
 																framesize=self.doubleSpinBox_scatterPlotFrameSize.value()))
+		self.checkBox_resultsAbsolute.stateChanged.connect(lambda: self.displayResults(
+																frame=self.checkBox_scatterPlotFrame.isChecked(),
+																framesize=self.doubleSpinBox_scatterPlotFrameSize.value()))
 
 		## Buttons
 		self.toolButton_rotcw.clicked.connect(lambda: self.rotateImage45(direction='cw'))
@@ -122,6 +129,9 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 		self.tableView_right._model = self.modelRight
 		self.tableView_left._scene = self.sceneLeft
 		self.tableView_right._scene = self.sceneRight
+
+		self.tableView_results.setContextMenuPolicy(3)
+		self.tableView_results.customContextMenuRequested.connect(self.cmTableViewResults)
 
 	def keyPressEvent(self,event):
 		if event.key() == QtCore.Qt.Key_Delete:
@@ -302,7 +312,8 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 			self.img_left_displayed = np.copy(self.img_left)
 			## link image to QTableview for determining z
 			self.tableView_left.img = self.imgstack_left
-			## check if coloring z values in table is needed (correlation needs z=0 in 2D image, so no checking for valid z with 2D images needed)
+			## check if coloring z values in table is needed (correlation needs z=0 in 2D image, so no checking for valid z
+			## with 2D images needed)
 			if self.imgstack_left is None:
 				self.sceneLeft._z = False
 			else:
@@ -335,7 +346,8 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 			self.img_right_displayed = np.copy(self.img_right)
 			## link image to QTableview for determining z
 			self.tableView_right.img = self.imgstack_right
-			## check if coloring z values in table is needed (correlation needs z=0 in 2D image, so no checking for valid z with 2D images needed)
+			## check if coloring z values in table is needed (correlation needs z=0 in 2D image, so no checking for valid z
+			## with 2D images needed)
 			if self.imgstack_right is None:
 				self.sceneRight._z = False
 			else:
@@ -766,7 +778,9 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 														markers_2d=self.model2np(model2D,[0,nrRowsModel2D]),
 														spots_3d=self.model2np(model3D,[nrRowsModel2D,nrRowsModel3D]),
 														rotation_center=self.rotation_center,
-														results_file=''.join([workingdir,'/',timestamp, '_correlation.txt'] if self.checkBox_writeReport.isChecked() else '')
+														results_file=''.join([
+															workingdir,'/',timestamp, '_correlation.txt'
+															] if self.checkBox_writeReport.isChecked() else '')
 														)
 			else:
 				QtGui.QMessageBox.critical(self, "Data Structur", "The two datasets do not contain the same amount of markers!")
@@ -808,10 +822,11 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 		self.displayResults(frame=self.checkBox_scatterPlotFrame.isChecked(),framesize=self.doubleSpinBox_scatterPlotFrameSize.value())
 		model2D.tableview._scene.deleteArrows()
 		for i in range(nrRowsModel2D):
-			model2D.tableview._scene.addArrow(self.model2np(model2D,[0,nrRowsModel2D])[i,:2],self.correlation_results[1][:2,i],arrowangle=45,color=QtCore.Qt.red)
+			model2D.tableview._scene.addArrow(self.model2np(
+				model2D,[0,nrRowsModel2D])[i,:2],self.correlation_results[1][:2,i],arrowangle=45,color=QtCore.Qt.red)
 
 	def displayResults(self,frame=False,framesize=None):
-		if self.correlation_results:
+		if hasattr(self, "correlation_results"):
 			## get data
 			transf = self.correlation_results[0]
 			# transf_3d = self.correlation_results[1]			## unused atm
@@ -866,18 +881,24 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 
 			## Populate tableView_results
 			self.modelResults.removeRows(0,self.modelResults.rowCount())
+			if self.checkBox_resultsAbsolute.isChecked():
+				delta2D = np.absolute(delta2D)
 			for i in range(delta2D.shape[1]):
-				item = [QtGui.QStandardItem(str(i+1)),QtGui.QStandardItem('{0:.5f}'.format(abs(delta2D[0,i]))),QtGui.QStandardItem('{0:.5f}'.format(abs(delta2D[1,i])))]
+				item = [
+					QtGui.QStandardItem(str(i+1)),
+					QtGui.QStandardItem('{0:.5f}'.format(delta2D[0,i])),
+					QtGui.QStandardItem('{0:.5f}'.format(delta2D[1,i]))]
 				self.modelResults.appendRow(item)
 			self.modelResults.setHeaderData(0, QtCore.Qt.Horizontal,'Nr.')
-			self.modelResults.setHeaderData(1, QtCore.Qt.Horizontal,'abs(dx)')
-			self.modelResults.setHeaderData(1, QtCore.Qt.Horizontal,'abs(dx)')
-			self.modelResults.setHeaderData(2, QtCore.Qt.Horizontal,'abs(dy)')
+			self.modelResults.setHeaderData(1, QtCore.Qt.Horizontal,'dx')
+			self.modelResults.setHeaderData(1, QtCore.Qt.Horizontal,'dx')
+			self.modelResults.setHeaderData(2, QtCore.Qt.Horizontal,'dy')
 			self.tableView_results.setColumnWidth(1, 86)
 			self.tableView_results.setColumnWidth(2, 86)
 
 		else:
-			QtGui.QMessageBox.critical(self, "Error", "No data to display!")
+			# QtGui.QMessageBox.critical(self, "Error", "No data to display!")
+			pass
 
 	def showSelectedResidual(self,doubleclick=False):
 		indices = self.tableView_results.selectedIndexes()
@@ -894,7 +915,7 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 			rows = set(index.row() for index in indices)
 			## Select rows (only one row selectable in the results table)
 			for row in rows:
-				markerNr = int(self.modelResults.data(self.modelResults.index(row, 0)).toString())-1
+				markerNr = int(self.modelResultsProxy.data(self.modelResultsProxy.index(row, 0)).toString())-1
 				tableView1.selectRow(markerNr)
 				tableView2.selectRow(markerNr)
 		if doubleclick is True:
@@ -916,6 +937,39 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 			graphicsView.centerOn(
 				float(tableView1._model.data(tableView1._model.index(markerNr, 0)).toString()),
 				float(tableView1._model.data(tableView1._model.index(markerNr, 1)).toString()))
+
+	def cmTableViewResults(self,pos):
+		indices = self.tableView_results.selectedIndexes()
+		if indices:
+			cmApplyShift = QtGui.QAction('Apply shift to marker', self)
+			cmApplyShift.triggered.connect(lambda: self.applyResidualShift(3,[-0.3,1.5755]))
+			self.contextMenu = QtGui.QMenu(self)
+			self.contextMenu.addAction(cmApplyShift)
+			self.contextMenu.popup(QtGui.QCursor.pos())
+
+	def applyResidualShift(self,marker,shift):
+		print marker, shift
+		indices = self.tableView_results.selectedIndexes()
+		if '{0:b}'.format(self.sceneLeft.imagetype)[-1] == '1':
+			tableView = self.tableView_left
+			scene = self.sceneLeft
+		else:
+			tableView = self.tableView_right
+			scene = self.sceneRight
+		items = []
+		for item in scene.items():
+			if isinstance(item, QtGui.QGraphicsEllipseItem):
+				items.append(item)
+		if indices:
+			## Filter selected rows
+			rows = set(index.row() for index in indices)
+			## Select rows (only one row selectable in the results table)
+			for row in rows:
+				markerNr = int(self.modelResultsProxy.data(self.modelResultsProxy.index(row, 0)).toString())-1
+				print markerNr
+				items[markerNr].setPos(
+					float(tableView._model.data(tableView._model.index(markerNr, 0)).toString())+self.correlation_results[3][0,markerNr],
+					float(tableView._model.data(tableView._model.index(markerNr, 1)).toString())+self.correlation_results[3][1,markerNr])
 
 												##################### END #####################
 												######            Correlation           #######

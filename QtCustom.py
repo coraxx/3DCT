@@ -8,7 +8,7 @@
 # @Credits			:
 # @Maintainer		: Jan Arnold
 # @Date				: 2016/02/27
-# @Version			: 0.1
+# @Version			: 3DCT 2.0.0 module rev. 1
 # @Status			: developement
 # @Usage			: part of 3D Correlation Toolbox
 # @Notes			: Some widgets in QT Designer are promoted to these classes
@@ -35,10 +35,15 @@ import bead_pos
 
 class QTableViewCustom(QtGui.QTableView):
 	def __init__(self, parent=None,):
-		## parent is mainWidget
 		QtGui.QTableView.__init__(self,parent)
-		if hasattr(self.parent(), "debug"):
-			self.debug = self.parent().debug
+
+		## parent is mainWidget or Qsplitter if dynamic UI is used. If QSplitter is used the main parent
+		## is callable by self.parent().parent() and not self.parent() when not using QSplitter. To be flexible:
+		if isinstance(self.parent(), QtGui.QSplitter):
+			self.mainParent = self.parent().parent()
+
+		if hasattr(self.mainParent, "debug"):
+			self.debug = self.mainParent.debug
 			if self.debug is True: print clrmsg.DEBUG + 'Debug bool inherited'
 		else:
 			self.debug = True
@@ -88,7 +93,7 @@ class QTableViewCustom(QtGui.QTableView):
 												self._model.data(self._model.index(row, 2)).toString(),
 												self._model.itemFromIndex(self._model.index(row, 2)).foreground().color().getRgb()]
 				row += 1
-		self.parent().colorModels()
+		self.mainParent.colorModels()
 
 	def showSelectedItem(self):
 		indices = self.selectedIndexes()
@@ -172,7 +177,7 @@ class QTableViewCustom(QtGui.QTableView):
 
 				if gauss is True:
 					if optimize is False:
-						zopt = bead_pos.getzGauss(x,y,self.img,parent=self.parent())
+						zopt = bead_pos.getzGauss(x,y,self.img,parent=self.mainParent)
 						if self.debug is True: print clrmsg.DEBUG + str(self.img.shape), zopt
 						if 0 <= zopt <= self.img.shape[-3]:
 							self._scene.zValuesDict[activeitems[row]][1] = (0,0,0)
@@ -183,8 +188,8 @@ class QTableViewCustom(QtGui.QTableView):
 						self._model.itemFromIndex(self._model.index(row, 2)).setText(str(zopt))
 					else:
 						xopt,yopt,zopt = bead_pos.getzGauss(
-															x,y,self.img,parent=self.parent(),optimize=True,threshold=True,
-															threshVal=self.parent().doubleSpinBox_treshVal.value(),cutout=self._scene.markerSize)
+															x,y,self.img,parent=self.mainParent,optimize=True,threshold=True,
+															threshVal=self.mainParent.doubleSpinBox_treshVal.value(),cutout=self._scene.markerSize)
 						if self.debug is True: print clrmsg.DEBUG + str(self.img.shape), xopt,yopt,zopt
 						if abs(x-xopt) <= 2*self._scene.markerSize and abs(y-yopt) <= 2*self._scene.markerSize and 0 <= zopt <= self.img.shape[-3]:
 							self._scene.zValuesDict[activeitems[row]][1] = (255,0,0)
@@ -222,6 +227,13 @@ class QTableViewCustom(QtGui.QTableView):
 												##################### END #####################
 												#######          Update items           #######
 												###############################################
+
+
+class NumberSortModel(QtGui.QSortFilterProxyModel):
+	def lessThan(self, left, right):
+		lvalue = left.data().toDouble()[0]
+		rvalue = right.data().toDouble()[0]
+		return lvalue < rvalue
 
 ##############################
 ## QStandardItemModelCustom

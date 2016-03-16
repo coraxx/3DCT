@@ -8,7 +8,7 @@
 # @Credits			: Florian Beck, Max-Planck-Institute for Biochemistry
 # @Maintainer		: Jan Arnold
 # @Date				: 2016/01
-# @Version			: 0.1
+# @Version			: 3DCT 2.0.0 module rev. 1
 # @Status			: developement
 # @Usage			: Meant to be imported, i.e. import matlab_3D_rotation.py and used with calling
 # 					: matlab_rotate(img_vol,)
