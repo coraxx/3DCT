@@ -1,23 +1,107 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""
+Establishes 2D to 3D correlation and correlates spots (Point of Interests) between e.g. EM and LM
+
+The procedure is organized as follows:
+
+	1) Find transformation between LM and EM overview systems using specified
+	markers. LM markers are typically specified as (coordinates of) features on a
+	LM image, and overview markers (as coordinates) of the same features on a low
+	mag EM image (so that the whole gid square fits on this image, such as 220x).
+
+	This transformation is an affine transformation in 2D, that is it is composed
+	of a Gl (general linear) transformation and a translation. The Gl
+	transformation can be decomposed into rotation, scaling along two principal
+	axes, parity (flipping one axis) and shear. The LM - overview transformation
+	can be calculated in two ways:
+
+		(a) Direct: Markers lm_markers and overview_markers need to correspond to
+		the same spots, the transformation is calculated directly
+
+		(b) Separate gl and translation:  Markers lm_markers_gl and
+		overview_markers_gl have to outline the same shape in the same orientation
+		but they need not don't need to be the same spots, that is they can have a
+		fixed displacement. For example, holes on a quantifoil can be used for this
+		purpose. These parameters are used to find the Gl transformation. In the
+		next step, parameters lm_markers_d and overview_markers_d are used to
+		calculate only the translation.
+
+	2)  Find transformation between EM overview and EM search systems using
+	(overview and search) markers (here caled details). The transformation is
+	also affine, but it can be restricted so that instead of the full Gl
+	transformation only orthogonal transformation is used (rotation, one scaling
+	and parity). The EM overview system has to have the same mag as the one used
+	for the LM - overview transformation, while the search system can be chosen
+	in a different way:
+
+		(a) Collage: A collage of medium mag EM images (image size around 10 um) is
+		used as a search system and the same overview image as the one used for
+		the LM - overview transformation. The markers (details) are simply
+		identified (as coordinates) of features found in these images
+		(overview_detail and search_detail). Parameter overview2search_mode has to
+		be set to 'move search'. This is conceptually the simplest method, but
+		assembling the EM image collage might take some time or not be feasible.
+
+		(b) Stage, move search: The same overview image as the one used for
+		the LM - overview transformation is used for the overview system, but the
+		stage movement system is used for the search system. Specifically, for each
+		detail (markers for this transformation) found on the overview image, the
+		EM stage needs to be moved so that the same feature is seen in the center
+		of the EM image made at a medium mag (image size typically up to 10 um).
+		The stage coordinates are used as search details. Parameter
+		overview2search_mode has to be set to 'move search'. The difficulty here is
+		to find enough features that are seen in the overview image but can be
+		easily navigated to in search (cracks in ice are often used).
+
+		(c) Stage, move overview: First one feature needs to be identified on the
+		overview image used for the LM - overview transformation. The coordinates
+		of that feature are used as one marker (search_detail) and the EM stage
+		coordinates for that image is the corresponding search marker
+		(search_detail). This particular stage position has also to be specified
+		as search_main parameter. The other markers are obtained by moving the
+		stage around (typically 10 - 20 um) and making overview at these positions.
+		Coordinates of the feature at overview images, and the corresponding
+		stage coordinates are used as overview and stage markers. Naturally, the
+		feature has to be present in all overview images. Parameter
+		overview2search_mode has to be set to 'move overview'. This is perhaps the
+		easiest method to use, but conceptually the most difficult.
+
+	3) Calculates transformation between LM and search systems as a composition of
+	the LM - overview and overview - search transforms
+
+	4) Correlates spots specified in one system to the other systems. Coordinates
+	of spots correlated to search system are interpreted according to the method
+	used to establish the overview - search transformation (see point 2)
+
+		(a) Collage: Spots in search system are simply the coordinates in the
+		collage used for the overview - search transformation.
+
+		(b) Stage, move search: Correlated spots are stage coordinates where
+		spots are located in the center of search images (medium mag).
+
+		(c) Stage, move overview: Correlated spots are stage coordinates. An search
+		image made at this stage position (low mag) contains the spot at the
+		coordinate specified by parameter overview_center.
+
 # @Title			: correlation
 # @Project			: 3DCTv2
 # @Description		: Establishes EM - LM correlation and correlates spots between EM and LM
 # @Author			: Vladan Lucic (Max Planck Institute for Biochemistry)
 # @Email			:
 # @Credits			:
-# @Maintainer		: Vladan Lucic
+# @Maintainer		: Vladan Lucic, Jan Arnold
 # @Date				: 2015/10
 # @Version			: 3DCT 2.0.0 module rev. 3
 # @Status			: stable
 # @Usage			: import correlation.py and call main(markers_3d,markers_2d,spots_3d,rotation_center,results_file)
 # 					: "markers_3d", "markers_2d" and "spots_3d" are numpy arrays. Those contain 3D coordinates
-# 					: (arbitrary 3rd dimension for the 2D array). Marke rcoordinates are for the correlation and spot
+# 					: (arbitrary 3rd dimension for the 2D array). Marker coordinates are for the correlation and spot
 # 					: coordinates are points on which the correlation is applied to.
 # @Notes			: Edited and adapted by Jan Arnold (Max Planck Institute for Biochemistry)
 # @Python_version	: 2.7.10
-# @Last Modified	: 2016/03/09
-# ============================================================================
+"""
+# ======================================================================================================================
 
 import os
 import numpy as np

@@ -1,8 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# @Title			: csv_handler
+"""
+Import and export PyQt model data from/to csv files
+
+Usage:
+	import csvHandler
+e.g. import:
+	>>> model = csvHandler.csv2model('test.csv',delimiter="\t",sniff=False,parent=None)
+e.g. export:
+	>>> csvHandler.model2csv(model,'test.csv',delimiter="\t")
+
+# @Title			: csvHandler
 # @Project			: 3DCTv2
-# @Description		: Import and export PyQt model data from/to csv fles
+# @Description		: Import and export PyQt model data from/to csv files
 # @Author			: Jan Arnold
 # @Email			: jan.arnold (at) coraxx.net
 # @Credits			:
@@ -10,13 +20,13 @@
 # @Date				: 2015/09
 # @Version			: 3DCT 2.0.0 module rev. 3
 # @Status			: stable
-# @Usage			: import csv_handler
-# 					: e.g. import: >>> model = csv_handler.csv2model('test.csv',delimiter="\t",sniff=False,parent=None)
-# 					: e.g. export: >>> csv_handler.model2csv(model,'test.csv',delimiter="\t")
+# @Usage			: import csvHandler
+# 					: e.g. import: >>> model = csvHandler.csv2model('test.csv',delimiter="\t",sniff=False,parent=None)
+# 					: e.g. export: >>> csvHandler.model2csv(model,'test.csv',delimiter="\t")
 # @Notes			:
 # @Python_version	: 2.7.10
-# @Last Modified	: 2016/03/09
-# ============================================================================
+"""
+# ======================================================================================================================
 
 import csv
 from PyQt4 import QtCore, QtGui
@@ -96,5 +106,5 @@ def model2csv(model,csv_file_out,delimiter="\t"):
 if __name__ == "__main__":
 	print(
 		r"""Please import me and use me like this:
-		e.g. import: >>> model = csv_handler.csv2model('test.csv',delimiter="\t",sniff=False,parent=None)
-		e.g. export: >>> csv_handler.model2csv(model,'test.csv',delimiter="\t")""")
+		e.g. import: >>> model = csvHandler.csv2model('test.csv',delimiter="\t",sniff=False,parent=None)
+		e.g. export: >>> csvHandler.model2csv(model,'test.csv',delimiter="\t")""")

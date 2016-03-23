@@ -1,6 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# @Title			: bead_pos
+"""
+Get z axis position of spherical markers from 3D image stacks (tiff z-stack)
+import beadPos.py and call z = beadPos.getz(x,y,img,n=None,optimize=False) to get z position
+at the given x and y pixel coordinate or call x,y,z = beadPos.getz(x,y,img,n=None,optimize=True)
+to get an optimized bead position (optimization of x, y and z)
+
+# @Title			: beadPos
 # @Project			: 3DCTv2
 # @Description		: Get bead z axis position from 3D image stacks (tiff z-stack)
 # @Author			: Jan Arnold
@@ -11,13 +17,13 @@
 # @Date				: 2015/12
 # @Version			: 3DCT 2.0.0 module rev. 2
 # @Status			: stable
-# @Usage			: import bead_pos.py and call z = bead_pos.getz(x,y,img,n=None,optimize=False) to get z position
-# 					  at the given x and y pixel coordinate or call x,y,z = bead_pos.getz(x,y,img,n=None,optimize=True)
+# @Usage			: import beadPos.py and call z = beadPos.getz(x,y,img,n=None,optimize=False) to get z position
+# 					  at the given x and y pixel coordinate or call x,y,z = beadPos.getz(x,y,img,n=None,optimize=True)
 # 					  to get an optimized bead position (optimization of x, y and z)
 # @Notes			: stable, but problems with low SNR <- needs revisiting
 # @Python_version	: 2.7.10
-# @Last Modified	: 2016/03/09
-# ============================================================================
+"""
+# ======================================================================================================================
 
 import time
 import math
@@ -36,13 +42,13 @@ repeat = 0
 
 
 def getzPoly(x,y,img,n=None,optimize=False):
+	"""x and y are coordinates
+	img is the path to the z-stack tiff file or a numpy.ndarray from tifffile.py imread function
+	n is the number of points around the max value that are used in the polyfit
+	leave n to use the maximum amount of points
+	If optimize is set to True, the algorithm will try to optimize the x,y,z position
+	!! if optimize is True, 3 values are returned: x,y,z"""
 	debug = True
-	## x and y are coordinates
-	## img is the path to the z-stack tiff file or a numpy.ndarray from tifffile.py imread function
-	## n is the number of points around the max value that are used in the polyfit
-	## leave n to use the maximum amount of points
-	## If optimize is set to True, the algorithm will try to optimize the x,y,z position
-	## !! if optimize is True, 3 values are returned: x,y,z
 
 	if not isinstance(img, str) and not isinstance(img, np.ndarray):
 		if clrmsg and debug is True: print clrmsg.ERROR
@@ -83,12 +89,12 @@ def getzPoly(x,y,img,n=None,optimize=False):
 
 
 def getzGauss(x,y,img,parent=None,optimize=False,threshold=None,threshVal=0.6,cutout=15):
+	"""x and y are coordinates
+	img is the path to the z-stack tiff file or a numpy.ndarray from tifffile.py imread function
+	optimize == True kicks off the 2D Gaussian fit and this function will return x,y,z
+	threshold == True filters the image where it cuts off at max - min * threshVal (threshVal between 0.1 and 1)
+	cutout specifies the FOV for the 2D Gaussian fit"""
 	debug = True
-	## x and y are coordinates
-	## img is the path to the z-stack tiff file or a numpy.ndarray from tifffile.py imread function
-	## optimize == True kicks off the 2D Gaussian fit and this function will return x,y,z
-	## threshold == True filters the image where it cuts off at max - min * threshVal (threshVal between 0.1 and 1)
-	## cutout specifies the FOV for the 2D Gaussian fit
 
 	if not isinstance(img, str) and not isinstance(img, np.ndarray):
 		if clrmsg and debug is True: print clrmsg.ERROR
@@ -163,8 +169,8 @@ def optimize_z(x,y,z,image,n=None):
 
 
 def getn(data):
-	## this function is used to determine the maximum amount of data points for the polyfit function
-	## data is a numpy array of values
+	"""this function is used to determine the maximum amount of data points for the polyfit function
+	data is a numpy array of values"""
 
 	if len(data)-np.argmax(data) <= np.argmax(data):
 		n = 2*(len(data)-np.argmax(data))-1
@@ -174,12 +180,11 @@ def getn(data):
 
 
 def optimize_xy(x,y,z,image,nx=None,ny=None):
+	"""x and y are coordinates, z is the layer in the z-stack tiff file
+	image can be either the path to the z-stack tiff file or the np.array data of itself
+	n is the number of points around the max value that are used in the polyfit
+	leave n to use the maximum amount of points"""
 	debug = True
-	## x and y are coordinates, z is the layer in the z-stack tiff file
-	## image can be either the path to the z-stack tiff file or the np.array data of itself
-	## n is the number of points around the max value that are used in the polyfit
-	## leave n to use the maximum amount of points
-
 	get_nx, get_ny = False, False
 	if type(image) == str:
 		img = tf.imread(image)
@@ -313,9 +318,9 @@ def gaussfit(data,parent=None,hold=False):
 		print clrmsg.DEBUG + 'Location		:', popt[1]
 		## http://mathworld.wolfram.com/GaussianFunction.html -> sigma * 2 * sqrt(2 * ln(2))
 		print clrmsg.DEBUG + 'FWHM			:', popt[2] * 2 * math.sqrt(2 * math.log(2,math.e))
-		print clrmsg.DEBUG + 'STD Amplitude	:', std_height
-		print clrmsg.DEBUG + 'STD Location	:', std_mean
-		print clrmsg.DEBUG + 'STD FWHM		:', std_sigma * 2 * math.sqrt(2 * math.log(2,math.e))
+		print clrmsg.DEBUG + 'Std. Amplitude	:', std_height
+		print clrmsg.DEBUG + 'Std. Location	:', std_mean
+		print clrmsg.DEBUG + 'Std. FWHM		:', std_sigma * 2 * math.sqrt(2 * math.log(2,math.e))
 		print clrmsg.DEBUG + 'Mean dy		:', np.absolute(y-data[1]).mean()
 		print clrmsg.DEBUG + str(ks_2samp(y, data[1]))
 	return popt, pcov
@@ -364,7 +369,7 @@ def gaussian(height, center_x, center_y, width_x, width_y):
 def moments(data):
 	"""Returns (height, x, y, width_x, width_y)
 	the Gaussian parameters of a 2D distribution by calculating its
-	moments """
+	moments"""
 	total = data.sum()
 	X, Y = np.indices(data.shape)
 	x = (X*data).sum()/total

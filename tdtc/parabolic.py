@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""
+Quadratic Interpolation of Spectral Peaks
+
 # @Title			: parabolic
 # @Project			: 3DCTv2
 # @Description		: Quadratic Interpolation of Spectral Peaks
@@ -13,8 +16,8 @@
 # @Usage			:
 # @Notes			:
 # @Python_version	: 2.7.10
-# @Last Modified	: 2015/12/11
-# ============================================================================
+"""
+# ======================================================================================================================
 
 from __future__ import division
 from numpy import polyfit, arange
@@ -33,10 +36,9 @@ def parabolic(f, x):
 	Defining a vector f with a local maximum at index 3 (= 6), find local
 	maximum if points 2, 3, and 4 actually defined a parabola.
 
-	In [3]: f = [2, 3, 1, 6, 4, 2, 3, 1]
-
-	In [4]: parabolic(f, argmax(f))
-	Out[4]: (3.2142857142857144, 6.1607142857142856)
+	>>> f = [2, 3, 1, 6, 4, 2, 3, 1]
+	>>> parabolic(f, argmax(f))
+	(3.2142857142857144, 6.1607142857142856)
 
 	"""
 	xv = 1/2. * (f[x-1] - f[x+1]) / (f[x-1] - 2 * f[x] + f[x+1]) + x

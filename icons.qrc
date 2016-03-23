@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="ico">
     <file>icons/mpi.png</file>
+    <file>icons/TDCT.png</file>
   </qresource>
 </RCC>

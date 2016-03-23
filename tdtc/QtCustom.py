@@ -1,5 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""
+Custom Qt classes. Some widgets in QT Designer are promoted to these classes:
+	- QTableView
+	- QSortFilterProxyModel
+	- QStandardItemModel
+	- QGraphicsScene
+	- a custom QWidget for Matplotlib integration
+
 # @Title			: QtCustom
 # @Project			: 3DCTv2
 # @Description		: Custom Qt classes
@@ -9,12 +17,12 @@
 # @Maintainer		: Jan Arnold
 # @Date				: 2016/02/27
 # @Version			: 3DCT 2.0.0 module rev. 1
-# @Status			: developement
+# @Status			: development
 # @Usage			: part of 3D Correlation Toolbox
 # @Notes			: Some widgets in QT Designer are promoted to these classes
 # @Python_version	: 2.7.10
-# @Last Modified	: 2016/03/09
-# ============================================================================
+"""
+# ======================================================================================================================
 
 from PyQt4 import QtCore, QtGui
 import numpy as np
@@ -27,18 +35,22 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 import math
 import clrmsg
-import bead_pos
+import beadPos
 
 ##############################
-## QTableViewCustom
+# QTableViewCustom
 
 
 class QTableViewCustom(QtGui.QTableView):
-	def __init__(self, parent=None,):
+	def __init__(self,parent=None):
+		"""
+		Test bla bla
+		"""
 		QtGui.QTableView.__init__(self,parent)
 
-		## parent is mainWidget or Qsplitter if dynamic UI is used. If QSplitter is used the main parent
-		## is callable by self.parent().parent() and not self.parent() when not using QSplitter. To be flexible:
+		"""The parent is not mainWidget but QSplitter i.e. the main parent is callable by
+		self.parent().parent() and not self.parent() when not using QSplitter. This may be
+		subject to change, so to be flexible there is a check for QSplitter."""
 		if isinstance(self.parent(), QtGui.QSplitter):
 			self.mainParent = self.parent().parent()
 
@@ -55,7 +67,7 @@ class QTableViewCustom(QtGui.QTableView):
 		self.setDragEnabled(True)
 		self.setDragDropMode(QtGui.QAbstractItemView.InternalMove)
 
-		'''associated model and scene are passed from correlation_widget and are available as self._model and self._scene'''
+		'''associated model and scene are passed from TDCT_correlation and are available as self._model and self._scene'''
 
 	def mouseMoveEvent(self,event):
 		super(QTableViewCustom, self).mouseMoveEvent(event)
@@ -177,7 +189,7 @@ class QTableViewCustom(QtGui.QTableView):
 
 				if gauss is True:
 					if optimize is False:
-						zopt = bead_pos.getzGauss(x,y,self.img,parent=self.mainParent)
+						zopt = beadPos.getzGauss(x,y,self.img,parent=self.mainParent)
 						if self.debug is True: print clrmsg.DEBUG + str(self.img.shape), zopt
 						if 0 <= zopt <= self.img.shape[-3]:
 							self._scene.zValuesDict[activeitems[row]][1] = (0,0,0)
@@ -187,7 +199,7 @@ class QTableViewCustom(QtGui.QTableView):
 							self._model.itemFromIndex(self._model.index(row, 2)).setForeground(QtCore.Qt.red)
 						self._model.itemFromIndex(self._model.index(row, 2)).setText(str(zopt))
 					else:
-						xopt,yopt,zopt = bead_pos.getzGauss(
+						xopt,yopt,zopt = beadPos.getzGauss(
 															x,y,self.img,parent=self.mainParent,optimize=True,threshold=True,
 															threshVal=self.mainParent.doubleSpinBox_treshVal.value(),cutout=self._scene.markerSize)
 						if self.debug is True: print clrmsg.DEBUG + str(self.img.shape), xopt,yopt,zopt
@@ -202,7 +214,7 @@ class QTableViewCustom(QtGui.QTableView):
 						self._model.itemFromIndex(self._model.index(row, 1)).setText(str(yopt))
 						self._model.itemFromIndex(self._model.index(row, 2)).setText(str(zopt))
 				elif optimize is False:
-					zopt = bead_pos.getzPoly(x,y,self.img,n=None)
+					zopt = beadPos.getzPoly(x,y,self.img,n=None)
 					if self.debug is True: print clrmsg.DEBUG + str(self.img.shape), zopt
 					if 0 <= zopt <= self.img.shape[-3]:
 						self._scene.zValuesDict[activeitems[row]][1] = (0,0,0)
@@ -212,7 +224,7 @@ class QTableViewCustom(QtGui.QTableView):
 						self._model.itemFromIndex(self._model.index(row, 2)).setForeground(QtCore.Qt.red)
 					self._model.itemFromIndex(self._model.index(row, 2)).setText(str(zopt))
 				elif optimize is True:
-					xopt,yopt,zopt = bead_pos.getzPoly(x,y,self.img,n=None,optimize=True)
+					xopt,yopt,zopt = beadPos.getzPoly(x,y,self.img,n=None,optimize=True)
 					if self.debug is True: print clrmsg.DEBUG + str(self.img.shape), xopt,yopt,zopt
 					if 0 <= xopt <= self.img.shape[-1] and 0 <= yopt <= self.img.shape[-2] and 0 <= zopt <= self.img.shape[-3]:
 						self._scene.zValuesDict[activeitems[row]][1] = (255,0,0)
@@ -230,7 +242,7 @@ class QTableViewCustom(QtGui.QTableView):
 
 
 class NumberSortModel(QtGui.QSortFilterProxyModel):
-	def lessThan(self, left, right):
+	def lessThan(self,left,right):
 		lvalue = left.data().toDouble()[0]
 		rvalue = right.data().toDouble()[0]
 		return lvalue < rvalue

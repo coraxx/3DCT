@@ -1,5 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""
+Colored stdout status powered by "Colorama".
+
+Usage:
+	import clrmsg
+then call e.g.:
+	print(clrmsg.ERROR + 'Error message')
+and it will print:
+	[ ERROR ] Error message
+
 # @Title			: clrmsg
 # @Project			: 3DCTv2
 # @Description		: Colored stdout status powered by "Colorama"
@@ -16,8 +26,8 @@
 # 					: and it will return # [ ERROR ] Error message
 # @Notes			: You can add your own status prefixes.
 # @Python_version	: 2.7.10
-# @Last Modified	: 2016/02/27
-# ============================================================================
+"""
+# ======================================================================================================================
 
 ## Fore: BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE, RESET.
 ## Back: BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE, RESET.

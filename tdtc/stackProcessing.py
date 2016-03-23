@@ -1,6 +1,35 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# @Title			: stack_processing
+"""
+Can be used as standalone application, i.e. run python -u stackProcessing.py
+or import stackProcessing.py and use main function like:
+	stackProcessing.main(imgpath, original_steppsize, interpolated_stepsize, interpolationmethod)
+
+e.g: stackProcessing("image_stack.tif", 300, 161.25, 'linear') => fast (~25x faster)
+or: stackProcessing("image_stack.tif", 300, 161.25, 'spline') => slow
+
+where 300 is the focus step size the image stack was acquired with and 161.25 the step size
+of the interpolated stack.
+
+The spline method also returns a graph representing the interpolation in z of one x,y pixel in the
+middle for comparison between the original data and the linear as well as the spline interpolation.
+
+kwargs:
+	saveorigstack (boolean):
+				If an image sequence is used, in the form of "Tile_001-001-001_1-000.tif"
+				(FEI MAPS/LA tif sequence naming scheme), this program will save a single
+				tiff stack file of the original images by default (True).
+
+	nointerpolation (boolean):
+				If set True (default is False) and saveorigstack is also True, no interpolation
+				is done, only the packing of an image sequence to one single image stack file.
+
+	showgraph (boolean):
+				If set True (default False) and nointerpolation is False a graph is returned
+				representing the interpolation in z of one x,y pixel in the middle of input stack
+				for comparison between the original data and the linear as well as the spline interpolation.
+
+# @Title			: stackProcessing
 # @Project			: 3DCTv2
 # @Description		: Process image stack files (.tif)
 # @Author			: Jan Arnold
@@ -10,12 +39,12 @@
 # @Date				: 2016/01
 # @Version			: 3DCT 2.0.0 module rev. 1
 # @Status			: stable
-# @Usage			: Can be used as standalone application, i.e. run python -u stack_processing.py
-# 					: or import stack_processing.py and use main function like:
-# 					: stack_processing.main(imgpath, original_steppsize, interpolated_stepsize, interpolationmethod)
+# @Usage			: Can be used as standalone application, i.e. run python -u stackProcessing.py
+# 					: or import stackProcessing.py and use main function like:
+# 					: stackProcessing.main(imgpath, original_steppsize, interpolated_stepsize, interpolationmethod)
 # 					:
-# 					: e.g: stack_processing("image_stack.tif", 300, 161.25, 'linear') => fast (~25x faster)
-# 					: or: stack_processing("image_stack.tif", 300, 161.25, 'spline') => slow
+# 					: e.g: stackProcessing("image_stack.tif", 300, 161.25, 'linear') => fast (~25x faster)
+# 					: or: stackProcessing("image_stack.tif", 300, 161.25, 'spline') => slow
 # 					:
 # 					: where 300 is the focus step size the image stack was acquired with and 161.25 the step size
 # 					: of the interpolated stack.
@@ -25,17 +54,19 @@
 # 					:
 # 					: ##Options##
 # 					: saveorigstack:	boolean	If an image sequence is used, in the form of "Tile_001-001-001_1-000.tif"
-# 					: 							(FEI MAPS/LA tif sequence naming scheme), this programm will save a single
-# 					: 							tiff stack file of the original images by default (True).
-# 					: nointerpolation:	boolean	If set True (default is False) and saveorigstack is also True, no interpoaltion
-# 					: 							is done, only the packing of an image sequence to one single image stack file.
-# 					: showgraph:		boolean	If set True (default False) and nointerpolation is False a graph is returned
-# 					: 							representing the interpolation in z of one x,y pixel in the middle of input stack
-# 					: 							for comparison between the original data and the linear as well as the spline interpolation.
+# 					: 							(FEI MAPS/LA tif sequence naming scheme), this program will save a
+# 					: 							single tiff stack file of the original images by default (True).
+# 					: nointerpolation:	boolean	If set True (default is False) and saveorigstack is also True, no
+# 					: 							interpolation is done, only the packing of an image sequence to one
+# 					: 							single image stack file.
+# 					: showgraph:		boolean	If set True (default False) and nointerpolation is False a graph is
+# 					: 							returned representing the interpolation in z of one x,y pixel in the
+# 					: 							middle of input stack for comparison between the original data and the
+# 					: 							linear as well as the spline interpolation.
 # @Notes			:
 # @Python_version	: 2.7.10
-# @Last Modified	: 2016/02/27
-# ============================================================================
+"""
+# ======================================================================================================================
 
 import sys
 import os
@@ -56,11 +87,12 @@ except:
 matplotlib.use('tkAgg')
 
 
-## Main function handling the file type and parsing of filenames/directories
 def main(img_path, ss_in, ss_out, interpolationmethod='linear', saveorigstack=True, showgraph=False):
-	## Raise "error" when prgramm has nothing to do due to all arguments set to none/false
+	"""Main function handling the file type and parsing of filenames/directories"""
+
+	## Raise "error" when program has nothing to do due to all arguments set to none/false
 	if interpolationmethod == 'none' and saveorigstack is False and showgraph is False:
-		print "At least let me do somthing! Setting everything to False... very funny -.-"
+		print "At least let me do something! Setting everything to False... very funny -.-"
 		return
 	## For single image stack files
 	if os.path.isfile(img_path) is True:
@@ -111,7 +143,7 @@ def main(img_path, ss_in, ss_out, interpolationmethod='linear', saveorigstack=Tr
 		if match is False:
 			print(
 				"ERROR: I only know FEI MAPS image sequences looking like e.g. 'Tile_001-001-001_1-000.tif'. " +
-				"I did not find images matching thise naming scheme")
+				"I did not find images matching this naming scheme")
 			return
 		## Channel numbers in filename i zero-based, so add 1 for total number
 		channels = int(max(channels))+1
@@ -151,7 +183,7 @@ def main(img_path, ss_in, ss_out, interpolationmethod='linear', saveorigstack=Tr
 				else:
 					tf.imsave(file_out_orig, img)
 				print "		...done."
-			## In case only the original image sequence is saved as a single stack file the interpolation is skiped
+			## In case only the original image sequence is saved as a single stack file the interpolation is skipped
 			if interpolationmethod == 'none' and showgraph is False:
 				pass
 			else:
@@ -171,6 +203,8 @@ def main(img_path, ss_in, ss_out, interpolationmethod='linear', saveorigstack=Tr
 
 
 def pxSize(img_path):
+	"""Extract pixel size from meta/exif data. Tailored for image headers from FEI dual beam electron microscopes
+	and CorrSight light microscope"""
 	with tf.TiffFile(img_path) as tif:
 		for page in tif:
 			for tag in page.tags.values():
@@ -202,7 +236,8 @@ def pxSize(img_path):
 
 
 def interpol(img, ss_in, ss_out, interpolationmethod, showgraph):
-	## Depending on tiff format the file can have a different shapes; e.g. z,y,x or c,z,y,x
+	"""Main function for interpolating image stacks via polyfit"""
+	## Depending on tiff format the file can have different shapes; e.g. z,y,x or c,z,y,x
 	if len(img.shape) == 4 and img.shape[0] == 1:
 		img = np.squeeze(img, axis=0)
 	elif len(img.shape) == 4 and img.shape[0] > 1:
@@ -212,9 +247,10 @@ def interpol(img, ss_in, ss_out, interpolationmethod, showgraph):
 		## Number of slices in original stack
 		sl_in = img.shape[0]
 		## Number of slices in interpolated stack
-		sl_out = int((sl_in-1)*(ss_in/ss_out)) + 1  # discarding last data point. e.g. 56 in i.e.
-													# 55 steps * (309nm original spacing/161.25nm new spacing) = 105.39 -> int()=105 + 1 = 106
-		## Interpolatet image stack shape
+		# Discarding last data point. e.g. 56 in i.e.
+		# 55 steps * (309 nm original spacing / 161.25 nm new spacing) = 105.39 -> int() = 105 + 1 = 106
+		sl_out = int((sl_in-1)*(ss_in/ss_out)) + 1
+		## Interpolate image stack shape
 		img_int_shape = (sl_out, img.shape[1], img.shape[2])
 	else:
 		return "ERROR: I only know tiff stack image formats in z,y,x or c,z,y,x with one channel"
@@ -237,6 +273,7 @@ def interpol(img, ss_in, ss_out, interpolationmethod, showgraph):
 
 
 def showgraph_(img, ss_in, ss_out, sl_in, sl_out, block=True):
+	"""Show graph for polyfit function to visualize fitting process"""
 	## Known x values in interpolated stack size.
 	zx = np.arange(0,sl_out,(ss_in/ss_out))
 	zy = img[:,int(img.shape[1]/2),int(img.shape[2]/2)]
@@ -250,23 +287,24 @@ def showgraph_(img, ss_in, ss_out, sl_in, sl_out, block=True):
 	## Spline interpolation
 	spl = interpolate.InterpolatedUnivariateSpline(zx, zy)
 
-	zxnew = np.arange(0, (sl_in-1)*ss_in/ss_out, 1)  # First slice of original and interpolated are both 0. n-1 to discard last slize
+	zxnew = np.arange(0, (sl_in-1)*ss_in/ss_out, 1)  # First slice of original and interpolated are both 0. n-1 to discard last slice
 	zynew_lin = lin(zxnew)
 	zynew_spl = spl(zxnew)
-	## Ploting data. blue = original, red = interpolated with interp1d, green = spline interpolation
+	## Plotting data. blue = original, red = interpolated with interp1d, green = spline interpolation
 	plt.plot(zx, zy, 'bo-', label='original')
 	plt.plot(zxnew, zynew_lin, 'rx-', label='linear')
 	plt.plot(zxnew, zynew_spl, 'g*-', label='spline')
 	plt.legend(loc='upper left')
 	if block is True:
-		print "######## \nPAUSED: Please close graph in order to continue with the programm \n########"
+		print "######## \nPAUSED: Please close graph in order to continue with the program \n########"
 	plt.show(block)
 
 
 def spline(img, img_int_shape, ss_in, ss_out, sl_in, sl_out):
+	"""Spline interpolating"""
 	## Known x values in interpolated stack size.
 	zx = np.arange(0,sl_out,(ss_in/ss_out))
-	zxnew = np.arange(0, (sl_in-1)*ss_in/ss_out, 1)  # First slice of original and interpolated are both 0. n-1 to discard last slize
+	zxnew = np.arange(0, (sl_in-1)*ss_in/ss_out, 1)  # First slice of original and interpolated are both 0. n-1 to discard last slice
 	if ss_in/ss_out < 1.0:
 		zx_mod = []
 		for i in range(img.shape[0]):
@@ -292,7 +330,8 @@ def spline(img, img_int_shape, ss_in, ss_out, sl_in, sl_out):
 
 
 def linear(img, img_int_shape, ss_in, ss_out, sl_in, sl_out):
-	##  Determine interpolatet slice positions
+	"""Linear interpolation"""
+	##  Determine interpolated slice positions
 	sl_int = np.arange(0,sl_in-1,ss_out/ss_in)  # sl_in-1 because last slice is discarded (no extrapolation)
 
 	## Create new numpy array for the interpolated image stack
@@ -314,6 +353,17 @@ def linear(img, img_int_shape, ss_in, ss_out, sl_in, sl_out):
 
 
 def norm_img(img,copy=False):
+	"""Normalizing image
+
+	Supported data types are (u)int8, (u)int16, float32 and float64.
+	Supported image types are 2D, 3D and/or multichannel images in the form of:
+
+	[y,x]
+	[c,y,x]
+	[z,y,x]
+	[z,c,y,x]
+	[c,z,y,x]
+	"""
 	if copy is True: img = np.copy(img)
 	dtype = str(img.dtype)
 	if dtype == "uint16" or dtype == "int16": typesize = 65535
@@ -348,7 +398,7 @@ if __name__ == '__main__':
 	T.grid(row=0,column=0,columnspan=2)
 	T.insert(Tkinter.END, """IMAGE STACK TOOL - 0.1 - by Jan Arnold
 
-	This application can interpolate/nomalize image stacks and/or merge an image sequence
+	This application can interpolate/normalize image stacks and/or merge an image sequence
 	to one single image stack file (for FEI MAPS generated single image stacks) as well as
 	create Maximum Intensity Projections (MIP)
 
@@ -377,7 +427,9 @@ if __name__ == '__main__':
 		if len(files) > 10:
 			filenames = filenames[0:10]
 			filenames.append("...")
-		ss_in = tkSimpleDialog.askfloat(parent=root, title='Enter ORIGINAL focus step size', prompt='Enter ORIGINAL focus step size for:\n'+'\n'.join('{}'.format(k) for k in filenames))
+		ss_in = tkSimpleDialog.askfloat(
+			parent=root, title='Enter ORIGINAL focus step size',
+			prompt='Enter ORIGINAL focus step size for:\n'+'\n'.join('{}'.format(k) for k in filenames))
 		if not ss_in: return
 		pixelsize = pxSize(files[0])
 		if pixelsize is None: pixelsize = 0
@@ -396,7 +448,9 @@ if __name__ == '__main__':
 	def getdirint():
 		directory = tkFileDialog.askdirectory(parent=root,title='Choose directory with image sequence stack files')
 		if not directory: return
-		ss_in = tkSimpleDialog.askfloat(parent=root, title='Enter ORIGINAL focus step size', prompt='Enter ORIGINAL focus step size for:\n{0}'.format(os.path.split(directory)[1]))
+		ss_in = tkSimpleDialog.askfloat(
+			parent=root, title='Enter ORIGINAL focus step size',
+			prompt='Enter ORIGINAL focus step size for:\n{0}'.format(os.path.split(directory)[1]))
 		if not ss_in: return
 		try:
 			pixelsize = pxSize(os.path.join(directory,'Tile_001-001-000_0-000.tif'))
@@ -493,7 +547,7 @@ if __name__ == '__main__':
 	B5 = Tkinter.Button(root, text="Create normalized MIP of image stack files...", command=mip)
 	B5.config(width=50)
 	B5.grid(row=9,column=0,columnspan=2)
-	### Checkboxes
+	### Check-boxes
 	c = Tkinter.Checkbutton(root, text="Show graph comparing interpolation methods", variable=showgraph)
 	c.grid(row=4,column=0,sticky=Tkinter.W,padx=100)
 

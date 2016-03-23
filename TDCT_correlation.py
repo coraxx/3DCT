@@ -1,6 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# @Title			: correlation_widget
+"""
+Extracting 2D and 3D points with subsequent 2D to 3D correlation.
+This module can be run as a standalone python application, but is best paired
+with the preceding data processing (cubing voxels, merge single image files
+to one single stack file, ...).
+
+# @Title			: TDCT_correlation
 # @Project			: 3DCTv2
 # @Description		: Extracting 2D and 3D points for 2D to 3D correlation
 # @Author			: Jan Arnold
@@ -9,12 +15,13 @@
 # @Maintainer		: Jan Arnold
 # @Date				: 2016/01
 # @Version			: 3DCT 2.0.0 module rev. 1
-# @Status			: developement
+# @Status			: development
 # @Usage			: part of 3D Correlation Toolbox
 # @Notes			:
 # @Python_version	: 2.7.10
-# @Last Modified	: 2016/03/09
-# ============================================================================
+"""
+# ======================================================================================================================
+
 
 import sys
 import os
@@ -24,37 +31,36 @@ from PyQt4 import QtCore, QtGui, uic
 import numpy as np
 import cv2
 import tifffile as tf
-## Colored stdout
-import clrmsg
-## Custom Qt functions (mostly to handle events) widgets in QtDesigner are promoted to
-import QtCustom
-## CSV handler
-import csv_handler
-import correlation
+## Colored stdout, custom Qt functions (mostly to handle events), CSV handler
+## and correlation algorithm
+from tdtc import clrmsg, QtCustom, csvHandler, correlation
+
+__version__ = 'v2.0.0'
 
 execdir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(execdir)
 workingdir = execdir
 
-qtCreatorFile_main = os.path.join(execdir, "TDCT_correlation_dynamic.ui")
+qtCreatorFile_main = os.path.join(execdir, "TDCT_correlation.ui")
 Ui_WidgetWindow, QtBaseClass = uic.loadUiType(qtCreatorFile_main)
 
 
-class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
-	def __init__(self, parent=None, left=None, right=None):
+class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
+	def __init__(self, parent=None, leftImage=None, rightImage=None):
 		self.debug = True
 		if self.debug is True: print clrmsg.DEBUG + 'Debug messages enabled'
 		QtGui.QWidget.__init__(self, parent)
 		Ui_WidgetWindow.__init__(self)
 		self.setupUi(self)
 		self.counter = 0		# Just for testing (loop counter for test button)
-		self.refreshUI = app.processEvents
+		self.refreshUI = QtGui.QApplication.processEvents
+		self.currentFocusedWidgetName = QtGui.QApplication.focusWidget()
 
 		## Stylesheet colors:
 		self.stylesheet_orange = "color: rgb(255, 120,   0);"
-		self.stylesheet_green = "color: rgb(  0, 200,   0);"
-		self.stylesheet_blue = "color: rgb(  0, 190, 255);"
-		self.stylesheet_red = "color: rgb(255,   0,   0);"
+		self.stylesheet_green = "color:  rgb(  0, 200,   0);"
+		self.stylesheet_blue = "color:   rgb(  0, 190, 255);"
+		self.stylesheet_red = "color:    rgb(255,   0,   0);"
 
 		## Tableview and models
 		self.modelLleft = QtCustom.QStandardItemModelCustom(self)
@@ -73,15 +79,19 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 		## store parameters for resizing
 		self.parent = parent
 		self.size = 500
-		self.left = left
-		self.right = right
+		self.leftImage = leftImage
+		self.rightImage = rightImage
 
 		## Initialize parameters
 		self.brightness_left = 0
 		self.contrast_left = 10
 		self.brightness_right = 0
 		self.contrast_right = 10
-		## Initialize Images
+		## Initialize Images and connect image load buttons
+		self.toolButton_loadLeftImage.clicked.connect(self.openImageLeft)
+		self.toolButton_loadRightImage.clicked.connect(self.openImageRight)
+		if leftImage is None or rightImage is None:
+			return
 		self.initImageLeft()
 		self.initImageRight()
 
@@ -122,9 +132,9 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 		self.horizontalSlider_brightness.valueChanged.connect(self.adjustBrightCont)
 		self.horizontalSlider_contrast.valueChanged.connect(self.adjustBrightCont)
 		## Capture focus change events
-		QtCore.QObject.connect(app, QtCore.SIGNAL("focusChanged(QWidget *, QWidget *)"), self.changedFocusSlot)
+		QtCore.QObject.connect(QtGui.QApplication.instance(), QtCore.SIGNAL("focusChanged(QWidget *, QWidget *)"), self.changedFocusSlot)
 
-		## Pass models and scenes to tableviewa
+		## Pass models and scenes to tableview for easy access
 		self.tableView_left._model = self.modelLleft
 		self.tableView_right._model = self.modelRight
 		self.tableView_left._scene = self.sceneLeft
@@ -158,8 +168,23 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 		if self.counter == 4:
 			self.widget_matplotlib.setupScatterCanvas(width=4,height=4,dpi=72,toolbar=True)
 			self.widget_matplotlib.scatterPlot(x='random',y='random',frame=True,framesize=6,xlabel="lol",ylabel="rofl")
-		itemlistL = csv_handler.csv2list(testpath+'correlation_test_dataset/FIB_coordinates.txt',delimiter="\t",parent=self,sniff=True)
-		itemlistR = csv_handler.csv2list(testpath+'correlation_test_dataset/LM_coordinates4FIB_POI.txt',delimiter="\t",parent=self,sniff=True)
+
+		# lol1 = str(self.leftImage)
+		# lol2 = str(self.rightImage)
+		# self.leftImage = lol2
+		# self.rightImage = lol1
+		# self.initImageLeft()
+		# self.initImageRight()
+		# self.tableView_left._scene = self.sceneLeft
+		# self.tableView_right._scene = self.sceneRight
+
+		# for i in range(self.tableView_left._model.rowCount()): self.sceneLeft.addCircle(0.0,0.0,0.0)
+		# self.tableView_left.updateItems()
+		# for i in range(self.tableView_right._model.rowCount()): self.sceneRight.addCircle(0.0,0.0,0.0)
+		# self.tableView_right.updateItems()
+
+		itemlistL = csvHandler.csv2list(testpath+'correlation_test_dataset/FIB_coordinates.txt',delimiter="\t",parent=self,sniff=True)
+		itemlistR = csvHandler.csv2list(testpath+'correlation_test_dataset/LM_coordinates4FIB_POI.txt',delimiter="\t",parent=self,sniff=True)
 		for item in itemlistL: self.sceneLeft.addCircle(
 				float(item[0]),
 				float(item[1]),
@@ -170,6 +195,7 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 				float(item[1]),
 				float(item[2]) if len(item) > 2 else 0)
 		self.sceneRight.itemsToModel()
+
 		self.counter += 1
 
 	def changedFocusSlot(self, former, current):
@@ -296,19 +322,22 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 												###### Image initialization and rotation ######
 												#################### START ####################
 	def initImageLeft(self):
-		if self.left is not None:
+		if self.leftImage is not None:
 			## Changed GraphicsSceneLeft(self) to QtCustom.QGraphicsSceneCustom(self.graphicsView_left) to reuse class for both scenes
 			self.sceneLeft = QtCustom.QGraphicsSceneCustom(self.graphicsView_left,mainWidget=self,side='left',model=self.modelLleft)
 			## set pen color yellow
 			self.sceneLeft.pen = QtGui.QPen(QtCore.Qt.red)
 			## Splash screen message
-			splash.showMessage("Loading images... "+self.left,color=QtCore.Qt.white)
-			app.processEvents()
+			try:
+				splash.splash.showMessage("Loading images... "+self.leftImage,color=QtCore.Qt.white)
+			except:
+				pass
+			QtGui.QApplication.processEvents()
 			## Get pixel size
-			self.sceneLeft.pixelSize = self.pxSize(self.left)
+			self.sceneLeft.pixelSize = self.pxSize(self.leftImage)
 			self.sceneLeft.pixelSizeUnit = 'um'
 			## Load image, assign it to scene and store image type information
-			self.img_left,self.sceneLeft.imagetype,self.imgstack_left = self.imread(self.left)
+			self.img_left,self.sceneLeft.imagetype,self.imgstack_left = self.imread(self.leftImage)
 			self.img_left_displayed = np.copy(self.img_left)
 			## link image to QTableview for determining z
 			self.tableView_left.img = self.imgstack_left
@@ -319,30 +348,33 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 			else:
 				self.sceneLeft._z = True
 				self.setCustomRotCenter(max(self.imgstack_left.shape))
-			# self.pixmap_left = QtGui.QPixmap(self.left)
+			# self.pixmap_left = QtGui.QPixmap(self.leftImage)
 			self.pixmap_left = self.cv2Qimage(self.img_left_displayed)
 			self.pixmap_item_left = QtGui.QGraphicsPixmapItem(self.pixmap_left, None, self.sceneLeft)
 			## connect scenes to gui elements
 			self.graphicsView_left.setScene(self.sceneLeft)
-			## reset scaling (needed for reinizialization)
+			## reset scaling (needed for reinitialization)
 			self.graphicsView_left.resetMatrix()
 			## scaling scene, not image
 			scaling_factor = float(self.size)/max(self.pixmap_left.width(), self.pixmap_left.height())
 			self.graphicsView_left.scale(scaling_factor,scaling_factor)
 
 	def initImageRight(self):
-		if self.right is not None:
+		if self.rightImage is not None:
 			self.sceneRight = QtCustom.QGraphicsSceneCustom(self.graphicsView_right,mainWidget=self,side='right',model=self.modelRight)
 			## set pen color yellow
 			self.sceneRight.pen = QtGui.QPen(QtCore.Qt.yellow)
 			## Splash screen message
-			splash.showMessage("Loading images... "+self.right,color=QtCore.Qt.white)
-			app.processEvents()
+			try:
+				splash.splash.showMessage("Loading images... "+self.rightImage,color=QtCore.Qt.white)
+			except:
+				pass
+			QtGui.QApplication.processEvents()
 			## Get pixel size
-			self.sceneRight.pixelSize = self.pxSize(self.right)
+			self.sceneRight.pixelSize = self.pxSize(self.rightImage)
 			self.sceneRight.pixelSizeUnit = 'um'
 			## Load image, assign it to scene and store image type information
-			self.img_right,self.sceneRight.imagetype,self.imgstack_right = self.imread(self.right)
+			self.img_right,self.sceneRight.imagetype,self.imgstack_right = self.imread(self.rightImage)
 			self.img_right_displayed = np.copy(self.img_right)
 			## link image to QTableview for determining z
 			self.tableView_right.img = self.imgstack_right
@@ -353,16 +385,38 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 			else:
 				self.sceneRight._z = True
 				self.setCustomRotCenter(max(self.imgstack_right.shape))
-			# self.pixmap_right = QtGui.QPixmap(self.right)
+			# self.pixmap_right = QtGui.QPixmap(self.rightImage)
 			self.pixmap_right = self.cv2Qimage(self.img_right_displayed)
 			self.pixmap_item_right = QtGui.QGraphicsPixmapItem(self.pixmap_right, None, self.sceneRight)
 			## connect scenes to gui elements
 			self.graphicsView_right.setScene(self.sceneRight)
-			## reset scaling (needed for reinizialization)
+			## reset scaling (needed for reinitialization)
 			self.graphicsView_right.resetMatrix()
 			## scaling scene, not image
 			scaling_factor = float(self.size)/max(self.pixmap_right.width(), self.pixmap_right.height())
 			self.graphicsView_right.scale(scaling_factor,scaling_factor)
+
+	def openImageLeft(self):
+		path = str(QtGui.QFileDialog.getOpenFileName(
+			None,"Select image file for correlation", workingdir,"Image Files (*.tif *.tiff);; All (*.*)"))  # *.png *.jpg *.bmp not yet supportes
+		if path != '':
+			self.leftImage = path
+			self.initImageLeft()
+			self.tableView_left._scene = self.sceneLeft
+			for i in range(self.tableView_left._model.rowCount()):
+				self.sceneLeft.addCircle(0.0,0.0,0.0)
+			self.tableView_left.updateItems()
+
+	def openImageRight(self):
+		path = str(QtGui.QFileDialog.getOpenFileName(
+			None,"Select image file for correlation", workingdir,"Image Files (*.tif *.tiff);; All (*.*)"))  # *.png *.jpg *.bmp not yet supportes
+		if path != '':
+			self.rightImage = path
+			self.initImageRight()
+			self.tableView_right._scene = self.sceneRight
+			for i in range(self.tableView_right._model.rowCount()):
+				self.sceneRight.addCircle(0.0,0.0,0.0)
+			self.tableView_right.updateItems()
 
 	def rotateImage(self):
 		if self.label_selimg.text() == 'left':
@@ -479,7 +533,7 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 		return code in 5bit just for fun:
 			1 = 2D
 			2 = 3D (always normalized, +16)
-			4 = greyscale
+			4 = gray scale
 			8 = multicolor/multichannel
 			16= normalized
 		'''
@@ -493,17 +547,17 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 			if self.debug is True: print clrmsg.DEBUG + "Image dtype converted to:", img.shape, img.dtype
 		if img.ndim == 4:
 			if self.debug is True: print clrmsg.DEBUG + "Calculating multichannel MIP"
-			## return mip, code 2+8+16 and imagestack
+			## return mip, code 2+8+16 and image stack
 			return np.amax(img, axis=1), 26, img
 		## this can only handle rgb. For more channels set "3" to whatever max number of channels should be handled
 		elif img.ndim == 3 and any([True for dim in img.shape if dim <= 3]) or img.ndim == 2:
 			if self.debug is True: print clrmsg.DEBUG + "Loading regular 2D image... multicolor/normalize:", \
 				[True for x in [img.ndim] if img.ndim == 3],'/',[normalize]
 			if normalize is True:
-				## return normalized 2D image with code 1+4+16 for greyscale normalized 2D image and 1+8+16 for multicolor normalized 2D image
+				## return normalized 2D image with code 1+4+16 for gray scale normalized 2D image and 1+8+16 for multicolor normalized 2D image
 				return self.norm_img(img), 25 if img.ndim == 3 else 21, None
 			else:
-				## return 2D image with code 1+4 for greyscale 2D image and 1+8 for multicolor 2D image
+				## return 2D image with code 1+4 for gray scale 2D image and 1+8 for multicolor 2D image
 				return img, 9 if img.ndim == 3 else 5, None
 		elif img.ndim == 3:
 			if self.debug is True: print clrmsg.DEBUG + "Calculating MIP"
@@ -523,7 +577,7 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 										try:
 											pixelSize = float(piece)
 											if self.debug is True: print clrmsg.DEBUG + "Pixel size from exif metakey:", keyword
-											## Value is in um from Corrsight/LA tiff files
+											## Value is in um from CorrSight/LA tiff files
 											return pixelSize
 										except Exception as e:
 											if self.debug is True: print clrmsg.DEBUG + "Pixel size parser:", e
@@ -543,7 +597,7 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 										try:
 											pixelSize = float(piece)
 											if self.debug is True: print clrmsg.DEBUG + "Pixel size from exif metakey:", keyword
-											## Value is in um from Corrsight/LA tiff files
+											## Value is in um from CorrSight/LA tiff files
 											return pixelSize
 										except Exception as e:
 											if self.debug is True: print clrmsg.DEBUG + "Pixel size parser:", e
@@ -682,10 +736,10 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 												#################### START ####################
 
 	def autosave(self):
-		csv_file_out = os.path.splitext(self.left)[0] + '_coordinates.txt'
-		csv_handler.model2csv(self.modelLleft,csv_file_out,delimiter="\t")
-		csv_file_out = os.path.splitext(self.right)[0] + '_coordinates.txt'
-		csv_handler.model2csv(self.modelRight,csv_file_out,delimiter="\t")
+		csv_file_out = os.path.splitext(self.leftImage)[0] + '_coordinates.txt'
+		csvHandler.model2csv(self.modelLleft,csv_file_out,delimiter="\t")
+		csv_file_out = os.path.splitext(self.rightImage)[0] + '_coordinates.txt'
+		csvHandler.model2csv(self.modelRight,csv_file_out,delimiter="\t")
 
 	def exportPoints(self):
 		if self.label_selectedTable.text() == 'left':
@@ -694,35 +748,35 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 			model = self.modelRight
 		## Export Dioalog. Needs check for extension or add default extension
 		csv_file_out, filterdialog = QtGui.QFileDialog.getSaveFileNameAndFilter(
-			self, 'Export file as', os.path.dirname(self.left) if self.label_selectedTable.text() == 'left' else os.path.dirname(self.right),
+			self, 'Export file as', os.path.dirname(self.leftImage) if self.label_selectedTable.text() == 'left' else os.path.dirname(self.rightImage),
 			"Tabstop sepperated (*.csv *.txt);;Comma sepperated (*.csv *.txt)")
 		if str(filterdialog).startswith('Comma') is True:
-			csv_handler.model2csv(model,csv_file_out,delimiter=",")
+			csvHandler.model2csv(model,csv_file_out,delimiter=",")
 		elif str(filterdialog).startswith('Tabstop') is True:
-			csv_handler.model2csv(model,csv_file_out,delimiter="\t")
+			csvHandler.model2csv(model,csv_file_out,delimiter="\t")
 
 	def importPoints(self):
 		csv_file_in, filterdialog = QtGui.QFileDialog.getOpenFileNameAndFilter(
-			self, 'Import file as', os.path.dirname(self.left) if self.label_selectedTable.text() == 'left' else os.path.dirname(self.right),
+			self, 'Import file as', os.path.dirname(self.leftImage) if self.label_selectedTable.text() == 'left' else os.path.dirname(self.rightImage),
 			"Tabstop sepperated (*.csv *.txt);;Comma sepperated (*.csv *.txt)")
 		if str(filterdialog).startswith('Comma') is True:
-			itemlist = csv_handler.csv2list(csv_file_in,delimiter=",",parent=self,sniff=True)
+			itemlist = csvHandler.csv2list(csv_file_in,delimiter=",",parent=self,sniff=True)
 		elif str(filterdialog).startswith('Tabstop') is True:
-			itemlist = csv_handler.csv2list(csv_file_in,delimiter="\t",parent=self,sniff=True)
+			itemlist = csvHandler.csv2list(csv_file_in,delimiter="\t",parent=self,sniff=True)
 		if self.label_selectedTable.text() == 'left':
 			for item in itemlist: self.sceneLeft.addCircle(
 				float(item[0]),
 				float(item[1]),
 				float(item[2]) if len(item) > 2 else 0)
 			self.sceneLeft.itemsToModel()
-			# csv_handler.csvAppend2model(csv_file_in,self.modelLleft,delimiter="\t",parent=self,sniff=True)
+			# csvHandler.csvAppend2model(csv_file_in,self.modelLleft,delimiter="\t",parent=self,sniff=True)
 		elif self.label_selectedTable.text() == 'right':
 			for item in itemlist: self.sceneRight.addCircle(
 				float(item[0]),
 				float(item[1]),
 				float(item[2]) if len(item) > 2 else 0)
 			self.sceneRight.itemsToModel()
-			# csv_handler.csvAppend2model(csv_file_in,self.modelRight,delimiter="\t",parent=self,sniff=True)
+			# csvHandler.csvAppend2model(csv_file_in,self.modelRight,delimiter="\t",parent=self,sniff=True)
 
 												##################### END #####################
 												######     CSV - Point import/export    #######
@@ -747,11 +801,17 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 			model3D = self.modelRight
 			## Temporary img to draw results and save it
 			img = np.copy(self.img_left)
+			if img.ndim == 2:
+				## Nees RGB for colored markers
+				img = cv2.cvtColor(img,cv2.COLOR_GRAY2BGR)
 		elif '{0:b}'.format(self.sceneLeft.imagetype)[-1] == '0' and '{0:b}'.format(self.sceneRight.imagetype)[-1] == '1':
 			model2D = self.modelRight
 			model3D = self.modelLleft
 			## Temporary img to draw results and save it
 			img = np.copy(self.img_right)
+			if img.ndim == 2:
+				## Nees RGB for colored markers
+				img = cv2.cvtColor(img,cv2.COLOR_GRAY2BGR)
 		else:
 			if '{0:b}'.format(self.sceneLeft.imagetype)[-1] == '0' and '{0:b}'.format(self.sceneRight.imagetype)[-1] == '0':
 				raise ValueError('Both datasets contain only 2D information. I need one 3D and one 2D dataset')
@@ -783,10 +843,10 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 															] if self.checkBox_writeReport.isChecked() else '')
 														)
 			else:
-				QtGui.QMessageBox.critical(self, "Data Structur", "The two datasets do not contain the same amount of markers!")
+				QtGui.QMessageBox.critical(self, "Data Structure", "The two datasets do not contain the same amount of markers!")
 				return
 		else:
-			QtGui.QMessageBox.critical(self, "Data Structur",'At least THREE markers are needed to do the correlation')
+			QtGui.QMessageBox.critical(self, "Data Structure",'At least THREE markers are needed to do the correlation')
 			return
 
 		transf_3d = self.correlation_results[1]
@@ -799,7 +859,10 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 				cv2.circle(img, (int(round(calc_spots_2d[0,i])), int(round(calc_spots_2d[1,i]))), 1, (0,0,255), -1)
 		if self.checkBox_writeReport.isChecked():
 			cv2.imwrite(os.path.join(workingdir,timestamp+"_correlated.tif"), img)
-		img = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
+		try:
+			img = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
+		except:
+			pass
 		## Display image
 		if '{0:b}'.format(self.sceneLeft.imagetype)[-1] == '1':
 			self.img_left_displayed = np.copy(img)
@@ -834,40 +897,28 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 			delta2D = self.correlation_results[3]
 			delta2D_mean = np.absolute(delta2D).mean(axis=1)
 			# cm_3D_markers = self.correlation_results[4]		## unused atm
-			modified_translation = self.correlation_results[5]
+			translation = (transf.d[0], transf.d[1], transf.d[2])
+			translation_customRotation = self.correlation_results[5]
 			eulers = transf.extract_euler(r=transf.q, mode='x', ret='one')
 			eulers = eulers * 180 / np.pi
-			# scale = transf.s_scalar
-			# translation = (transf.d[0], transf.d[1], transf.d[2])
+			scale = transf.s_scalar
 
 			# ## display data
-			# # rotation
-			# self.lcdNumber_psi.display(eulers[2])
-			# self.lcdNumber_phi.display(eulers[0])
-			# self.lcdNumber_theta.display(eulers[1])
-			# # translation and scale
-			# self.label_rotcenter.setText('[%5.2f, %5.2f, %5.2f]' % (
-			# 	self.rotation_center[0],
-			# 	self.rotation_center[1],
-			# 	self.rotation_center[2]))
-			# self.lcdNumber_transxRotCenter.display(modified_translation[0])
-			# self.lcdNumber_transyRotCenter.display(modified_translation[1])
-			# self.lcdNumber_transx.display(transf.d[0])
-			# self.lcdNumber_transy.display(transf.d[1])
-			# self.lcdNumber_scale.display(transf.s_scalar)
-			# # error
-			# self.lcdNumber_RMS.display(transf.rmsError)
-			# self.lcdNumber_meandx.display(delta2D_mean[0])
-			# self.lcdNumber_meandy.display(delta2D_mean[1])
 			self.label_phi.setText('{0:.3f}'.format(eulers[0]))
 			self.label_phi.setStyleSheet(self.stylesheet_green)
 			self.label_psi.setText('{0:.3f}'.format(eulers[2]))
 			self.label_psi.setStyleSheet(self.stylesheet_green)
 			self.label_theta.setText('{0:.3f}'.format(eulers[1]))
 			self.label_theta.setStyleSheet(self.stylesheet_green)
-			self.label_translation.setText('x = {0:.3f} | y = {1:.3f}'.format(transf.d[0], transf.d[1]))
+			self.label_scale.setText('{0:.3f}'.format(scale))
+			self.label_scale.setStyleSheet(self.stylesheet_green)
+			self.label_translation.setText('x = {0:.3f} | y = {1:.3f}'.format(translation[0], translation[1]))
 			self.label_translation.setStyleSheet(self.stylesheet_green)
-			self.label_translation_custom_rot.setText('x = {0:.3f} | y = {1:.3f}'.format(modified_translation[0], modified_translation[1]))
+			self.label_custom_rot_center.setText('[{0},{1},{2}]:'.format(
+								int(self.doubleSpinBox_custom_rot_center_x.value()),
+								int(self.doubleSpinBox_custom_rot_center_y.value()),
+								int(self.doubleSpinBox_custom_rot_center_z.value())))
+			self.label_translation_custom_rot.setText('x = {0:.3f} | y = {1:.3f}'.format(translation_customRotation[0], translation_customRotation[1]))
 			self.label_translation_custom_rot.setStyleSheet(self.stylesheet_green)
 			self.label_meandxdy.setText('{0:.5f} / {1:.5f}'.format(delta2D_mean[0], delta2D_mean[1]))
 			if delta2D_mean[0] <= 1 and delta2D_mean[1] <= 1: self.label_meandxdy.setStyleSheet(self.stylesheet_green)
@@ -918,6 +969,9 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 				markerNr = int(self.modelResultsProxy.data(self.modelResultsProxy.index(row, 0)).toString())-1
 				tableView1.selectRow(markerNr)
 				tableView2.selectRow(markerNr)
+		else:
+			tableView1.clearSelection()
+			tableView2.clearSelection()
 		if doubleclick is True:
 			print 'double click'
 			print graphicsView.transform().m11(), graphicsView.transform().m22()
@@ -942,13 +996,12 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 		indices = self.tableView_results.selectedIndexes()
 		if indices:
 			cmApplyShift = QtGui.QAction('Apply shift to marker', self)
-			cmApplyShift.triggered.connect(lambda: self.applyResidualShift(3,[-0.3,1.5755]))
+			cmApplyShift.triggered.connect(self.applyResidualShift)
 			self.contextMenu = QtGui.QMenu(self)
 			self.contextMenu.addAction(cmApplyShift)
 			self.contextMenu.popup(QtGui.QCursor.pos())
 
-	def applyResidualShift(self,marker,shift):
-		print marker, shift
+	def applyResidualShift(self):
 		indices = self.tableView_results.selectedIndexes()
 		if '{0:b}'.format(self.sceneLeft.imagetype)[-1] == '1':
 			tableView = self.tableView_left
@@ -966,14 +1019,99 @@ class MainWidget(QtGui.QWidget, Ui_WidgetWindow):
 			## Select rows (only one row selectable in the results table)
 			for row in rows:
 				markerNr = int(self.modelResultsProxy.data(self.modelResultsProxy.index(row, 0)).toString())-1
-				print markerNr
-				items[markerNr].setPos(
-					float(tableView._model.data(tableView._model.index(markerNr, 0)).toString())+self.correlation_results[3][0,markerNr],
-					float(tableView._model.data(tableView._model.index(markerNr, 1)).toString())+self.correlation_results[3][1,markerNr])
+				if self.debug is True: print clrmsg.DEBUG + 'Marker number/background color (Qrgba)', markerNr, \
+					self.modelResults.itemFromIndex(self.modelResultsProxy.mapToSource((self.modelResultsProxy.index(row, 0)))).background().color().rgba()
+				if self.modelResults.itemFromIndex(self.modelResultsProxy.mapToSource((
+					self.modelResultsProxy.index(row, 0)))).background().color().rgba() == 4278190080:
+					BackColor = (50,220,175,100)
+					ForeColor = (180,180,180,255)
+					items[markerNr].setPos(
+						float(tableView._model.data(tableView._model.index(markerNr, 0)).toString())+self.correlation_results[3][0,markerNr],
+						float(tableView._model.data(tableView._model.index(markerNr, 1)).toString())+self.correlation_results[3][1,markerNr])
+					self.modelResults.itemFromIndex(self.modelResultsProxy.mapToSource((
+						self.modelResultsProxy.index(row, 0)))).setBackground(QtGui.QColor(*BackColor))
+					self.modelResults.itemFromIndex(self.modelResultsProxy.mapToSource((
+						self.modelResultsProxy.index(row, 1)))).setBackground(QtGui.QColor(*BackColor))
+					self.modelResults.itemFromIndex(self.modelResultsProxy.mapToSource((
+						self.modelResultsProxy.index(row, 2)))).setBackground(QtGui.QColor(*BackColor))
+					self.modelResults.itemFromIndex(self.modelResultsProxy.mapToSource((
+						self.modelResultsProxy.index(row, 0)))).setForeground(QtGui.QColor(*ForeColor))
+					self.modelResults.itemFromIndex(self.modelResultsProxy.mapToSource((
+						self.modelResultsProxy.index(row, 1)))).setForeground(QtGui.QColor(*ForeColor))
+					self.modelResults.itemFromIndex(self.modelResultsProxy.mapToSource((
+						self.modelResultsProxy.index(row, 2)))).setForeground(QtGui.QColor(*ForeColor))
+		scene.itemsToModel()
+		self.tableView_results.clearSelection()
 
 												##################### END #####################
 												######            Correlation           #######
 												###############################################
+
+
+class SplashScreen():
+	def __init__(self):
+		QtGui.QApplication.processEvents()
+		## Load splash screen image
+		splash_pix = QtGui.QPixmap('SplashScreen.png')
+		## Add version
+		painter = QtGui.QPainter()
+		painter.begin(splash_pix)
+		painter.setPen(QtCore.Qt.white)
+		painter.drawText(0, 0,splash_pix.size().width()-3,splash_pix.size().height()-1,QtCore.Qt.AlignBottom | QtCore.Qt.AlignRight, __version__)
+		painter.end()
+		## Show splash screen
+		self.splash = QtGui.QSplashScreen(splash_pix, QtCore.Qt.WindowStaysOnTopHint)
+		self.splash.setMask(splash_pix.mask())
+		self.splash.show()
+		self.splash.showMessage("Initializing...",color=QtCore.Qt.white)
+		## Needed to receive mouse clicks to hide splash screen
+		QtGui.QApplication.processEvents()
+
+		# Simulate something that takes time
+		time.sleep(1)
+		self.splash.showMessage("Loading images...",color=QtCore.Qt.white)
+
+
+class main():
+	def __init__(self,leftImage=None,rightImage=None,nosplash=False):
+		if leftImage is None or rightImage is None:
+			sys.exit("Please pass 'leftImage=PATH' and 'rightImage=PATH' to this function")
+
+		if nosplash is False:
+			global splash
+			splash = SplashScreen()
+
+		self.widget = MainWidget(leftImage=leftImage, rightImage=rightImage)
+		self.widget.show()
+
+		if nosplash is False:
+			splash.splash.finish(widget)
+
+	def close(self):
+		quit_msg = "Are you sure you want to exit the\n3DCT Correlation?\n\nUnsaved data will be lost!"
+		reply = QtGui.QMessageBox.question(self.widget, 'Message', quit_msg, QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
+		if reply == QtGui.QMessageBox.Yes:
+			self.widget.close()
+			return 0
+		else:
+			return 1
+
+
+class test():
+	def __init__(self):
+		## Testing paths
+		global testpath
+		testpath = '/Users/jan/Desktop/'
+		leftImage = testpath+'correlation_test_dataset/IB_030.tif'
+		rightImage = testpath+'correlation_test_dataset/LM_green_reslized.tif'
+
+		global splash
+		splash = SplashScreen()
+
+		widget = MainWidget(leftImage=leftImage, rightImage=rightImage)
+		widget.show()
+
+		splash.splash.finish(widget)
 
 if __name__ == "__main__":
 	print clrmsg.DEBUG + 'Debug Test'
@@ -982,52 +1120,17 @@ if __name__ == "__main__":
 	print clrmsg.INFO + 'Info Test'
 	print clrmsg.WARNING + 'Warning Test'
 	print '='*20, 'Initializing', '='*20
+
 	app = QtGui.QApplication(sys.argv)
-	## mac
-	left = '/Volumes/Silver/Dropbox/Dokumente/Code/test_stuff/IB_030.tif'
-	# left = '/Volumes/Silver/Dropbox/Dokumente/Code/test_stuff/IB_030_bw.tif'
-	# left = '/Users/jan/Desktop/160202/LM-SEM.tif'
-	# left = '/Volumes/Silver/output/MAX_input-0.tif'
-	# left = '/Users/jan/Desktop/rofllol.tif'
-	left = '/Volumes/Silver/output/input-0.tif'
-	# left = '/Volumes/Silver/output/Composite.tif'
-	# left = '/Users/jan/Desktop/LM-SEM.tif'
-	# right = '/Volumes/Silver/Dropbox/Dokumente/Code/test_stuff/px_test.tif'
-	right = '/Volumes/Silver/Dropbox/Dokumente/Code/test_stuff/Tile_001-001-000_0-000.tif'
-	# right = '/Users/jan/Desktop/test/pxsize_test/pxsize_test_0_small.tif'
-	## win
-	# left = r'E:\Dropbox\Dokumente\Code\test_stuff\IB_030.tif'
-	# right = r'E:\Dropbox\Dokumente\Code\test_stuff\px_test.tif'
-	# right = r'F:\jan_temp\sh2_g2_40x_SD_area5-0_reslized.tif'
-	## correlation dataset
-	testpath = '/Users/jan/Desktop/'
-	# testpath = 'F:/jan_temp/'
-	left = testpath+'correlation_test_dataset/IB_030.tif'
-	right = testpath+'correlation_test_dataset/LM_green_reslized.tif'
+	test()
+	# # File dialogs for standalone mode
+	# left = str(QtGui.QFileDialog.getOpenFileName(
+	# 	None,"Select first image file for correlation", workingdir,"Image Files (*.tif *.tiff);; All (*.*)"))  # *.png *.jpg *.bmp not yet supportes
+	# if left == '': sys.exit()
+	# right = str(QtGui.QFileDialog.getOpenFileName(
+	# 	None,"Select second image file for correlation", workingdir,"Image Files (*.tif *.tiff);; All (*.*)"))  # *.png *.jpg *.bmp not yet supportes
+	# if right == '': sys.exit()
 
-	## Load splash screen image
-	splash_pix = QtGui.QPixmap('SplashScreen.png')
-	## Add version
-	painter = QtGui.QPainter()
-	painter.begin(splash_pix)
-	painter.setPen(QtCore.Qt.white)
-	painter.drawText(0, 0,splash_pix.size().width()-3,splash_pix.size().height()-1,QtCore.Qt.AlignBottom | QtCore.Qt.AlignRight, 'v2.0')
-	painter.end()
-	## Show splash screen
-	splash = QtGui.QSplashScreen(splash_pix, QtCore.Qt.WindowStaysOnTopHint)
-	splash.setMask(splash_pix.mask())
-	splash.show()
-	splash.showMessage("Initializing...",color=QtCore.Qt.white)
-	## Needed to receive mouse clicks to hide splash screen
-	app.processEvents()
-
-	# Simulate something that takes time
-	time.sleep(1)
-	splash.showMessage("Loading images...",color=QtCore.Qt.white)
-
-	widget = MainWidget(left=left, right=right)
-	widget.show()
-
-	splash.finish(widget)
+	# main(leftImage=left,rightImage=right)
 
 	sys.exit(app.exec_())

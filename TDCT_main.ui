@@ -37,7 +37,7 @@
   </property>
   <property name="windowIcon">
    <iconset resource="icons.qrc">
-    <normaloff>:/ico/icons/mpi.png</normaloff>:/ico/icons/mpi.png</iconset>
+    <normaloff>:/ico/icons/TDCT.png</normaloff>:/ico/icons/TDCT.png</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <property name="enabled">

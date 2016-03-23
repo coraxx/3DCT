@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# @Title			: matlab_3D_rotation
+"""
+Rotate original light microscope volume with tom_rotate function in matlab.
+
+This generates the matlab script and runs in the matlab -nodisplay console.
+
+# @Title			: matlab3Drotation
 # @Project			: 3DCTv2
 # @Description		: Rotate original light microscope volume
 # @Author			: Jan Arnold
@@ -10,12 +15,12 @@
 # @Date				: 2016/01
 # @Version			: 3DCT 2.0.0 module rev. 1
 # @Status			: developement
-# @Usage			: Meant to be imported, i.e. import matlab_3D_rotation.py and used with calling
+# @Usage			: Meant to be imported, i.e. import matlab3Drotation.py and used with calling
 # 					: matlab_rotate(img_vol,)
 # @Notes			:
 # @Python_version	: 2.7.10
-# @Last Modified	: 2016/02/27
-# ============================================================================
+"""
+# ======================================================================================================================
 
 import sys
 import os
