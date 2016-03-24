@@ -33,28 +33,30 @@ import cv2
 import tifffile as tf
 ## Colored stdout, custom Qt functions (mostly to handle events), CSV handler
 ## and correlation algorithm
-from tdtc import clrmsg, QtCustom, csvHandler, correlation
+from tdct import clrmsg, QtCustom, csvHandler, correlation
 
 __version__ = 'v2.0.0'
 
 execdir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(execdir)
-workingdir = execdir
 
 qtCreatorFile_main = os.path.join(execdir, "TDCT_correlation.ui")
 Ui_WidgetWindow, QtBaseClass = uic.loadUiType(qtCreatorFile_main)
 
 
 class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
-	def __init__(self, parent=None, leftImage=None, rightImage=None):
+	def __init__(self, parent=None, leftImage=None, rightImage=None,workingdir=execdir):
 		self.debug = True
 		if self.debug is True: print clrmsg.DEBUG + 'Debug messages enabled'
-		QtGui.QWidget.__init__(self, parent)
+		QtGui.QWidget.__init__(self)
 		Ui_WidgetWindow.__init__(self)
 		self.setupUi(self)
+		self.parent = parent
 		self.counter = 0		# Just for testing (loop counter for test button)
 		self.refreshUI = QtGui.QApplication.processEvents
 		self.currentFocusedWidgetName = QtGui.QApplication.focusWidget()
+		self.workingdir = workingdir
+		self.lineEdit_workingDir.setText(self.workingdir)
 
 		## Stylesheet colors:
 		self.stylesheet_orange = "color: rgb(255, 120,   0);"
@@ -119,13 +121,14 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 																framesize=self.doubleSpinBox_scatterPlotFrameSize.value()))
 
 		## Buttons
+		self.pushButton_test.clicked.connect(self.test)
 		self.toolButton_rotcw.clicked.connect(lambda: self.rotateImage45(direction='cw'))
 		self.toolButton_rotccw.clicked.connect(lambda: self.rotateImage45(direction='ccw'))
-		self.pushButton_test.clicked.connect(self.test)
 		self.toolButton_brightness_reset.clicked.connect(lambda: self.horizontalSlider_brightness.setValue(0))
 		self.toolButton_contrast_reset.clicked.connect(lambda: self.horizontalSlider_contrast.setValue(10))
 		self.toolButton_importPoints.clicked.connect(self.importPoints)
 		self.toolButton_exportPoints.clicked.connect(self.exportPoints)
+		self.toolButton_selectWorkingDir.clicked.connect(self.selectWorkingDir)
 		self.commandLinkButton_correlate.clicked.connect(self.correlate)
 
 		## Sliders
@@ -143,6 +146,8 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		self.tableView_results.setContextMenuPolicy(3)
 		self.tableView_results.customContextMenuRequested.connect(self.cmTableViewResults)
 
+		self.lineEdit_workingDir.textChanged.connect(self.updateWorkingDir)
+
 	def keyPressEvent(self,event):
 		if event.key() == QtCore.Qt.Key_Delete:
 			if self.currentFocusedWidgetName == 'tableView_left':
@@ -157,6 +162,25 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 				self.tableView_right.deleteItem()
 				# self.updateItems(self.modelRight,self.sceneRight)
 				self.tableView_right.updateItems()
+
+	def closeEvent(self, event):
+		exitstatus = self.parent.close()
+		if exitstatus == 1:
+			event.ignore()
+
+	def selectWorkingDir(self):
+		path = str(QtGui.QFileDialog.getExistingDirectory(self, "Select working directory", self.workingdir))
+		if path:
+			self.workingdir = path
+			self.lineEdit_workingDir.setText(self.workingdir)
+
+	def updateWorkingDir(self):
+		if os.path.isdir(self.lineEdit_workingDir.text()):
+			self.workingdir = self.lineEdit_workingDir.text()
+			print 'updated working dir to:', self.workingdir
+		else:
+			self.lineEdit_workingDir.setText(self.workingdir)
+			print clrmsg.ERROR + "Dropped object is not a valid path. Returning to {0} as working directory.".format(self.workingdir)
 
 	def test(self):
 		if self.counter == 1:
@@ -398,7 +422,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 
 	def openImageLeft(self):
 		path = str(QtGui.QFileDialog.getOpenFileName(
-			None,"Select image file for correlation", workingdir,"Image Files (*.tif *.tiff);; All (*.*)"))  # *.png *.jpg *.bmp not yet supportes
+			None,"Select image file for correlation", self.workingdir,"Image Files (*.tif *.tiff);; All (*.*)"))  # *.png *.jpg *.bmp not yet supportes
 		if path != '':
 			self.leftImage = path
 			self.initImageLeft()
@@ -409,7 +433,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 
 	def openImageRight(self):
 		path = str(QtGui.QFileDialog.getOpenFileName(
-			None,"Select image file for correlation", workingdir,"Image Files (*.tif *.tiff);; All (*.*)"))  # *.png *.jpg *.bmp not yet supportes
+			None,"Select image file for correlation", self.workingdir,"Image Files (*.tif *.tiff);; All (*.*)"))  # *.png *.jpg *.bmp not yet supportes
 		if path != '':
 			self.rightImage = path
 			self.initImageRight()
@@ -839,7 +863,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 														spots_3d=self.model2np(model3D,[nrRowsModel2D,nrRowsModel3D]),
 														rotation_center=self.rotation_center,
 														results_file=''.join([
-															workingdir,'/',timestamp, '_correlation.txt'
+															self.workingdir,'/',timestamp, '_correlation.txt'
 															] if self.checkBox_writeReport.isChecked() else '')
 														)
 			else:
@@ -858,7 +882,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			for i in range(calc_spots_2d.shape[1]):
 				cv2.circle(img, (int(round(calc_spots_2d[0,i])), int(round(calc_spots_2d[1,i]))), 1, (0,0,255), -1)
 		if self.checkBox_writeReport.isChecked():
-			cv2.imwrite(os.path.join(workingdir,timestamp+"_correlated.tif"), img)
+			cv2.imwrite(os.path.join(self.workingdir,timestamp+"_correlated.tif"), img)
 		try:
 			img = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
 		except:
@@ -1072,46 +1096,62 @@ class SplashScreen():
 		self.splash.showMessage("Loading images...",color=QtCore.Qt.white)
 
 
-class main():
-	def __init__(self,leftImage=None,rightImage=None,nosplash=False):
+class Main():
+	def __init__(self,leftImage=None,rightImage=None,nosplash=False,workingdir=None):
 		if leftImage is None or rightImage is None:
 			sys.exit("Please pass 'leftImage=PATH' and 'rightImage=PATH' to this function")
 
 		if nosplash is False:
 			global splash
-			splash = SplashScreen()
+			ss = SplashScreen()
 
-		self.widget = MainWidget(leftImage=leftImage, rightImage=rightImage)
+		if workingdir is None:
+			workingdir = execdir
+
+		self.widget = MainWidget(parent=self,leftImage=leftImage, rightImage=rightImage,workingdir=workingdir)
 		self.widget.show()
 
 		if nosplash is False:
-			splash.splash.finish(widget)
+			ss.splash.finish(self.widget)
 
 	def close(self):
 		quit_msg = "Are you sure you want to exit the\n3DCT Correlation?\n\nUnsaved data will be lost!"
 		reply = QtGui.QMessageBox.question(self.widget, 'Message', quit_msg, QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
 		if reply == QtGui.QMessageBox.Yes:
 			self.widget.close()
+			del self.widget
 			return 0
 		else:
 			return 1
 
 
-class test():
+class Test():
 	def __init__(self):
 		## Testing paths
 		global testpath
 		testpath = '/Users/jan/Desktop/'
+		testpath = 'F:/jan_temp/'
 		leftImage = testpath+'correlation_test_dataset/IB_030.tif'
 		rightImage = testpath+'correlation_test_dataset/LM_green_reslized.tif'
 
 		global splash
 		splash = SplashScreen()
 
-		widget = MainWidget(leftImage=leftImage, rightImage=rightImage)
-		widget.show()
+		self.widget = MainWidget(parent=self,leftImage=leftImage, rightImage=rightImage)
+		self.widget.show()
 
-		splash.splash.finish(widget)
+		splash.splash.finish(self.widget)
+
+	def close(self):
+		quit_msg = "Are you sure you want to exit the\n3DCT Correlation?\n\nUnsaved data will be lost!"
+		reply = QtGui.QMessageBox.question(self.widget, 'Message', quit_msg, QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
+		if reply == QtGui.QMessageBox.Yes:
+			self.widget.close()
+			del self.widget
+			return 0
+		else:
+			return 1
+
 
 if __name__ == "__main__":
 	print clrmsg.DEBUG + 'Debug Test'
@@ -1122,15 +1162,15 @@ if __name__ == "__main__":
 	print '='*20, 'Initializing', '='*20
 
 	app = QtGui.QApplication(sys.argv)
-	test()
+	test = Test()
 	# # File dialogs for standalone mode
 	# left = str(QtGui.QFileDialog.getOpenFileName(
-	# 	None,"Select first image file for correlation", workingdir,"Image Files (*.tif *.tiff);; All (*.*)"))  # *.png *.jpg *.bmp not yet supportes
+	# 	None,"Select first image file for correlation", execdir,"Image Files (*.tif *.tiff);; All (*.*)"))  # *.png *.jpg *.bmp not yet supportes
 	# if left == '': sys.exit()
 	# right = str(QtGui.QFileDialog.getOpenFileName(
-	# 	None,"Select second image file for correlation", workingdir,"Image Files (*.tif *.tiff);; All (*.*)"))  # *.png *.jpg *.bmp not yet supportes
+	# 	None,"Select second image file for correlation", execdir,"Image Files (*.tif *.tiff);; All (*.*)"))  # *.png *.jpg *.bmp not yet supportes
 	# if right == '': sys.exit()
 
-	# main(leftImage=left,rightImage=right)
+	# Main(leftImage=left,rightImage=right)
 
 	sys.exit(app.exec_())

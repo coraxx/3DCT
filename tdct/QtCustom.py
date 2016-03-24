@@ -50,9 +50,10 @@ class QTableViewCustom(QtGui.QTableView):
 
 		"""The parent is not mainWidget but QSplitter i.e. the main parent is callable by
 		self.parent().parent() and not self.parent() when not using QSplitter. This may be
-		subject to change, so to be flexible there is a check for QSplitter."""
+		subject to change, so to be flexible there is a check for QSplitter.
+		UPDATE: GUI now QMainWindow, i.e. aditional parent call"""
 		if isinstance(self.parent(), QtGui.QSplitter):
-			self.mainParent = self.parent().parent()
+			self.mainParent = self.parent().parent().parent()
 
 		if hasattr(self.mainParent, "debug"):
 			self.debug = self.mainParent.debug
@@ -594,3 +595,60 @@ class MatplotlibWidgetCustom(QtGui.QWidget):
 							verticalalignment='bottom', transform=self.figure.transFigure)
 		self.subplotMat.set_anchor('W')
 		self.canvas.draw()
+
+
+##############################
+## QLineedit drops
+
+
+class QLineEditFilePath(QtGui.QLineEdit):
+	def __init__(self,parent):
+		super(QLineEditFilePath, self).__init__(parent)
+		self.setDragEnabled(True)
+
+	def dragEnterEvent(self,event):
+		data = event.mimeData()
+		urls = data.urls()
+		if (urls and urls[0].scheme() == 'file'):
+			event.acceptProposedAction()
+
+	def dragMoveEvent(self,event):
+		data = event.mimeData()
+		urls = data.urls()
+		if (urls and urls[0].scheme() == 'file'):
+			event.acceptProposedAction()
+
+	def dropEvent(self,event):
+		data = event.mimeData()
+		urls = data.urls()
+		if (urls and urls[0].scheme() == 'file'):
+			# for some reason, this doubles up the intro slash
+			filepath = str(urls[0].path())[1:]
+			self.setText(filepath)
+
+
+class QLineEditDirPath(QtGui.QLineEdit):
+	def __init__(self,parent):
+		super(QLineEditDirPath, self).__init__(parent)
+
+		self.setDragEnabled(True)
+
+	def dragEnterEvent(self,event):
+		data = event.mimeData()
+		urls = data.urls()
+		if (urls and urls[0].scheme() == 'file'):
+			event.acceptProposedAction()
+
+	def dragMoveEvent(self,event):
+		data = event.mimeData()
+		urls = data.urls()
+		if (urls and urls[0].scheme() == 'file'):
+			event.acceptProposedAction()
+
+	def dropEvent(self,event):
+		data = event.mimeData()
+		urls = data.urls()
+		if (urls and urls[0].scheme() == 'file'):
+			# for some reason, this doubles up the intro slash
+			filepath = str(urls[0].path())[1:]
+			self.setText(filepath)

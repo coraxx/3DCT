@@ -7,11 +7,15 @@
     <x>0</x>
     <y>0</y>
     <width>1400</width>
-    <height>820</height>
+    <height>814</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="icons.qrc">
+    <normaloff>:/ico/icons/TDCT.png</normaloff>:/ico/icons/TDCT.png</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <property name="minimumSize">
@@ -483,7 +487,7 @@
              <widget class="QLabel" name="label_18">
               <property name="text">
                <string>Optional: Calculate translation for
-  rotation center at:</string>
+rotation center at:</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -1067,6 +1071,41 @@
              </widget>
             </item>
             <item>
+             <widget class="QGroupBox" name="groupBox_3">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>50</height>
+               </size>
+              </property>
+              <property name="title">
+               <string>Set working directory</string>
+              </property>
+              <layout class="QVBoxLayout" name="verticalLayout_13">
+               <item>
+                <widget class="QLineEditFilePath" name="lineEdit_workingDir">
+                 <property name="maximumSize">
+                  <size>
+                   <width>180</width>
+                   <height>16777215</height>
+                  </size>
+                 </property>
+                 <property name="readOnly">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QToolButton" name="toolButton_selectWorkingDir">
+                 <property name="text">
+                  <string>Select...</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
              <spacer name="verticalSpacer_2">
               <property name="orientation">
                <enum>Qt::Vertical</enum>
@@ -1095,8 +1134,14 @@
             <height>36</height>
            </size>
           </property>
+          <property name="font">
+           <font>
+            <family>Segoe UI</family>
+            <pointsize>11</pointsize>
+           </font>
+          </property>
           <property name="text">
-           <string>Run correlation</string>
+           <string>Correlate</string>
           </property>
          </widget>
         </item>
@@ -1123,7 +1168,7 @@
      <x>0</x>
      <y>0</y>
      <width>1400</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>
@@ -1133,13 +1178,18 @@
   <customwidget>
    <class>QTableViewCustom</class>
    <extends>QTableView</extends>
-   <header>tdtc/QtCustom.h</header>
+   <header>tdct/QtCustom.h</header>
   </customwidget>
   <customwidget>
    <class>MatplotlibWidgetCustom</class>
    <extends>QWidget</extends>
-   <header>tdtc/QtCustom.h</header>
+   <header>tdct/QtCustom.h</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>QLineEditFilePath</class>
+   <extends>QLineEdit</extends>
+   <header>tdct/QtCustom.h</header>
   </customwidget>
  </customwidgets>
  <resources>
