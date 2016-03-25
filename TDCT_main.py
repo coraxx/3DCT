@@ -119,31 +119,43 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 		elif os.path.isfile(lineEdit.text()):
 			if os.path.splitext(str(lineEdit.text()))[1] in ['.tif','.tiff']:
 				lineEdit.setStyleSheet(
-					"QLineEdit{background-color: rgb(0,255,0,120);} QLineEdit:hover{border: 1px solid grey; background-color rgb(0,255,0,120);}")
+					"QLineEdit{background-color: rgb(0,255,0,120);}\
+					QLineEdit:hover{border: 1px solid grey; background-color rgb(0,255,0,120);}")
 				lineEdit.fileIsValid = True
 				lineEdit.fileIsTiff = True
 			else:
 				lineEdit.setStyleSheet(
-					"QLineEdit{background-color: rgb(255,120,0,120);} QLineEdit:hover{border: 1px solid grey; background-color rgb(255,120,0,120);}")
+					"QLineEdit{background-color: rgb(255,120,0,120);}\
+					QLineEdit:hover{border: 1px solid grey; background-color rgb(255,120,0,120);}")
 				lineEdit.fileIsValid = True
 				lineEdit.fileIsTiff = False
 		else:
 			lineEdit.setStyleSheet(
-				"QLineEdit{background-color: rgb(255,0,0,120);} QLineEdit:hover{border: 1px solid grey; background-color rgb(255,0,0,120);}")
+				"QLineEdit{background-color: rgb(255,0,0,120);}\
+				QLineEdit:hover{border: 1px solid grey; background-color rgb(255,0,0,120);}")
 			lineEdit.fileIsValid = False
 
 	def isValidPath(self,lineEdit):
 		if lineEdit.text() == "":
 			lineEdit.setStyleSheet(
 				"QLineEdit{background-color: white;} QLineEdit:hover{border: 1px solid grey; background-color white;}")
-			if lineEdit.objectName() is 'lineEdit_workingDir':
+			if lineEdit.objectName() == 'lineEdit_workingDir':
 				self.listWidget_workingDir.clear()
 		elif os.path.isdir(lineEdit.text()):
-			lineEdit.setStyleSheet(
-				"QLineEdit{background-color: rgb(0,255,0,120);} QLineEdit:hover{border: 1px solid grey; background-color rgb(0,255,0,120);}")
-			if lineEdit.objectName() is 'lineEdit_workingDir':
-				self.workingdir = self.checkWorkingDirPrivileges(str(self.lineEdit_workingDir.text()))
-				self.populate_filelist(self.workingdir)
+			if lineEdit.objectName() == 'lineEdit_workingDir':
+				workingdir = self.checkWorkingDirPrivileges(str(self.lineEdit_workingDir.text()))
+				if workingdir:
+					lineEdit.setStyleSheet(
+						"QLineEdit{background-color: rgb(0,255,0,120);} QLineEdit:hover{border: 1px solid grey; background-color rgb(0,255,0,120);}")
+					self.workingdir = workingdir
+					self.populate_filelist(self.workingdir)
+				else:
+					lineEdit.setStyleSheet(
+						"QLineEdit{background-color: rgb(255,0,0,120);}\
+						QLineEdit:hover{border: 1px solid grey; background-color rgb(255,0,0,120);}")
+			else:
+				lineEdit.setStyleSheet(
+					"QLineEdit{background-color: rgb(0,255,0,120);} QLineEdit:hover{border: 1px solid grey; background-color rgb(0,255,0,120);}")
 		else:
 			lineEdit.setStyleSheet(
 				"QLineEdit{background-color: rgb(255,0,0,120);} QLineEdit:hover{border: 1px solid grey; background-color rgb(255,0,0,120);}")
@@ -196,7 +208,7 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 			QtGui.QMessageBox.critical(
 				self,"Warning",
 				"I cannot write to this folder: {0}\nFalling back to {1} as the working directory".format(path, self.workingdir))
-			return self.workingdir
+			return None
 
 	## Open directory
 	def openDirectoy(self,targetDirectory):
@@ -230,10 +242,11 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 		path = str(QtGui.QFileDialog.getExistingDirectory(self, "Select Directory", self.workingdir))
 		if path:
 			if sender == self.pushButton_selectWorkingDir:
-				self.workingdir = self.checkWorkingDirPrivileges(path)
-				pathLine.setText(self.workingdir)
-				# Populate file lists
-				self.populate_filelist(self.workingdir)
+				workingdir = self.checkWorkingDirPrivileges(path)
+				if workingdir:
+					self.workingdir = workingdir
+					self.populate_filelist(self.workingdir)
+					pathLine.setText(self.workingdir)
 			# Open Save to directory button
 			if sender == self.pushButton_saveTo:
 				self.lineEdit_saveToPath.setText(path)
@@ -329,7 +342,8 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 		app.processEvents()
 		# run FIJI with macro
 		if sys.platform == 'darwin':
-			self.runStackProcessing_return_code = call([execdir + "/Fiji/Contents/MacOS/ImageJ-macosx", "--headless", "-macro", pathMACRO, "&"])
+			self.runStackProcessing_return_code = call(
+				[execdir + "/Fiji/Contents/MacOS/ImageJ-macosx", "--headless", "-macro", pathMACRO, "&"])
 		elif sys.platform == 'linux2':
 			self.runStackProcessing_return_code = call([execdir + "/Fiji/ImageJ-linux64", "-macro", pathMACRO, "&"])
 		elif sys.platform == 'win32':
@@ -400,10 +414,12 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 		else:
 			if self.lineEdit_selectImage1.text() == "":
 				self.lineEdit_selectImage1.setStyleSheet(
-					"QLineEdit{background-color: rgb(255,0,0,120);} QLineEdit:hover{border: 1px solid grey; background-color rgb(255,0,0,120);}")
+					"QLineEdit{background-color: rgb(255,0,0,120);}\
+					QLineEdit:hover{border: 1px solid grey; background-color rgb(255,0,0,120);}")
 			if self.lineEdit_selectImage2.text() == "":
 				self.lineEdit_selectImage2.setStyleSheet(
-					"QLineEdit{background-color: rgb(255,0,0,120);} QLineEdit:hover{border: 1px solid grey; background-color rgb(255,0,0,120);}")
+					"QLineEdit{background-color: rgb(255,0,0,120);}\
+					QLineEdit:hover{border: 1px solid grey; background-color rgb(255,0,0,120);}")
 
 
 ## Class to outsource work to an independant thread. Not used anymore at the moment.
