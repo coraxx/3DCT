@@ -20,7 +20,7 @@ Custom Qt classes. Some widgets in QT Designer are promoted to these classes:
 # @Status			: development
 # @Usage			: part of 3D Correlation Toolbox
 # @Notes			: Some widgets in QT Designer are promoted to these classes
-# @Python_version	: 2.7.10
+# @Python_version	: 2.7.11
 """
 # ======================================================================================================================
 
@@ -36,12 +36,9 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 import math
 import beadPos
-# Not important, just pretty.
-try:
-	import clrmsg
-except Exception as e:
-	clrmsg = None
-	print 'Colored Messages import failed:', e
+import clrmsg
+
+debug = True
 ##############################
 # QTableViewCustom
 
@@ -60,12 +57,6 @@ class QTableViewCustom(QtGui.QTableView):
 		if isinstance(self.parent(), QtGui.QSplitter):
 			self.mainParent = self.parent().parent().parent()
 
-		if hasattr(self.mainParent, "debug"):
-			self.debug = self.mainParent.debug
-			if clrmsg and self.debug is True: print clrmsg.DEBUG + 'Debug bool inherited'
-		else:
-			self.debug = True
-			if clrmsg and self.debug is True: print clrmsg.DEBUG + 'Debug messages enabled'
 		self._drop = False
 
 		## Enable Drag'n'Drop
@@ -95,11 +86,11 @@ class QTableViewCustom(QtGui.QTableView):
 		for item in self._scene.items():
 			if isinstance(item, QtGui.QGraphicsEllipseItem):
 				items.append(item)
-		if clrmsg and self.debug is True: print clrmsg.DEBUG + "Update items check - Nr. of items/rows:", len(items), self._model.rowCount()
+		if debug is True: print clrmsg.DEBUG + "Update items check - Nr. of items/rows:", len(items), self._model.rowCount()
 		if len(items) == self._model.rowCount():
 			row = 0
 			for item in items:
-				if clrmsg and self.debug is True:
+				if debug is True:
 					print clrmsg.DEBUG + 'Row:', row, '|', \
 						self._model.data(self._model.index(row, 0)).toString(),\
 						self._model.data(self._model.index(row, 1)).toString(),\
@@ -185,7 +176,7 @@ class QTableViewCustom(QtGui.QTableView):
 			rows = set(index.row() for index in indices)
 			## Delete selected rows in scene.
 			for row in rows:
-				if clrmsg and self.debug is True:
+				if debug is True:
 					print clrmsg.DEBUG + 'Row:', row, '|', \
 						self._model.data(self._model.index(row, 0)).toString(),\
 						self._model.data(self._model.index(row, 1)).toString(),\
@@ -196,7 +187,7 @@ class QTableViewCustom(QtGui.QTableView):
 				if gauss is True:
 					if optimize is False:
 						zopt = beadPos.getzGauss(x,y,self.img,parent=self.mainParent)
-						if clrmsg and self.debug is True: print clrmsg.DEBUG + str(self.img.shape), zopt
+						if debug is True: print clrmsg.DEBUG + str(self.img.shape), zopt
 						if 0 <= zopt <= self.img.shape[-3]:
 							self._scene.zValuesDict[activeitems[row]][1] = (0,0,0)
 							self._model.itemFromIndex(self._model.index(row, 2)).setForeground(QtCore.Qt.black)
@@ -208,7 +199,7 @@ class QTableViewCustom(QtGui.QTableView):
 						xopt,yopt,zopt = beadPos.getzGauss(
 							x,y,self.img,parent=self.mainParent,optimize=True,threshold=True,
 							threshVal=self.mainParent.doubleSpinBox_treshVal.value(),cutout=self._scene.markerSize)
-						if clrmsg and self.debug is True: print clrmsg.DEBUG + str(self.img.shape), xopt,yopt,zopt
+						if debug is True: print clrmsg.DEBUG + str(self.img.shape), xopt,yopt,zopt
 						if (
 							abs(x-xopt) <= 2*self._scene.markerSize and
 							abs(y-yopt) <= 2*self._scene.markerSize and
@@ -224,7 +215,7 @@ class QTableViewCustom(QtGui.QTableView):
 						self._model.itemFromIndex(self._model.index(row, 2)).setText(str(zopt))
 				elif optimize is False:
 					zopt = beadPos.getzPoly(x,y,self.img,n=None)
-					if clrmsg and self.debug is True: print clrmsg.DEBUG + str(self.img.shape), zopt
+					if debug is True: print clrmsg.DEBUG + str(self.img.shape), zopt
 					if 0 <= zopt <= self.img.shape[-3]:
 						self._scene.zValuesDict[activeitems[row]][1] = (0,0,0)
 						self._model.itemFromIndex(self._model.index(row, 2)).setForeground(QtCore.Qt.black)
@@ -234,7 +225,7 @@ class QTableViewCustom(QtGui.QTableView):
 					self._model.itemFromIndex(self._model.index(row, 2)).setText(str(zopt))
 				elif optimize is True:
 					xopt,yopt,zopt = beadPos.getzPoly(x,y,self.img,n=None,optimize=True)
-					if clrmsg and self.debug is True: print clrmsg.DEBUG + str(self.img.shape), xopt,yopt,zopt
+					if debug is True: print clrmsg.DEBUG + str(self.img.shape), xopt,yopt,zopt
 					if 0 <= xopt <= self.img.shape[-1] and 0 <= yopt <= self.img.shape[-2] and 0 <= zopt <= self.img.shape[-3]:
 						self._scene.zValuesDict[activeitems[row]][1] = (255,0,0)
 						self._model.itemFromIndex(self._model.index(row, 2)).setForeground(QtCore.Qt.black)
@@ -273,7 +264,6 @@ class QStandardItemModelCustom(QtGui.QStandardItemModel):
 
 class QGraphicsSceneCustom(QtGui.QGraphicsScene):
 	def __init__(self,parent=None,mainWidget=None,side=None,model=None):
-		self.debug = True
 		## parent is QGraphicsView
 		QtGui.QGraphicsScene.__init__(self,parent)
 		self.mainWidget = mainWidget
@@ -333,7 +323,7 @@ class QGraphicsSceneCustom(QtGui.QGraphicsScene):
 		super(QGraphicsSceneCustom, self).mouseReleaseEvent(event)
 		## Only update position when single item is drag and dropped
 		if self.selectedItems() and self.selectionmode is False:
-			if clrmsg and self.debug is True: print clrmsg.DEBUG + 'New pos:', self.selectedItems()[0].x(), self.selectedItems()[0].y()
+			if debug is True: print clrmsg.DEBUG + 'New pos:', self.selectedItems()[0].x(), self.selectedItems()[0].y()
 			## Only change color to orange when marker is moved in the 3D image (in order to remind reacquiring z coordinate)
 			if '{0:b}'.format(self.imagetype)[-1] == '0':
 				for item in self.selectedItems():
@@ -392,7 +382,7 @@ class QGraphicsSceneCustom(QtGui.QGraphicsScene):
 		angle = -(math.asin(dy/length))
 		if dx < 0:
 			angle = math.radians(180) - angle
-		if clrmsg and self.debug is True: print clrmsg.DEBUG + 'Radians:', angle, 'Degree', math.degrees(angle)
+		if debug is True: print clrmsg.DEBUG + 'Radians:', angle, 'Degree', math.degrees(angle)
 		path = QtGui.QPainterPath()
 		path.moveTo(*start)
 		path.lineTo(*end)
@@ -613,7 +603,6 @@ class MatplotlibWidgetCustom(QtGui.QWidget):
 class QLineEditFilePath(QtGui.QLineEdit):
 	def __init__(self,parent):
 		super(QLineEditFilePath, self).__init__(parent)
-		self.debug = True
 		self.setDragEnabled(True)
 		if sys.platform == 'darwin':
 			global objc
@@ -621,9 +610,9 @@ class QLineEditFilePath(QtGui.QLineEdit):
 			try:
 				import objc
 				import CoreFoundation as CF
-				if clrmsg and self.debug is True: print clrmsg.DEBUG + '"objc" and "CoreFoundation" import successful'
+				if debug is True: print clrmsg.DEBUG + '"objc" and "CoreFoundation" import successful'
 			except Exception as e:
-				if clrmsg and self.debug is True: print clrmsg.ERROR + str(e)
+				if debug is True: print clrmsg.ERROR + str(e)
 				objc = None
 
 	def dragEnterEvent(self,event):
@@ -643,11 +632,11 @@ class QLineEditFilePath(QtGui.QLineEdit):
 			# for some reason, this doubles up the intro slash
 			filepath = str(urls[0].path())[1:]
 			if filepath.startswith('.file/id=') and objc:
-				if clrmsg and self.debug is True: print clrmsg.DEBUG + 'File id bug in PyQt4 for:', filepath
+				if debug is True: print clrmsg.DEBUG + 'File id bug in PyQt4 for:', filepath
 				filepath = self.getUrlFromLocalFileID(urls[0])
-				if clrmsg and self.debug is True: print clrmsg.DEBUG + '						->', filepath
+				if debug is True: print clrmsg.DEBUG + '						->', filepath
 			elif filepath.startswith('.file/id=') and not objc:
-				if clrmsg and self.debug is True:
+				if debug is True:
 					print clrmsg.DEBUG + (
 						"File id bug in PyQt4 under mac. Please make sure that PyObjC is installed (pip install PyObjC).\n"
 						"		  With PyObjC installed, this programm can work around this bug.\n"

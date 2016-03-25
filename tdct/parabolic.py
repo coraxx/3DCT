@@ -15,7 +15,7 @@ Quadratic Interpolation of Spectral Peaks
 # @Status			:
 # @Usage			:
 # @Notes			:
-# @Python_version	: 2.7.10
+# @Python_version	: 2.7.11
 """
 # ======================================================================================================================
 

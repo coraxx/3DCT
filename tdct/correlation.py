@@ -99,7 +99,7 @@ The procedure is organized as follows:
 # 					: (arbitrary 3rd dimension for the 2D array). Marker coordinates are for the correlation and spot
 # 					: coordinates are points on which the correlation is applied to.
 # @Notes			: Edited and adapted by Jan Arnold (Max Planck Institute for Biochemistry)
-# @Python_version	: 2.7.10
+# @Python_version	: 2.7.11
 """
 # ======================================================================================================================
 

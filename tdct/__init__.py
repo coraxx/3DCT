@@ -15,6 +15,6 @@ Modules for the 3D Correlation Toolbox
 # @Status			: developement
 # @Usage			:
 # @Notes			:
-# @Python_version	: 2.7.10
+# @Python_version	: 2.7.11
 '''
 # ============================================================================

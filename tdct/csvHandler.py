@@ -24,7 +24,7 @@ e.g. export:
 # 					: e.g. import: >>> model = csvHandler.csv2model('test.csv',delimiter="\t",sniff=False,parent=None)
 # 					: e.g. export: >>> csvHandler.model2csv(model,'test.csv',delimiter="\t")
 # @Notes			:
-# @Python_version	: 2.7.10
+# @Python_version	: 2.7.11
 """
 # ======================================================================================================================
 

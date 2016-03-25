@@ -18,7 +18,7 @@ to one single stack file, ...).
 # @Status			: development
 # @Usage			: part of 3D Correlation Toolbox
 # @Notes			:
-# @Python_version	: 2.7.10
+# @Python_version	: 2.7.11
 """
 # ======================================================================================================================
 
@@ -27,6 +27,7 @@ import sys
 import os
 import time
 import re
+import tempfile
 from PyQt4 import QtCore, QtGui, uic
 import numpy as np
 import cv2
@@ -43,11 +44,12 @@ sys.path.append(execdir)
 qtCreatorFile_main = os.path.join(execdir, "TDCT_correlation.ui")
 Ui_WidgetWindow, QtBaseClass = uic.loadUiType(qtCreatorFile_main)
 
+debug = True
+
 
 class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 	def __init__(self, parent=None, leftImage=None, rightImage=None,workingdir=execdir):
-		self.debug = True
-		if self.debug is True: print clrmsg.DEBUG + 'Debug messages enabled'
+		if debug is True: print clrmsg.DEBUG + 'Debug messages enabled'
 		QtGui.QWidget.__init__(self)
 		Ui_WidgetWindow.__init__(self)
 		self.setupUi(self)
@@ -151,13 +153,13 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 	def keyPressEvent(self,event):
 		if event.key() == QtCore.Qt.Key_Delete:
 			if self.currentFocusedWidgetName == 'tableView_left':
-				if self.debug is True: print clrmsg.DEBUG + "Deleting item(s) on the left side"
+				if debug is True: print clrmsg.DEBUG + "Deleting item(s) on the left side"
 				# self.deleteItem(self.tableView_left,self.modelLleft,self.sceneLeft)
 				self.tableView_left.deleteItem()
 				# self.updateItems(self.modelLleft,self.sceneLeft)
 				self.tableView_left.updateItems()
 			elif self.currentFocusedWidgetName == 'tableView_right':
-				if self.debug is True: print clrmsg.DEBUG + "Deleting item(s) on the right side"
+				if debug is True: print clrmsg.DEBUG + "Deleting item(s) on the right side"
 				# self.deleteItem(self.tableView_right,self.modelRight,self.sceneRight)
 				self.tableView_right.deleteItem()
 				# self.updateItems(self.modelRight,self.sceneRight)
@@ -171,16 +173,32 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 	def selectWorkingDir(self):
 		path = str(QtGui.QFileDialog.getExistingDirectory(self, "Select working directory", self.workingdir))
 		if path:
-			self.workingdir = path
+			workingdir = self.checkWorkingDirPrivileges(path)
+			if workingdir:
+				self.workingdir = workingdir
 			self.lineEdit_workingDir.setText(self.workingdir)
 
 	def updateWorkingDir(self):
 		if os.path.isdir(self.lineEdit_workingDir.text()):
-			self.workingdir = self.lineEdit_workingDir.text()
+			workingdir = self.checkWorkingDirPrivileges(str(self.lineEdit_workingDir.text()))
+			if workingdir:
+				self.workingdir = workingdir
+			self.lineEdit_workingDir.setText(self.workingdir)
 			print 'updated working dir to:', self.workingdir
 		else:
 			self.lineEdit_workingDir.setText(self.workingdir)
 			print clrmsg.ERROR + "Dropped object is not a valid path. Returning to {0} as working directory.".format(self.workingdir)
+
+	def checkWorkingDirPrivileges(self,path):
+		try:
+			testfile = tempfile.TemporaryFile(dir=path)
+			testfile.close()
+			return path
+		except Exception:
+			QtGui.QMessageBox.critical(
+				self,"Warning",
+				"I cannot write to this folder: {0}\nFalling back to {1} as the working directory".format(path, self.workingdir))
+			return None
 
 	def test(self):
 		if self.counter == 1:
@@ -207,8 +225,10 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		# for i in range(self.tableView_right._model.rowCount()): self.sceneRight.addCircle(0.0,0.0,0.0)
 		# self.tableView_right.updateItems()
 
-		itemlistL = csvHandler.csv2list(testpath+'correlation_test_dataset/FIB_coordinates.txt',delimiter="\t",parent=self,sniff=True)
-		itemlistR = csvHandler.csv2list(testpath+'correlation_test_dataset/LM_coordinates4FIB_POI.txt',delimiter="\t",parent=self,sniff=True)
+		itemlistL = csvHandler.csv2list(
+			testpath+'correlation_test_dataset/FIB_coordinates.txt',delimiter="\t",parent=self,sniff=True)
+		itemlistR = csvHandler.csv2list(
+			testpath+'correlation_test_dataset/LM_coordinates4FIB_POI.txt',delimiter="\t",parent=self,sniff=True)
 		for item in itemlistL: self.sceneLeft.addCircle(
 				float(item[0]),
 				float(item[1]),
@@ -223,7 +243,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		self.counter += 1
 
 	def changedFocusSlot(self, former, current):
-		if self.debug is True: print clrmsg.DEBUG + "focus changed from/to:", former.objectName() if former else former, \
+		if debug is True: print clrmsg.DEBUG + "focus changed from/to:", former.objectName() if former else former, \
 				current.objectName() if current else current
 		if current:
 			self.currentFocusedWidgetName = current.objectName()
@@ -421,8 +441,9 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			self.graphicsView_right.scale(scaling_factor,scaling_factor)
 
 	def openImageLeft(self):
+		## *.png *.jpg *.bmp not yet supportes
 		path = str(QtGui.QFileDialog.getOpenFileName(
-			None,"Select image file for correlation", self.workingdir,"Image Files (*.tif *.tiff);; All (*.*)"))  # *.png *.jpg *.bmp not yet supportes
+			None,"Select image file for correlation", self.workingdir,"Image Files (*.tif *.tiff);; All (*.*)"))
 		if path != '':
 			self.leftImage = path
 			self.initImageLeft()
@@ -432,8 +453,9 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			self.tableView_left.updateItems()
 
 	def openImageRight(self):
+		## *.png *.jpg *.bmp not yet supportes
 		path = str(QtGui.QFileDialog.getOpenFileName(
-			None,"Select image file for correlation", self.workingdir,"Image Files (*.tif *.tiff);; All (*.*)"))  # *.png *.jpg *.bmp not yet supportes
+			None,"Select image file for correlation", self.workingdir,"Image Files (*.tif *.tiff);; All (*.*)"))
 		if path != '':
 			self.rightImage = path
 			self.initImageRight()
@@ -509,12 +531,12 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			## Update graphics
 			self.sceneLeft.enumeratePoints()
 			if self.sceneLeft.pixelSize:
-				if self.debug is True: print clrmsg.DEBUG + "Doing stuff with image pixelSize (left image).", self.label_imgpxsize.text()
+				if debug is True: print clrmsg.DEBUG + "Doing stuff with image pixelSize (left image).", self.label_imgpxsize.text()
 				try:
 					self.label_markerSizeNano.setText(str(self.sceneLeft.markerSize*2*self.sceneLeft.pixelSize))
 					self.label_markerSizeNanoUnit.setText(self.sceneLeft.pixelSizeUnit)
 				except:
-					if self.debug is True: print clrmsg.DEBUG + "Image pixel size is not a number:", self.label_imgpxsize.text()
+					if debug is True: print clrmsg.DEBUG + "Image pixel size is not a number:", self.label_imgpxsize.text()
 					self.label_markerSizeNano.setText("NaN")
 					self.label_markerSizeNanoUnit.setText('')
 			else:
@@ -525,12 +547,12 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			## Update graphics
 			self.sceneRight.enumeratePoints()
 			if self.sceneRight.pixelSize:
-				if self.debug is True: print clrmsg.DEBUG + "Doing stuff with image pixelSize (right image).", self.label_imgpxsize.text()
+				if debug is True: print clrmsg.DEBUG + "Doing stuff with image pixelSize (right image).", self.label_imgpxsize.text()
 				try:
 					self.label_markerSizeNano.setText(str(self.sceneRight.markerSize*2*self.sceneRight.pixelSize))
 					self.label_markerSizeNanoUnit.setText(self.sceneRight.pixelSizeUnit)
 				except:
-					if self.debug is True: print clrmsg.DEBUG + "Image pixel size is not a number:", self.label_imgpxsize.text()
+					if debug is True: print clrmsg.DEBUG + "Image pixel size is not a number:", self.label_imgpxsize.text()
 					self.label_markerSizeNano.setText("NaN")
 					self.label_markerSizeNanoUnit.setText('')
 			else:
@@ -561,30 +583,31 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			8 = multicolor/multichannel
 			16= normalized
 		'''
-		if self.debug is True: print clrmsg.DEBUG + "===== imread"
+		if debug is True: print clrmsg.DEBUG + "===== imread"
 		img = tf.imread(path)
-		if self.debug is True: print clrmsg.DEBUG + "Image shape/dtype:", img.shape, img.dtype
+		if debug is True: print clrmsg.DEBUG + "Image shape/dtype:", img.shape, img.dtype
 		## Displaying issues with uint16 images -> convert to uint8
 		if img.dtype == 'uint16':
 			img = img*(255.0/img.max())
 			img = img.astype(dtype='uint8')
-			if self.debug is True: print clrmsg.DEBUG + "Image dtype converted to:", img.shape, img.dtype
+			if debug is True: print clrmsg.DEBUG + "Image dtype converted to:", img.shape, img.dtype
 		if img.ndim == 4:
-			if self.debug is True: print clrmsg.DEBUG + "Calculating multichannel MIP"
+			if debug is True: print clrmsg.DEBUG + "Calculating multichannel MIP"
 			## return mip, code 2+8+16 and image stack
 			return np.amax(img, axis=1), 26, img
 		## this can only handle rgb. For more channels set "3" to whatever max number of channels should be handled
 		elif img.ndim == 3 and any([True for dim in img.shape if dim <= 3]) or img.ndim == 2:
-			if self.debug is True: print clrmsg.DEBUG + "Loading regular 2D image... multicolor/normalize:", \
+			if debug is True: print clrmsg.DEBUG + "Loading regular 2D image... multicolor/normalize:", \
 				[True for x in [img.ndim] if img.ndim == 3],'/',[normalize]
 			if normalize is True:
-				## return normalized 2D image with code 1+4+16 for gray scale normalized 2D image and 1+8+16 for multicolor normalized 2D image
+				## return normalized 2D image with code 1+4+16 for gray scale normalized 2D image and 1+8+16 for
+				## multicolor normalized 2D image
 				return self.norm_img(img), 25 if img.ndim == 3 else 21, None
 			else:
 				## return 2D image with code 1+4 for gray scale 2D image and 1+8 for multicolor 2D image
 				return img, 9 if img.ndim == 3 else 5, None
 		elif img.ndim == 3:
-			if self.debug is True: print clrmsg.DEBUG + "Calculating MIP"
+			if debug is True: print clrmsg.DEBUG + "Calculating MIP"
 			## return mip and code 2+4+16
 			return np.amax(img, axis=0), 22, img
 
@@ -600,50 +623,50 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 									for piece in tag.value[tagpos:tagpos+30].split('"'):
 										try:
 											pixelSize = float(piece)
-											if self.debug is True: print clrmsg.DEBUG + "Pixel size from exif metakey:", keyword
+											if debug is True: print clrmsg.DEBUG + "Pixel size from exif metakey:", keyword
 											## Value is in um from CorrSight/LA tiff files
 											return pixelSize
 										except Exception as e:
-											if self.debug is True: print clrmsg.DEBUG + "Pixel size parser:", e
+											if debug is True: print clrmsg.DEBUG + "Pixel size parser:", e
 											pass
 								elif keyword == 'PixelWidth':
 									for piece in tag.value[tagpos:tagpos+30].split('='):
 										try:
 											pixelSize = float(piece.strip().split('\r\n')[0])
-											if self.debug is True: print clrmsg.DEBUG + "Pixel size from exif metakey:", keyword
+											if debug is True: print clrmsg.DEBUG + "Pixel size from exif metakey:", keyword
 											## *1E6 because these values from SEM/FIB image is in m
 											return pixelSize*1E6
 										except Exception as e:
-											if self.debug is True: print clrmsg.DEBUG + "Pixel size parser:", e
+											if debug is True: print clrmsg.DEBUG + "Pixel size parser:", e
 											pass
 								elif keyword == 'PixelSize':
 									for piece in tag.value[tagpos:tagpos+30].split('"'):
 										try:
 											pixelSize = float(piece)
-											if self.debug is True: print clrmsg.DEBUG + "Pixel size from exif metakey:", keyword
+											if debug is True: print clrmsg.DEBUG + "Pixel size from exif metakey:", keyword
 											## Value is in um from CorrSight/LA tiff files
 											return pixelSize
 										except Exception as e:
-											if self.debug is True: print clrmsg.DEBUG + "Pixel size parser:", e
+											if debug is True: print clrmsg.DEBUG + "Pixel size parser:", e
 											pass
 
 	## Convert opencv image (numpy array in BGR) to RGB QImage and return pixmap. Only takes 2D images
 	def cv2Qimage(self,img):
-		if self.debug is True: print clrmsg.DEBUG + "===== cv2Qimage"
+		if debug is True: print clrmsg.DEBUG + "===== cv2Qimage"
 		## Format 2D greyscale to RGB for QImage
 		if img.ndim == 2:
 			img = cv2.cvtColor(img,cv2.COLOR_GRAY2RGB)
 		if img.shape[0] <= 3:
-			if self.debug is True: print clrmsg.DEBUG + "Swaping image axes from c,y,x to y,x,c."
+			if debug is True: print clrmsg.DEBUG + "Swaping image axes from c,y,x to y,x,c."
 			img = img.swapaxes(0,2).swapaxes(0,1)
-		if self.debug is True: print clrmsg.DEBUG + "Image shape:", img.shape
+		if debug is True: print clrmsg.DEBUG + "Image shape:", img.shape
 		image = QtGui.QImage(img.tobytes(), img.shape[1], img.shape[0], QtGui.QImage.Format_RGB888)  # .rgbSwapped()
 		return QtGui.QPixmap.fromImage(image)
 		# return QtGui.QPixmap('/Users/jan/Desktop/160202/LM-SEM.tif')
 
 	## Adjust Brightness and Contrast by sliders
 	def adjustBrightCont(self):
-		if self.debug is True: print clrmsg.DEBUG + "===== adjustBrightCont"
+		if debug is True: print clrmsg.DEBUG + "===== adjustBrightCont"
 		if self.label_selimg.text() == 'left':
 			self.brightness_left = self.horizontalSlider_brightness.value()
 			self.contrast_left = self.horizontalSlider_contrast.value()
@@ -699,7 +722,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 
 	## Normalize Image
 	def norm_img(self,img,copy=False):
-		if self.debug is True: print clrmsg.DEBUG + "===== norm_img"
+		if debug is True: print clrmsg.DEBUG + "===== norm_img"
 		if copy is True:
 			img = np.copy(img)
 		dtype = str(img.dtype)
@@ -728,25 +751,25 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 	## function is now done via numpay axis max
 	# ## Create Maximum Intensity Projection (MIP)
 	# def mip(self,img):
-	# 	if self.debug is True: print clrmsg.DEBUG + "===== mip"
+	# 	if debug is True: print clrmsg.DEBUG + "===== mip"
 	# 	if len(img.shape) == 4:
 	# 		img_MIP = np.zeros((img.shape[0], img.shape[2],img.shape[3]), dtype=img.dtype)
 	# 		for i in range(0,img.shape[0]):
 	# 			for ii in range(0,img.shape[2]):
 	# 				for iii in range(0,img.shape[3]):
 	# 					img_MIP[i,ii,iii] = img[i,:,ii,iii].max()
-	# 		if self.debug is True: print clrmsg.DEBUG + "Image shape original/MIP:", img.shape, img_MIP.shape
+	# 		if debug is True: print clrmsg.DEBUG + "Image shape original/MIP:", img.shape, img_MIP.shape
 	# 		img_MIP = self.norm_img(img_MIP)
-	# 		if self.debug is True: print clrmsg.DEBUG + "Image shape normalized MIP:", img_MIP.shape
+	# 		if debug is True: print clrmsg.DEBUG + "Image shape normalized MIP:", img_MIP.shape
 	# 		return img_MIP
 	# 	elif len(img.shape) == 3:
 	# 		img_MIP = np.zeros((img.shape[1],img.shape[2]), dtype=img.dtype)
 	# 		for i in range(0,img.shape[1]):
 	# 			for ii in range(0,img.shape[2]):
 	# 				img_MIP[i,ii] = img[:,i,ii].max()
-	# 		if self.debug is True: print clrmsg.DEBUG + "Image shape original/MIP:", img.shape, img_MIP.shape
+	# 		if debug is True: print clrmsg.DEBUG + "Image shape original/MIP:", img.shape, img_MIP.shape
 	# 		img_MIP = self.norm_img(img_MIP)
-	# 		if self.debug is True: print clrmsg.DEBUG + "Image shape normalized MIP:", img_MIP.shape
+	# 		if debug is True: print clrmsg.DEBUG + "Image shape normalized MIP:", img_MIP.shape
 	# 		return img_MIP
 	# 	else:
 	# 		print clrmsg.ERROR + "I'm sorry, I don't know this image shape: {0}".format(img.shape)
@@ -772,7 +795,8 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			model = self.modelRight
 		## Export Dioalog. Needs check for extension or add default extension
 		csv_file_out, filterdialog = QtGui.QFileDialog.getSaveFileNameAndFilter(
-			self, 'Export file as', os.path.dirname(self.leftImage) if self.label_selectedTable.text() == 'left' else os.path.dirname(self.rightImage),
+			self, 'Export file as',
+			os.path.dirname(self.leftImage) if self.label_selectedTable.text() == 'left' else os.path.dirname(self.rightImage),
 			"Tabstop sepperated (*.csv *.txt);;Comma sepperated (*.csv *.txt)")
 		if str(filterdialog).startswith('Comma') is True:
 			csvHandler.model2csv(model,csv_file_out,delimiter=",")
@@ -781,7 +805,8 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 
 	def importPoints(self):
 		csv_file_in, filterdialog = QtGui.QFileDialog.getOpenFileNameAndFilter(
-			self, 'Import file as', os.path.dirname(self.leftImage) if self.label_selectedTable.text() == 'left' else os.path.dirname(self.rightImage),
+			self, 'Import file as',
+			os.path.dirname(self.leftImage) if self.label_selectedTable.text() == 'left' else os.path.dirname(self.rightImage),
 			"Tabstop sepperated (*.csv *.txt);;Comma sepperated (*.csv *.txt)")
 		if str(filterdialog).startswith('Comma') is True:
 			itemlist = csvHandler.csv2list(csv_file_in,delimiter=",",parent=self,sniff=True)
@@ -942,7 +967,8 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 								int(self.doubleSpinBox_custom_rot_center_x.value()),
 								int(self.doubleSpinBox_custom_rot_center_y.value()),
 								int(self.doubleSpinBox_custom_rot_center_z.value())))
-			self.label_translation_custom_rot.setText('x = {0:.3f} | y = {1:.3f}'.format(translation_customRotation[0], translation_customRotation[1]))
+			self.label_translation_custom_rot.setText('x = {0:.3f} | y = {1:.3f}'.format(
+				translation_customRotation[0], translation_customRotation[1]))
 			self.label_translation_custom_rot.setStyleSheet(self.stylesheet_green)
 			self.label_meandxdy.setText('{0:.5f} / {1:.5f}'.format(delta2D_mean[0], delta2D_mean[1]))
 			if delta2D_mean[0] <= 1 and delta2D_mean[1] <= 1: self.label_meandxdy.setStyleSheet(self.stylesheet_green)
@@ -1043,15 +1069,18 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			## Select rows (only one row selectable in the results table)
 			for row in rows:
 				markerNr = int(self.modelResultsProxy.data(self.modelResultsProxy.index(row, 0)).toString())-1
-				if self.debug is True: print clrmsg.DEBUG + 'Marker number/background color (Qrgba)', markerNr, \
-					self.modelResults.itemFromIndex(self.modelResultsProxy.mapToSource((self.modelResultsProxy.index(row, 0)))).background().color().rgba()
+				if debug is True: print clrmsg.DEBUG + 'Marker number/background color (Qrgba)', markerNr, \
+					self.modelResults.itemFromIndex(
+						self.modelResultsProxy.mapToSource((self.modelResultsProxy.index(row, 0)))).background().color().rgba()
 				if self.modelResults.itemFromIndex(self.modelResultsProxy.mapToSource((
 					self.modelResultsProxy.index(row, 0)))).background().color().rgba() == 4278190080:
 					BackColor = (50,220,175,100)
 					ForeColor = (180,180,180,255)
 					items[markerNr].setPos(
-						float(tableView._model.data(tableView._model.index(markerNr, 0)).toString())+self.correlation_results[3][0,markerNr],
-						float(tableView._model.data(tableView._model.index(markerNr, 1)).toString())+self.correlation_results[3][1,markerNr])
+						float(tableView._model.data(
+							tableView._model.index(markerNr, 0)).toString())+self.correlation_results[3][0,markerNr],
+						float(tableView._model.data(
+							tableView._model.index(markerNr, 1)).toString())+self.correlation_results[3][1,markerNr])
 					self.modelResults.itemFromIndex(self.modelResultsProxy.mapToSource((
 						self.modelResultsProxy.index(row, 0)))).setBackground(QtGui.QColor(*BackColor))
 					self.modelResults.itemFromIndex(self.modelResultsProxy.mapToSource((
@@ -1081,7 +1110,9 @@ class SplashScreen():
 		painter = QtGui.QPainter()
 		painter.begin(splash_pix)
 		painter.setPen(QtCore.Qt.white)
-		painter.drawText(0, 0,splash_pix.size().width()-3,splash_pix.size().height()-1,QtCore.Qt.AlignBottom | QtCore.Qt.AlignRight, __version__)
+		painter.drawText(
+			0,0,
+			splash_pix.size().width()-3,splash_pix.size().height()-1,QtCore.Qt.AlignBottom | QtCore.Qt.AlignRight, __version__)
 		painter.end()
 		## Show splash screen
 		self.splash = QtGui.QSplashScreen(splash_pix, QtCore.Qt.WindowStaysOnTopHint)
@@ -1119,7 +1150,10 @@ class Main():
 		reply = QtGui.QMessageBox.question(self.widget, 'Message', quit_msg, QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
 		if reply == QtGui.QMessageBox.Yes:
 			self.widget.close()
-			del self.widget
+			try:
+				del self.widget
+			except Exception as e:
+				if debug is True: print clrmsg.DEBUG + str(e)
 			return 0
 		else:
 			return 1
@@ -1130,7 +1164,7 @@ class Test():
 		## Testing paths
 		global testpath
 		testpath = '/Users/jan/Desktop/'
-		testpath = 'F:/jan_temp/'
+		# testpath = 'F:/jan_temp/'
 		leftImage = testpath+'correlation_test_dataset/IB_030.tif'
 		rightImage = testpath+'correlation_test_dataset/LM_green_reslized.tif'
 
@@ -1163,12 +1197,13 @@ if __name__ == "__main__":
 
 	app = QtGui.QApplication(sys.argv)
 	test = Test()
-	# # File dialogs for standalone mode
+	# ## File dialogs for standalone mode
+	# ## *.png *.jpg *.bmp not yet supportes
 	# left = str(QtGui.QFileDialog.getOpenFileName(
-	# 	None,"Select first image file for correlation", execdir,"Image Files (*.tif *.tiff);; All (*.*)"))  # *.png *.jpg *.bmp not yet supportes
+	# 	None,"Select first image file for correlation", execdir,"Image Files (*.tif *.tiff);; All (*.*)"))
 	# if left == '': sys.exit()
 	# right = str(QtGui.QFileDialog.getOpenFileName(
-	# 	None,"Select second image file for correlation", execdir,"Image Files (*.tif *.tiff);; All (*.*)"))  # *.png *.jpg *.bmp not yet supportes
+	# 	None,"Select second image file for correlation", execdir,"Image Files (*.tif *.tiff);; All (*.*)"))
 	# if right == '': sys.exit()
 
 	# Main(leftImage=left,rightImage=right)

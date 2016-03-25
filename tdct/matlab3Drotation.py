@@ -18,7 +18,7 @@ This generates the matlab script and runs in the matlab -nodisplay console.
 # @Usage			: Meant to be imported, i.e. import matlab3Drotation.py and used with calling
 # 					: matlab_rotate(img_vol,)
 # @Notes			:
-# @Python_version	: 2.7.10
+# @Python_version	: 2.7.11
 """
 # ======================================================================================================================
 

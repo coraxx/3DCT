@@ -34,30 +34,26 @@ A test dataset can be downloaded from the "testdata" folder:
 # @Status			: developement
 # @Usage			: python -u TDCT_main.py
 # @Notes			:
-# @Python_version	: 2.7.10
+# @Python_version	: 2.7.11
 """
 # ======================================================================================================================
 
 import sys
 import os
+import tempfile
 import fileinput
 # from functools import partial
 from subprocess import call
 from PyQt4 import QtCore, QtGui, uic
+from tdct import clrmsg, helpdoc, stackProcessing
+import TDCT_correlation
 # add working directory temporarily to PYTHONPATH
 execdir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(execdir)
-try:
-	## Colored stdout
-	from tdct import clrmsg
-	import TDCT_correlation
-except Exception as e:
-	print e
-	sys.exit()
 
 __version__ = 'v2.0.0'
 
-
+debug = True
 ########## GUI layout file #######################################################
 ##################################################################################
 qtCreatorFile_main = os.path.join(execdir, "TDCT_main.ui")
@@ -72,50 +68,77 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 		QtGui.QMainWindow.__init__(self)
 		Ui_MainWindow.__init__(self)
 		self.setupUi(self)
-		self.stackProcessStatus.setVisible(False)
+		# DEL self.stackProcessStatus.setVisible(False)
 		self.menuDebug.menuAction().setVisible(False)
 		# Menu, set shortcuts
 		self.actionQuit.triggered.connect(self.close)
 		self.actionQuit.setShortcuts(['Ctrl+Q','Esc'])
 		self.actionQuit.setStatusTip('Exit application')
+		self.helpdoc = helpdoc.help(self)
 
 		QtGui.QShortcut(QtGui.QKeySequence(QtCore.Qt.CTRL + QtCore.Qt.Key_0), self, self.showDebugMenu)
 		self.actionLoad_Test_Dataset.triggered.connect(self.loadTestDataset)
 
 		self.actionAbout.triggered.connect(self.about)
 
-		# Buttons
-		self.pushButton_selectWorkingDir.clicked.connect(lambda: self.selectpath(self.lineEdit_workingDir))
-		self.pushButton_openWorkingDir.clicked.connect(lambda: self.openDirectoy(self.lineEdit_workingDir.text()))
-		self.pushButton_saveTo.clicked.connect(lambda: self.selectpath(self.lineEdit_saveToPath))
-		self.pushButton_selectTif.clicked.connect(lambda: self.selectpath(self.lineEdit_selectTifPath))
-		self.pushButton_openSaveToPath.clicked.connect(lambda: self.openDirectoy(self.lineEdit_saveToPath.text()))
-		self.pushButton_runStack.clicked.connect(self.runStackProcessing)
+		# Open Buttons
+		self.toolButton_WorkingDirOpen.clicked.connect(lambda: self.openDirectoy(self.lineEdit_WorkingDirPath.text()))
+		self.toolButton_ImageStackOpen.clicked.connect(lambda: self.openDirectoy(self.lineEdit_ImageStackPath.text()))
+		self.toolButton_ImageSequenceOpen.clicked.connect(lambda: self.openDirectoy(self.lineEdit_ImageSequencePath.text()))
+		self.toolButton_NormalizeOpen.clicked.connect(lambda: self.openDirectoy(self.lineEdit_NormalizePath.text()))
+		self.toolButton_MipOpen.clicked.connect(lambda: self.openDirectoy(self.lineEdit_MipPath.text()))
+		## Select Buttons
+		self.toolButton_WorkingDirSelect.clicked.connect(lambda: self.selectPath(self.lineEdit_WorkingDirPath))
+		self.toolButton_ImageStackSelect.clicked.connect(lambda: self.selectFile(self.lineEdit_ImageStackPath))
+		self.toolButton_ImageSequenceSelect.clicked.connect(lambda: self.selectPath(self.lineEdit_ImageSequencePath))
+		self.toolButton_NormalizeSelect.clicked.connect(lambda: self.selectFile(self.lineEdit_NormalizePath))
+		self.toolButton_MipSelect.clicked.connect(lambda: self.selectFile(self.lineEdit_MipPath))
 		self.toolButton_selectImage1.clicked.connect(self.selectImage1)
 		self.toolButton_selectImage2.clicked.connect(self.selectImage2)
-		self.toolButton_reloadFileList.clicked.connect(self.reloadFileList)
+		## Command Buttons
 		self.commandLinkButton_correlate.clicked.connect(self.runCorrelationModule)
+		self.commandLinkButton_Reslice.clicked.connect(self.imageStack)
+		self.commandLinkButton_CreateStackFile.clicked.connect(self.imageSequence)
+		self.commandLinkButton_Normalize.clicked.connect(self.printLOL)
+		self.commandLinkButton_Mip.clicked.connect(self.printLOL)
+		## Help Buttons
+		self.toolButton_WorkingDirHelp.clicked.connect(self.helpdoc.WorkingDir)
+		self.toolButton_ImageStackHelp.clicked.connect(self.helpdoc.ImageStack)
+		self.toolButton_ImageSequenceHelp.clicked.connect(self.helpdoc.ImageSequence)
+		self.toolButton_NormalizeHelp.clicked.connect(self.helpdoc.Normalize)
+		self.toolButton_FileListHelp.clicked.connect(self.helpdoc.FileList)
+		self.toolButton_MipHelp.clicked.connect(self.helpdoc.Mip)
+		self.toolButton_CorrelationHelp.clicked.connect(self.helpdoc.Correlation)
+		## Misc buttons
+		self.toolButton_FileListReload.clicked.connect(self.reloadFileList)
 		self.testButton.clicked.connect(self.tester)
 
 		# QLineEdits
-		self.lineEdit_selectTifPath.textChanged.connect(lambda: self.isValidPath(self.lineEdit_selectTifPath))
+		self.lineEdit_WorkingDirPath.textChanged.connect(lambda: self.isValidPath(self.lineEdit_WorkingDirPath))
+		self.lineEdit_ImageStackPath.textChanged.connect(lambda: self.isValidFile(self.lineEdit_ImageStackPath))
+		self.lineEdit_ImageSequencePath.textChanged.connect(lambda: self.isValidPath(self.lineEdit_ImageSequencePath))
+		self.lineEdit_NormalizePath.textChanged.connect(lambda: self.isValidFile(self.lineEdit_NormalizePath))
+		self.lineEdit_MipPath.textChanged.connect(lambda: self.isValidFile(self.lineEdit_MipPath))
 		self.lineEdit_selectImage1.textChanged.connect(lambda: self.isValidFile(self.lineEdit_selectImage1))
 		self.lineEdit_selectImage2.textChanged.connect(lambda: self.isValidFile(self.lineEdit_selectImage2))
-		self.lineEdit_workingDir.textChanged.connect(lambda: self.isValidPath(self.lineEdit_workingDir))
-		self.lineEdit_saveToPath.textChanged.connect(lambda: self.isValidPath(self.lineEdit_saveToPath))
 
 		# Checkbox
-		self.checkBox_cubeVoxels.stateChanged.connect(lambda: self.cubeVoxels(self.checkBox_cubeVoxels.isChecked()))
+		# DEL self.checkBox_cubeVoxels.stateChanged.connect(lambda: self.cubeVoxelsState(self.checkBox_cubeVoxels.isChecked()))
 
 		# Init Working directory
 		self.workingdir = os.path.expanduser("~")
-		self.lineEdit_workingDir.setText(self.workingdir)
+		self.lineEdit_WorkingDirPath.setText(self.workingdir)
 		self.populate_filelist(self.workingdir)
+
+	def printLOL(self):
+		print 'LOL'
 
 	def isValidFile(self,lineEdit):
 		if lineEdit.text() == "":
 			lineEdit.setStyleSheet(
 				"QLineEdit{background-color: white;} QLineEdit:hover{border: 1px solid grey; background-color white;}")
+			lineEdit.fileIsValid = False
+			lineEdit.fileIsTiff = False
 		elif os.path.isfile(lineEdit.text()):
 			if os.path.splitext(str(lineEdit.text()))[1] in ['.tif','.tiff']:
 				lineEdit.setStyleSheet(
@@ -134,19 +157,21 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 				"QLineEdit{background-color: rgb(255,0,0,120);}\
 				QLineEdit:hover{border: 1px solid grey; background-color rgb(255,0,0,120);}")
 			lineEdit.fileIsValid = False
+			lineEdit.fileIsTiff = False
 
 	def isValidPath(self,lineEdit):
 		if lineEdit.text() == "":
 			lineEdit.setStyleSheet(
 				"QLineEdit{background-color: white;} QLineEdit:hover{border: 1px solid grey; background-color white;}")
-			if lineEdit.objectName() == 'lineEdit_workingDir':
-				self.listWidget_workingDir.clear()
+			if lineEdit.objectName() == 'lineEdit_WorkingDirPath':
+				self.listWidget_WorkingDir.clear()
 		elif os.path.isdir(lineEdit.text()):
-			if lineEdit.objectName() == 'lineEdit_workingDir':
-				workingdir = self.checkWorkingDirPrivileges(str(self.lineEdit_workingDir.text()))
+			if lineEdit.objectName() == 'lineEdit_WorkingDirPath':
+				workingdir = self.checkDirectoryPrivileges(str(self.lineEdit_WorkingDirPath.text()))
 				if workingdir:
 					lineEdit.setStyleSheet(
-						"QLineEdit{background-color: rgb(0,255,0,120);} QLineEdit:hover{border: 1px solid grey; background-color rgb(0,255,0,120);}")
+						"QLineEdit{background-color: rgb(0,255,0,120);}\
+						QLineEdit:hover{border: 1px solid grey; background-color rgb(0,255,0,120);}")
 					self.workingdir = workingdir
 					self.populate_filelist(self.workingdir)
 				else:
@@ -155,13 +180,14 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 						QLineEdit:hover{border: 1px solid grey; background-color rgb(255,0,0,120);}")
 			else:
 				lineEdit.setStyleSheet(
-					"QLineEdit{background-color: rgb(0,255,0,120);} QLineEdit:hover{border: 1px solid grey; background-color rgb(0,255,0,120);}")
+					"QLineEdit{background-color: rgb(0,255,0,120);}\
+					QLineEdit:hover{border: 1px solid grey; background-color rgb(0,255,0,120);}")
 		else:
 			lineEdit.setStyleSheet(
 				"QLineEdit{background-color: rgb(255,0,0,120);} QLineEdit:hover{border: 1px solid grey; background-color rgb(255,0,0,120);}")
 
 	def focusInEvent(self, event):
-		print('Got focus')
+		if debug is True: print clrmsg.DEBUG + 'Got focus'
 
 		# List Widget Test
 		# self.listWidget_coordEx_LMfiles.itemSelectionChanged.connect(self.dostuff)
@@ -177,10 +203,7 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 
 	## only for quick load of test datasets - REMOVE FROM FINAL VERSION
 	def loadTestDataset(self):
-		self.lineEdit_selectTifPath.setText("/Volumes/Silver/input")
-		self.lineEdit_saveToPath.setText("/Volumes/Silver/output")
-		self.pushButton_openSaveToPath.setEnabled(True)
-		self.pushButton_runStack.setEnabled(True)
+		print 'nope'
 
 	## only for quick load of test datasets - REMOVE FROM FINAL VERSION
 	def tester(self):
@@ -194,31 +217,59 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 	## About
 	def about(self):
 		QtGui.QMessageBox.about(
-								self, "About 3DCT", "3DCT v0.1\n\ndeveloped by:\n\nMax-Planck-Institute of Biochemistry\n\n" +
+								self, "About 3DCT",
+								"3D Correlation Toolbox v2.0.0\n\ndeveloped by:\n\nMax-Planck-Institute of Biochemistry\n\n" +
 								"3D Correlation Toolbox:	Jan Arnold\nCorrelation Algorithm:	Vladan Lucic"
 								)
 
-	def checkWorkingDirPrivileges(self,path):
-		import tempfile
+	def checkDirectoryPrivileges(self,path):
 		try:
 			testfile = tempfile.TemporaryFile(dir=path)
 			testfile.close()
 			return path
 		except Exception:
-			QtGui.QMessageBox.critical(
+			reply = QtGui.QMessageBox.critical(
 				self,"Warning",
-				"I cannot write to this folder: {0}\nFalling back to {1} as the working directory".format(path, self.workingdir))
-			return None
+				"I cannot write to the folder: {0}\n\nDo you want to select another directory?".format(path),
+				QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
+			pathValid = False
+			if reply == QtGui.QMessageBox.Yes:
+				while True:
+					newpath = str(QtGui.QFileDialog.getExistingDirectory(self, "Select directory", path))
+					if newpath != "":
+						try:
+							testfile = tempfile.TemporaryFile(dir=newpath)
+							testfile.close()
+							pathValid = True
+							break
+						except:
+							reply = QtGui.QMessageBox.critical(
+								self,"Warning",
+								"I cannot write to the folder: {0}\n\nDo you want to select another directory?".format(newpath),
+								QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
+							if reply == QtGui.QMessageBox.No:
+								pathValid = False
+								break
+					else:
+						pathValid = False
+						break
+			if pathValid is False:
+				return None
+			else:
+				return newpath
 
 	## Open directory
-	def openDirectoy(self,targetDirectory):
-		targetDirectory = str(targetDirectory)
-		if sys.platform == 'darwin':
-			call(['open', '-R', targetDirectory])
-		elif sys.platform == 'linux2':
-			call(['gnome-open', '--', targetDirectory])
-		elif sys.platform == 'win32':
-			call(['explorer', targetDirectory])
+	def openDirectoy(self,path):
+		if debug is True: print clrmsg.DEBUG + 'Passed path value:', path
+		directory, file = os.path.split(str(path))
+		if debug is True: print clrmsg.DEBUG + 'os split (directory, file):', directory, file
+		if os.path.isdir(directory):
+			if sys.platform == 'darwin':
+				call(['open', '-R', directory])
+			elif sys.platform == 'linux2':
+				call(['gnome-open', '--', directory])
+			elif sys.platform == 'win32':
+				call(['explorer', directory])
 
 	## Exit Warning
 	def closeEvent(self, event):
@@ -236,31 +287,27 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 		else:
 			event.ignore()
 
-	## Select Paths
-	def selectpath(self, pathLine):
+	def selectPath(self, pathLine):
 		sender = self.sender()
 		path = str(QtGui.QFileDialog.getExistingDirectory(self, "Select Directory", self.workingdir))
 		if path:
-			if sender == self.pushButton_selectWorkingDir:
-				workingdir = self.checkWorkingDirPrivileges(path)
+			if sender == self.toolButton_WorkingDirSelect:
+				workingdir = self.checkDirectoryPrivileges(path)
 				if workingdir:
 					self.workingdir = workingdir
 					self.populate_filelist(self.workingdir)
 					pathLine.setText(self.workingdir)
-			# Open Save to directory button
-			if sender == self.pushButton_saveTo:
-				self.lineEdit_saveToPath.setText(path)
-				self.pushButton_openSaveToPath.setEnabled(True)
-			# Working directory
-			elif sender == self.pushButton_selectWorkingDir and self.lineEdit_saveToPath.text() == "":
-				self.lineEdit_saveToPath.setText(self.workingdir)
-				self.pushButton_openSaveToPath.setEnabled(True)
-			# Save new Stack to directoy
-			if self.lineEdit_saveToPath.text() != "" and self.lineEdit_selectTifPath.text() != "":
-				self.pushButton_runStack.setEnabled(True)
+			else:
+				pathLine.setText(path)
+
+	def selectFile(self, pathLine):
+		path = str(QtGui.QFileDialog.getOpenFileName(
+			None,"Select tiff image file", self.workingdir,"Image Files (*.tif *.tiff);; All (*.*)"))
+		if path:
+			pathLine.setText(path)
 
 	## Cube Voxels button state handling
-	def cubeVoxels(self, checkstate):
+	def cubeVoxelsState(self, checkstate):
 		if checkstate is True:
 			self.doubleSpinBox_focusStepsize.setEnabled(True)
 			self.radioButton_20x.setEnabled(True)
@@ -297,9 +344,10 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 		if sys.platform == 'win32':
 			str_lineEdit_selectTifPath = str(self.lineEdit_selectTifPath.text())
 			str_lineEdit_saveToPath = str(self.lineEdit_saveToPath.text())
-			print clrmsg.DEBUG, str_lineEdit_selectTifPath, str_lineEdit_saveToPath
-			print clrmsg.DEBUG, str_lineEdit_selectTifPath.encode('string-escape'), str_lineEdit_saveToPath.encode('string-escape')
-			print clrmsg.DEBUG, str_lineEdit_selectTifPath.encode('string-escape').replace('\\\\','\\'), \
+			if debug is True: print clrmsg.DEBUG, str_lineEdit_selectTifPath, str_lineEdit_saveToPath
+			if debug is True: print clrmsg.DEBUG, str_lineEdit_selectTifPath.encode('string-escape'), str_lineEdit_saveToPath.encode(
+				'string-escape')
+			if debug is True: print clrmsg.DEBUG, str_lineEdit_selectTifPath.encode('string-escape').replace('\\\\','\\'), \
 				str_lineEdit_saveToPath.encode('string-escape').replace('\\\\','\\')
 			pathFROM = "PATH = " + '"' + str_lineEdit_selectTifPath.encode('string-escape') + '/";'
 			pathTO = "PATHSAVETO = " + '"' + str_lineEdit_saveToPath.encode('string-escape') + '/";'
@@ -366,8 +414,8 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 
 	## Populate List widget for listing files needed for coordinate extraction
 	def populate_filelist(self,path):
-		self.listWidget_workingDir.clear()
-		self.listWidget_workingDir.itempath = path
+		self.listWidget_WorkingDir.clear()
+		self.listWidget_WorkingDir.itempath = path
 		for fname in os.listdir(path):
 			checkdir = os.path.join(path, fname)
 			if (
@@ -379,20 +427,20 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 				item.setText(fname)
 				# item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
 				# item.setCheckState(QtCore.Qt.Unchecked)
-				self.listWidget_workingDir.addItem(item)
+				self.listWidget_WorkingDir.addItem(item)
 
 	def reloadFileList(self):
 		if hasattr(self, "workingdir"):
 			self.populate_filelist(self.workingdir)
-			print 'reloaded'
+			if debug is True: print clrmsg.DEBUG + 'Working directory file list reloaded'
 
 	def selectImage1(self):
 		self.lineEdit_selectImage1.setText(
-			os.path.join(self.listWidget_workingDir.itempath, str(self.listWidget_workingDir.selectedItems()[0].text())))
+			os.path.join(self.listWidget_WorkingDir.itempath, str(self.listWidget_WorkingDir.selectedItems()[0].text())))
 
 	def selectImage2(self):
 		self.lineEdit_selectImage2.setText(
-			os.path.join(self.listWidget_workingDir.itempath, str(self.listWidget_workingDir.selectedItems()[0].text())))
+			os.path.join(self.listWidget_WorkingDir.itempath, str(self.listWidget_WorkingDir.selectedItems()[0].text())))
 
 	def runCorrelationModule(self):
 		if self.lineEdit_selectImage1.text() != "" and self.lineEdit_selectImage2.text() != "":
@@ -421,6 +469,26 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 					"QLineEdit{background-color: rgb(255,0,0,120);}\
 					QLineEdit:hover{border: 1px solid grey; background-color rgb(255,0,0,120);}")
 
+	def imageStack(self):
+		img_path = str(self.lineEdit_ImageStackPath.text())
+		customSaveDir = self.checkDirectoryPrivileges(os.path.split(img_path)[0])
+		if self.lineEdit_ImageStackPath.fileIsTiff is True and customSaveDir:
+			ss_in = self.doubleSpinBox_ImageStackFocusStepSizeOrig.value()
+			ss_out = self.doubleSpinBox_ImageStackFocusStepSizeReslized.value()
+			print img_path, ss_in, ss_out, customSaveDir
+			# stackProcessing.main(
+			# 	img_path, ss_in, ss_out, interpolationmethod='linear', saveorigstack=False, showgraph=False, customSaveDir=customSaveDir)
+
+	def imageSequence(self):
+		dirPath = str(self.lineEdit_ImageSequencePath.text())
+		customSaveDir = self.checkDirectoryPrivileges(dirPath)
+		if os.path.isdir(dirPath) and customSaveDir:
+			ss_in = self.doubleSpinBox_ImageStackFocusStepSizeOrig.value()
+			ss_out = self.doubleSpinBox_ImageStackFocusStepSizeReslized.value()
+			print dirPath, ss_in, ss_out, customSaveDir
+			# stackProcessing.main(
+			# 	dirPath, ss_in, ss_out, interpolationmethod='linear', saveorigstack=False, showgraph=False, customSaveDir=customSaveDir)
+
 
 ## Class to outsource work to an independant thread. Not used anymore at the moment.
 class GenericThread(QtCore.QThread):
@@ -438,11 +506,11 @@ class GenericThread(QtCore.QThread):
 		return
 
 
-print clrmsg.DEBUG + 'Debug Test'
-print clrmsg.OK + 'OK Test'
-print clrmsg.ERROR + 'Error Test'
-print clrmsg.INFO + 'Info Test'
-print clrmsg.WARNING + 'Warning Test'
+if debug is True: print clrmsg.DEBUG + 'Debug Test'
+if debug is True: print clrmsg.OK + 'OK Test'
+if debug is True: print clrmsg.ERROR + 'Error Test'
+if debug is True: print clrmsg.INFO + 'Info Test'
+if debug is True: print clrmsg.WARNING + 'Warning Test'
 ########## Executed when running in standalone ###################################
 ##################################################################################
 

@@ -21,7 +21,7 @@ to get an optimized bead position (optimization of x, y and z)
 # 					  at the given x and y pixel coordinate or call x,y,z = beadPos.getz(x,y,img,n=None,optimize=True)
 # 					  to get an optimized bead position (optimization of x, y and z)
 # @Notes			: stable, but problems with low SNR <- needs revisiting
-# @Python_version	: 2.7.10
+# @Python_version	: 2.7.11
 """
 # ======================================================================================================================
 

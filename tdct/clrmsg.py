@@ -25,7 +25,7 @@ and it will print:
 # 					: then call e.g. # print(clrmsg.ERROR + 'Error message')
 # 					: and it will return # [ ERROR ] Error message
 # @Notes			: You can add your own status prefixes.
-# @Python_version	: 2.7.10
+# @Python_version	: 2.7.11
 """
 # ======================================================================================================================
 

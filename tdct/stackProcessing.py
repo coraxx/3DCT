@@ -64,7 +64,7 @@ kwargs:
 # 					: 							middle of input stack for comparison between the original data and the
 # 					: 							linear as well as the spline interpolation.
 # @Notes			:
-# @Python_version	: 2.7.10
+# @Python_version	: 2.7.11
 """
 # ======================================================================================================================
 
@@ -76,6 +76,10 @@ import time
 import numpy as np
 from scipy import interpolate
 import matplotlib
+try:
+	matplotlib.use('tkAgg')
+except:
+	pass
 import matplotlib.pyplot as plt
 ## Adding execution directory to include possible scripts in the same folder (e.g. tifffile.py)
 execdir = os.path.dirname(os.path.realpath(__file__))
@@ -84,10 +88,9 @@ try:
 	import tifffile as tf
 except:
 	sys.exit("Please install tifffile, e.g.: pip install tifffile")
-matplotlib.use('tkAgg')
 
 
-def main(img_path, ss_in, ss_out, interpolationmethod='linear', saveorigstack=True, showgraph=False):
+def main(img_path, ss_in, ss_out, interpolationmethod='linear', saveorigstack=True, showgraph=False, customSaveDir=None):
 	"""Main function handling the file type and parsing of filenames/directories"""
 
 	## Raise "error" when program has nothing to do due to all arguments set to none/false
@@ -115,7 +118,10 @@ def main(img_path, ss_in, ss_out, interpolationmethod='linear', saveorigstack=Tr
 			px_info = False
 		## Start Processing
 		print px_info
-		file_out_int = os.path.join(img_path, os.path.splitext(img_path)[0]+"_resliced.tif")
+		if customSaveDir:
+			file_out_int = os.path.join(customSaveDir, os.path.splitext(os.path.split(img_path)[1])[0]+"_resliced.tif")
+		else:
+			file_out_int = os.path.join(img_path, os.path.splitext(img_path)[0]+"_resliced.tif")  # revisit
 		print "Interpolating..."
 		img_int = interpol(img, ss_in, ss_out, interpolationmethod, showgraph)
 		if type(img_int) == str:
@@ -129,7 +135,7 @@ def main(img_path, ss_in, ss_out, interpolationmethod='linear', saveorigstack=Tr
 				tf.imsave(file_out_int, img_int)
 			print "		...done."
 	## For image sequence (only FEI MAPS/LA image sequences at the moment)
-	elif os.path.isfile(img_path) is False:
+	elif os.path.isdir(img_path):
 		files = os.listdir(img_path)
 		print "Checking directory: ", img_path
 		channels = []
@@ -173,10 +179,16 @@ def main(img_path, ss_in, ss_out, interpolationmethod='linear', saveorigstack=Tr
 			## Default pattern is not compatible with OME header from FEI MAPS/Live Acquisition Software
 			img = tf.imread(filelist, pattern='')
 			## Generate file output name
-			file_out_int = os.path.join(img_path, os.path.basename(os.path.normpath(img_path))+"_"+str(i)+"_resliced.tif")
+			if customSaveDir:
+				file_out_int = os.path.join(customSaveDir, os.path.basename(os.path.normpath(img_path))+"_"+str(i)+"_resliced.tif")
+			else:
+				file_out_int = os.path.join(img_path, os.path.basename(os.path.normpath(img_path))+"_"+str(i)+"_resliced.tif")
 			## Possibility to save the image sequence files as one single stack file for easier handling and better overview
 			if saveorigstack is True:
-				file_out_orig = os.path.join(img_path, os.path.basename(os.path.normpath(img_path))+"_"+str(i)+".tif")
+				if customSaveDir:
+					file_out_orig = os.path.join(customSaveDir, os.path.basename(os.path.normpath(img_path))+"_"+str(i)+".tif")
+				else:
+					file_out_orig = os.path.join(img_path, os.path.basename(os.path.normpath(img_path))+"_"+str(i)+".tif")
 				print "Saving original image stack as single stack file: {0} |shape: {1}".format(file_out_orig,img.shape)
 				if px_info is True:
 					tf.imsave(file_out_orig, img, metadata={'PixelSize': str(pixelsize)})
@@ -200,6 +212,8 @@ def main(img_path, ss_in, ss_out, interpolationmethod='linear', saveorigstack=Tr
 					else:
 						tf.imsave(file_out_int, img_int)
 					print "		...done."
+	else:
+		print 'ERROR: Path is neither a valid file nor a valid directory!'
 
 
 def pxSize(img_path):
