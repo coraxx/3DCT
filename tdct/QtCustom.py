@@ -610,7 +610,7 @@ class QLineEditFilePath(QtGui.QLineEdit):
 			try:
 				import objc
 				import CoreFoundation as CF
-				if debug is True: print clrmsg.DEBUG + '"objc" and "CoreFoundation" import successful'
+				if debug is True: print clrmsg.DEBUG + """"objc" and "CoreFoundation" import successful | Drag'n'Drop support for Mac OS X >= 10.10"""
 			except Exception as e:
 				if debug is True: print clrmsg.ERROR + str(e)
 				objc = None
@@ -632,9 +632,9 @@ class QLineEditFilePath(QtGui.QLineEdit):
 			# for some reason, this doubles up the intro slash
 			filepath = str(urls[0].path())[1:]
 			if filepath.startswith('.file/id=') and objc:
-				if debug is True: print clrmsg.DEBUG + 'File id bug in PyQt4 for:', filepath
+				if debug is True: print clrmsg.DEBUG + 'File id bug in PyQt4, converting:', filepath
 				filepath = self.getUrlFromLocalFileID(urls[0])
-				if debug is True: print clrmsg.DEBUG + '						->', filepath
+				if debug is True: print clrmsg.DEBUG + '							to ->', filepath
 			elif filepath.startswith('.file/id=') and not objc:
 				if debug is True:
 					print clrmsg.DEBUG + (

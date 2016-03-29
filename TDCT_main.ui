@@ -185,7 +185,7 @@
             </font>
            </property>
            <property name="styleSheet">
-            <string notr="true">background-color: rgb(0,255,0,120);</string>
+            <string notr="true">background-color: rgb(0,255,0,80);</string>
            </property>
            <property name="text">
             <string> valid path </string>
@@ -212,7 +212,7 @@
             </font>
            </property>
            <property name="styleSheet">
-            <string notr="true">background-color: rgb(255,0,0,120);</string>
+            <string notr="true">background-color: rgb(255,0,0,80);</string>
            </property>
            <property name="text">
             <string> invalid path or read-only </string>
@@ -271,7 +271,7 @@
        <item>
         <widget class="QTabWidget" name="tabWidget">
          <property name="currentIndex">
-          <number>0</number>
+          <number>1</number>
          </property>
          <widget class="QWidget" name="ImageStack">
           <attribute name="title">
@@ -319,7 +319,7 @@
              <item>
               <widget class="QLabel" name="label_14">
                <property name="text">
-                <string>Original focus step size:</string>
+                <string>Input focus step size:</string>
                </property>
               </widget>
              </item>
@@ -328,15 +328,21 @@
                <property name="decimals">
                 <number>4</number>
                </property>
+               <property name="minimum">
+                <double>0.000100000000000</double>
+               </property>
                <property name="maximum">
                 <double>10000.000000000000000</double>
+               </property>
+               <property name="value">
+                <double>1.000000000000000</double>
                </property>
               </widget>
              </item>
              <item>
               <widget class="QLabel" name="label_15">
                <property name="text">
-                <string>Output focus stepsize (pixel size)</string>
+                <string>Output focus stepsize:</string>
                </property>
               </widget>
              </item>
@@ -345,8 +351,21 @@
                <property name="decimals">
                 <number>4</number>
                </property>
+               <property name="minimum">
+                <double>0.000100000000000</double>
+               </property>
                <property name="maximum">
                 <double>10000.000000000000000</double>
+               </property>
+               <property name="value">
+                <double>1.000000000000000</double>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QToolButton" name="toolButton_ImageStackGetPixelSize">
+               <property name="text">
+                <string>get px size</string>
                </property>
               </widget>
              </item>
@@ -363,13 +382,6 @@
                </property>
               </spacer>
              </item>
-             <item>
-              <widget class="QCheckBox" name="checkBox_ImageStackNormalize">
-               <property name="text">
-                <string>normalize</string>
-               </property>
-              </widget>
-             </item>
             </layout>
            </item>
            <item>
@@ -378,6 +390,29 @@
               <widget class="QCommandLinkButton" name="commandLinkButton_Reslice">
                <property name="text">
                 <string>Reslice</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_15">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeType">
+                <enum>QSizePolicy::Fixed</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>10</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <widget class="QProgressBar" name="progressBar_ImageStack">
+               <property name="value">
+                <number>0</number>
                </property>
               </widget>
              </item>
@@ -472,7 +507,7 @@
                 </font>
                </property>
                <property name="styleSheet">
-                <string notr="true">background-color: rgb(0,255,0,120);</string>
+                <string notr="true">background-color: rgb(0,255,0,80);</string>
                </property>
                <property name="text">
                 <string> valid tiff </string>
@@ -493,7 +528,7 @@
                 </font>
                </property>
                <property name="styleSheet">
-                <string notr="true">background-color: rgb(255,120,0,120);</string>
+                <string notr="true">background-color: rgb(255,120,0,80);</string>
                </property>
                <property name="text">
                 <string> unsupported file format </string>
@@ -520,7 +555,7 @@
                 </font>
                </property>
                <property name="styleSheet">
-                <string notr="true">background-color: rgb(255,0,0,120);</string>
+                <string notr="true">background-color: rgb(255,0,0,80);</string>
                </property>
                <property name="text">
                 <string> invalid path </string>
@@ -598,13 +633,6 @@
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="checkBox_ImageSequenceNormalize">
-               <property name="text">
-                <string>normalize</string>
-               </property>
-              </widget>
-             </item>
-             <item>
               <spacer name="horizontalSpacer_11">
                <property name="orientation">
                 <enum>Qt::Horizontal</enum>
@@ -624,7 +652,7 @@
              <item>
               <widget class="QLabel" name="label_2">
                <property name="text">
-                <string>Original focus step size:</string>
+                <string>Input focus step size:</string>
                </property>
               </widget>
              </item>
@@ -636,15 +664,21 @@
                <property name="decimals">
                 <number>4</number>
                </property>
+               <property name="minimum">
+                <double>0.000100000000000</double>
+               </property>
                <property name="maximum">
                 <double>10000.000000000000000</double>
+               </property>
+               <property name="value">
+                <double>1.000000000000000</double>
                </property>
               </widget>
              </item>
              <item>
               <widget class="QLabel" name="label">
                <property name="text">
-                <string>Output focus stepsize (pixel size)</string>
+                <string>Output focus stepsize:</string>
                </property>
               </widget>
              </item>
@@ -653,8 +687,21 @@
                <property name="decimals">
                 <number>4</number>
                </property>
+               <property name="minimum">
+                <double>0.000100000000000</double>
+               </property>
                <property name="maximum">
                 <double>10000.000000000000000</double>
+               </property>
+               <property name="value">
+                <double>1.000000000000000</double>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QToolButton" name="toolButton_ImageSequenceGetPixelSize">
+               <property name="text">
+                <string>get px size</string>
                </property>
               </widget>
              </item>
@@ -665,7 +712,7 @@
                </property>
                <property name="sizeHint" stdset="0">
                 <size>
-                 <width>40</width>
+                 <width>5</width>
                  <height>20</height>
                 </size>
                </property>
@@ -686,6 +733,29 @@
               <widget class="QCommandLinkButton" name="commandLinkButton_CreateStackFile">
                <property name="text">
                 <string>Create stack file</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_14">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeType">
+                <enum>QSizePolicy::Fixed</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>10</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <widget class="QProgressBar" name="progressBar_ImageSequence">
+               <property name="value">
+                <number>0</number>
                </property>
               </widget>
              </item>
@@ -780,7 +850,7 @@
                 </font>
                </property>
                <property name="styleSheet">
-                <string notr="true">background-color: rgb(0,255,0,120);</string>
+                <string notr="true">background-color: rgb(0,255,0,80);</string>
                </property>
                <property name="text">
                 <string> valid path </string>
@@ -807,7 +877,7 @@
                 </font>
                </property>
                <property name="styleSheet">
-                <string notr="true">background-color: rgb(255,0,0,120);</string>
+                <string notr="true">background-color: rgb(255,0,0,80);</string>
                </property>
                <property name="text">
                 <string> invalid path </string>
@@ -878,6 +948,29 @@
               <widget class="QCommandLinkButton" name="commandLinkButton_Normalize">
                <property name="text">
                 <string>Normalize</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_22">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeType">
+                <enum>QSizePolicy::Fixed</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>10</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <widget class="QProgressBar" name="progressBar_Normalize">
+               <property name="value">
+                <number>0</number>
                </property>
               </widget>
              </item>
@@ -972,7 +1065,7 @@
                 </font>
                </property>
                <property name="styleSheet">
-                <string notr="true">background-color: rgb(0,255,0,120);</string>
+                <string notr="true">background-color: rgb(0,255,0,80);</string>
                </property>
                <property name="text">
                 <string> valid tiff </string>
@@ -993,7 +1086,7 @@
                 </font>
                </property>
                <property name="styleSheet">
-                <string notr="true">background-color: rgb(255,120,0,120);</string>
+                <string notr="true">background-color: rgb(255,120,0,80);</string>
                </property>
                <property name="text">
                 <string> unsupported file format </string>
@@ -1020,7 +1113,7 @@
                 </font>
                </property>
                <property name="styleSheet">
-                <string notr="true">background-color: rgb(255,0,0,120);</string>
+                <string notr="true">background-color: rgb(255,0,0,80);</string>
                </property>
                <property name="text">
                 <string> invalid path </string>
@@ -1092,11 +1185,41 @@
             </layout>
            </item>
            <item>
+            <widget class="QCheckBox" name="checkBox_MipNormalize">
+             <property name="text">
+              <string>normalize</string>
+             </property>
+            </widget>
+           </item>
+           <item>
             <layout class="QHBoxLayout" name="horizontalLayout_18">
              <item>
               <widget class="QCommandLinkButton" name="commandLinkButton_Mip">
                <property name="text">
                 <string>Create MIP</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_23">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeType">
+                <enum>QSizePolicy::Fixed</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>10</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <widget class="QProgressBar" name="progressBar_Mip">
+               <property name="value">
+                <number>0</number>
                </property>
               </widget>
              </item>
@@ -1191,7 +1314,7 @@
                 </font>
                </property>
                <property name="styleSheet">
-                <string notr="true">background-color: rgb(0,255,0,120);</string>
+                <string notr="true">background-color: rgb(0,255,0,80);</string>
                </property>
                <property name="text">
                 <string> valid tiff </string>
@@ -1212,7 +1335,7 @@
                 </font>
                </property>
                <property name="styleSheet">
-                <string notr="true">background-color: rgb(255,120,0,120);</string>
+                <string notr="true">background-color: rgb(255,120,0,80);</string>
                </property>
                <property name="text">
                 <string> unsupported file format </string>
@@ -1239,7 +1362,7 @@
                 </font>
                </property>
                <property name="styleSheet">
-                <string notr="true">background-color: rgb(255,0,0,120);</string>
+                <string notr="true">background-color: rgb(255,0,0,80);</string>
                </property>
                <property name="text">
                 <string> invalid path </string>
@@ -1513,7 +1636,7 @@
             </font>
            </property>
            <property name="styleSheet">
-            <string notr="true">background-color: rgb(0,255,0,120);</string>
+            <string notr="true">background-color: rgb(0,255,0,80);</string>
            </property>
            <property name="text">
             <string> valid tiff </string>
@@ -1534,7 +1657,7 @@
             </font>
            </property>
            <property name="styleSheet">
-            <string notr="true">background-color: rgb(255,120,0,120);</string>
+            <string notr="true">background-color: rgb(255,120,0,80);</string>
            </property>
            <property name="text">
             <string> unsupported file format </string>
@@ -1561,7 +1684,7 @@
             </font>
            </property>
            <property name="styleSheet">
-            <string notr="true">background-color: rgb(255,0,0,120);</string>
+            <string notr="true">background-color: rgb(255,0,0,80);</string>
            </property>
            <property name="text">
             <string> invalid path </string>

@@ -41,7 +41,6 @@ A test dataset can be downloaded from the "testdata" folder:
 import sys
 import os
 import tempfile
-import fileinput
 # from functools import partial
 from subprocess import call
 from PyQt4 import QtCore, QtGui, uic
@@ -99,8 +98,8 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 		self.commandLinkButton_correlate.clicked.connect(self.runCorrelationModule)
 		self.commandLinkButton_Reslice.clicked.connect(self.imageStack)
 		self.commandLinkButton_CreateStackFile.clicked.connect(self.imageSequence)
-		self.commandLinkButton_Normalize.clicked.connect(self.printLOL)
-		self.commandLinkButton_Mip.clicked.connect(self.printLOL)
+		self.commandLinkButton_Normalize.clicked.connect(self.normalize)
+		self.commandLinkButton_Mip.clicked.connect(self.mip)
 		## Help Buttons
 		self.toolButton_WorkingDirHelp.clicked.connect(self.helpdoc.WorkingDir)
 		self.toolButton_ImageStackHelp.clicked.connect(self.helpdoc.ImageStack)
@@ -111,9 +110,11 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 		self.toolButton_CorrelationHelp.clicked.connect(self.helpdoc.Correlation)
 		## Misc buttons
 		self.toolButton_FileListReload.clicked.connect(self.reloadFileList)
+		self.toolButton_ImageStackGetPixelSize.clicked.connect(self.getPixelSize)
+		self.toolButton_ImageSequenceGetPixelSize.clicked.connect(self.getPixelSize)
 		self.testButton.clicked.connect(self.tester)
 
-		# QLineEdits
+		## QLineEdits
 		self.lineEdit_WorkingDirPath.textChanged.connect(lambda: self.isValidPath(self.lineEdit_WorkingDirPath))
 		self.lineEdit_ImageStackPath.textChanged.connect(lambda: self.isValidFile(self.lineEdit_ImageStackPath))
 		self.lineEdit_ImageSequencePath.textChanged.connect(lambda: self.isValidPath(self.lineEdit_ImageSequencePath))
@@ -121,6 +122,12 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 		self.lineEdit_MipPath.textChanged.connect(lambda: self.isValidFile(self.lineEdit_MipPath))
 		self.lineEdit_selectImage1.textChanged.connect(lambda: self.isValidFile(self.lineEdit_selectImage1))
 		self.lineEdit_selectImage2.textChanged.connect(lambda: self.isValidFile(self.lineEdit_selectImage2))
+
+		## Progressbars
+		self.progressBar_ImageStack.setVisible(False)
+		self.progressBar_ImageSequence.setVisible(False)
+		self.progressBar_Normalize.setVisible(False)
+		self.progressBar_Mip.setVisible(False)
 
 		# Checkbox
 		# DEL self.checkBox_cubeVoxels.stateChanged.connect(lambda: self.cubeVoxelsState(self.checkBox_cubeVoxels.isChecked()))
@@ -142,20 +149,20 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 		elif os.path.isfile(lineEdit.text()):
 			if os.path.splitext(str(lineEdit.text()))[1] in ['.tif','.tiff']:
 				lineEdit.setStyleSheet(
-					"QLineEdit{background-color: rgb(0,255,0,120);}\
-					QLineEdit:hover{border: 1px solid grey; background-color rgb(0,255,0,120);}")
+					"QLineEdit{background-color: rgb(0,255,0,80);}\
+					QLineEdit:hover{border: 1px solid grey; background-color rgb(0,255,0,80);}")
 				lineEdit.fileIsValid = True
 				lineEdit.fileIsTiff = True
 			else:
 				lineEdit.setStyleSheet(
-					"QLineEdit{background-color: rgb(255,120,0,120);}\
-					QLineEdit:hover{border: 1px solid grey; background-color rgb(255,120,0,120);}")
+					"QLineEdit{background-color: rgb(255,120,0,80);}\
+					QLineEdit:hover{border: 1px solid grey; background-color rgb(255,120,0,80);}")
 				lineEdit.fileIsValid = True
 				lineEdit.fileIsTiff = False
 		else:
 			lineEdit.setStyleSheet(
-				"QLineEdit{background-color: rgb(255,0,0,120);}\
-				QLineEdit:hover{border: 1px solid grey; background-color rgb(255,0,0,120);}")
+				"QLineEdit{background-color: rgb(255,0,0,80);}\
+				QLineEdit:hover{border: 1px solid grey; background-color rgb(255,0,0,80);}")
 			lineEdit.fileIsValid = False
 			lineEdit.fileIsTiff = False
 
@@ -170,24 +177,25 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 				workingdir = self.checkDirectoryPrivileges(str(self.lineEdit_WorkingDirPath.text()))
 				if workingdir:
 					lineEdit.setStyleSheet(
-						"QLineEdit{background-color: rgb(0,255,0,120);}\
-						QLineEdit:hover{border: 1px solid grey; background-color rgb(0,255,0,120);}")
+						"QLineEdit{background-color: rgb(0,255,0,80);}\
+						QLineEdit:hover{border: 1px solid grey; background-color rgb(0,255,0,80);}")
 					self.workingdir = workingdir
 					self.populate_filelist(self.workingdir)
+					lineEdit.setText(self.workingdir)
 				else:
 					lineEdit.setStyleSheet(
-						"QLineEdit{background-color: rgb(255,0,0,120);}\
-						QLineEdit:hover{border: 1px solid grey; background-color rgb(255,0,0,120);}")
+						"QLineEdit{background-color: rgb(255,0,0,80);}\
+						QLineEdit:hover{border: 1px solid grey; background-color rgb(255,0,0,80);}")
 			else:
 				lineEdit.setStyleSheet(
-					"QLineEdit{background-color: rgb(0,255,0,120);}\
-					QLineEdit:hover{border: 1px solid grey; background-color rgb(0,255,0,120);}")
+					"QLineEdit{background-color: rgb(0,255,0,80);}\
+					QLineEdit:hover{border: 1px solid grey; background-color rgb(0,255,0,80);}")
 		else:
 			lineEdit.setStyleSheet(
-				"QLineEdit{background-color: rgb(255,0,0,120);} QLineEdit:hover{border: 1px solid grey; background-color rgb(255,0,0,120);}")
+				"QLineEdit{background-color: rgb(255,0,0,80);} QLineEdit:hover{border: 1px solid grey; background-color rgb(255,0,0,80);}")
 
 	def focusInEvent(self, event):
-		if debug is True: print clrmsg.DEBUG + 'Got focus'
+		if debug is True: print clrmsg.DEBUG, 'Got focus'
 
 		# List Widget Test
 		# self.listWidget_coordEx_LMfiles.itemSelectionChanged.connect(self.dostuff)
@@ -222,7 +230,7 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 								"3D Correlation Toolbox:	Jan Arnold\nCorrelation Algorithm:	Vladan Lucic"
 								)
 
-	def checkDirectoryPrivileges(self,path):
+	def checkDirectoryPrivileges(self,path,question="Do you want to select another directory?"):
 		try:
 			testfile = tempfile.TemporaryFile(dir=path)
 			testfile.close()
@@ -245,7 +253,7 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 						except:
 							reply = QtGui.QMessageBox.critical(
 								self,"Warning",
-								"I cannot write to the folder: {0}\n\nDo you want to select another directory?".format(newpath),
+								"I cannot write to the folder: {0}\n\n{1}".format(newpath,question),
 								QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
 							if reply == QtGui.QMessageBox.No:
 								pathValid = False
@@ -260,9 +268,9 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 
 	## Open directory
 	def openDirectoy(self,path):
-		if debug is True: print clrmsg.DEBUG + 'Passed path value:', path
+		if debug is True: print clrmsg.DEBUG, 'Passed path value:', path
 		directory, file = os.path.split(str(path))
-		if debug is True: print clrmsg.DEBUG + 'os split (directory, file):', directory, file
+		if debug is True: print clrmsg.DEBUG, 'os split (directory, file):', directory, file
 		if os.path.isdir(directory):
 			if sys.platform == 'darwin':
 				call(['open', '-R', directory])
@@ -306,6 +314,35 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 		if path:
 			pathLine.setText(path)
 
+	def getPixelSize(self):
+		sender = self.sender()
+		if sender == self.toolButton_ImageStackGetPixelSize:
+			try:
+				pixelSize = stackProcessing.pxSize(str(self.lineEdit_ImageStackPath.text()))
+				if debug is True: print clrmsg.DEBUG, pixelSize
+				if pixelSize:
+					self.doubleSpinBox_ImageStackFocusStepSizeOrig.setValue(pixelSize*1000)
+					self.doubleSpinBox_ImageStackFocusStepSizeReslized.setValue(pixelSize*1000)
+				else:
+					raise Exception('No pixel size information found!')
+			except Exception as e:
+				QtGui.QMessageBox.warning(
+						self,"Warning",
+						"Unable to extract pixel size.\n\n{0}".format(e))
+		elif sender == self.toolButton_ImageSequenceGetPixelSize:
+			try:
+				pixelSize = stackProcessing.pxSize(os.path.join(str(self.lineEdit_ImageSequencePath.text()),"Tile_001-001-000_0-000.tif"))
+				if debug is True: print clrmsg.DEBUG, pixelSize
+				if pixelSize:
+					self.doubleSpinBox_ImageSequenceFocusStepSizeOrig.setValue(pixelSize*1000)
+					self.doubleSpinBox_ImageSequenceFocusStepSizeReslized.setValue(pixelSize*1000)
+				else:
+					raise Exception('No pixel size information found!')
+			except Exception as e:
+				QtGui.QMessageBox.warning(
+						self,"Warning",
+						"Unable to extract pixel size.\n\n{0}".format(e))
+
 	## Cube Voxels button state handling
 	def cubeVoxelsState(self, checkstate):
 		if checkstate is True:
@@ -323,94 +360,6 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 			self.radioButton_63x.setEnabled(False)
 			self.radioButton_customFocusStepsize.setEnabled(False)
 			self.doubleSpinBox_customFocusStepsize.setEnabled(False)
-
-	## Run image stack processing
-	def runStackProcessing(self):
-		# button visibility
-		def StackProcessStatusVisability(state):
-			if state is True and self.stackProcessStatus.isVisible() is False:
-				self.stackProcessStatus.setVisible(True)
-				app.processEvents()
-			else:
-				return
-			if state is False and self.stackProcessStatus.isVisible() is True:
-				self.stackProcessStatus.setVisible(False)
-				app.processEvents()
-			else:
-				return
-		StackProcessStatusVisability(False)
-		# setting up paths
-		pathMACRO = execdir + '/fiji_macro.ijm'
-		if sys.platform == 'win32':
-			str_lineEdit_selectTifPath = str(self.lineEdit_selectTifPath.text())
-			str_lineEdit_saveToPath = str(self.lineEdit_saveToPath.text())
-			if debug is True: print clrmsg.DEBUG, str_lineEdit_selectTifPath, str_lineEdit_saveToPath
-			if debug is True: print clrmsg.DEBUG, str_lineEdit_selectTifPath.encode('string-escape'), str_lineEdit_saveToPath.encode(
-				'string-escape')
-			if debug is True: print clrmsg.DEBUG, str_lineEdit_selectTifPath.encode('string-escape').replace('\\\\','\\'), \
-				str_lineEdit_saveToPath.encode('string-escape').replace('\\\\','\\')
-			pathFROM = "PATH = " + '"' + str_lineEdit_selectTifPath.encode('string-escape') + '/";'
-			pathTO = "PATHSAVETO = " + '"' + str_lineEdit_saveToPath.encode('string-escape') + '/";'
-		else:
-			pathFROM = "PATH = " + '"' + self.lineEdit_selectTifPath.text() + '/";'
-			pathTO = "PATHSAVETO = " + '"' + self.lineEdit_saveToPath.text() + '/";'
-		template_path = os.path.join(execdir,"fiji_macro_template.ijm")
-		macro_path = os.path.join(execdir,"fiji_macro.ijm")
-		# check for cube voxels option
-		if self.checkBox_cubeVoxels.isChecked() is True and self.doubleSpinBox_focusStepsize.value() == 0:
-			StackProcessStatusVisability(True)
-			self.stackProcessStatus.setStyleSheet("color: rgb(255, 80, 0);")
-			self.stackProcessStatus.setText('Set stepsize!')
-			app.processEvents()
-			return 0
-		## create macro template for FIJI run
-		# Copy template
-		with open(template_path) as f:
-			with open(macro_path, "w") as f1:
-				for line in f:
-					f1.write(line)
-		# Add path to template
-		for line in fileinput.input(macro_path, inplace=1):
-			print line,
-			if line.startswith('//PARAMETERS'):
-				print pathFROM
-				print pathTO
-				if self.checkBox_cubeVoxels.isChecked() is True:
-					print """cubeVoxels = "True";"""
-					print "STEPSIZE = " + str(self.doubleSpinBox_focusStepsize.value()) + ";"
-					if self.radioButton_20x.isChecked() is True:
-						print """PIXELSIZE = 322.5;"""
-					elif self.radioButton_40x.isChecked() is True:
-						print """PIXELSIZE = 161.25;"""
-					elif self.radioButton_63x.isChecked() is True:
-						print """PIXELSIZE = 102.38;"""
-		StackProcessStatusVisability(True)
-		self.stackProcessStatus.setStyleSheet("color: rgb(255, 125, 0);")
-		self.stackProcessStatus.setText('Fiji is running ...')
-		app.processEvents()
-		# run FIJI with macro
-		if sys.platform == 'darwin':
-			self.runStackProcessing_return_code = call(
-				[execdir + "/Fiji/Contents/MacOS/ImageJ-macosx", "--headless", "-macro", pathMACRO, "&"])
-		elif sys.platform == 'linux2':
-			self.runStackProcessing_return_code = call([execdir + "/Fiji/ImageJ-linux64", "-macro", pathMACRO, "&"])
-		elif sys.platform == 'win32':
-			self.runStackProcessing_return_code = call([execdir + "/Fiji/ImageJ-win64.exe", "-macro", pathMACRO])
-		if self.runStackProcessing_return_code == 0:
-			self.stackProcessStatus.setStyleSheet("color: rgb(0, 225, 90);")
-			self.stackProcessStatus.setText('Yeay, done!')
-		else:
-			self.stackProcessStatus.setStyleSheet("color: rgb(255, 0, 0);")
-			self.stackProcessStatus.setText('Fiji failed!')
-			restart_msg = "Fiji closed with an error. Do you want to restart it?"
-			reply = QtGui.QMessageBox.question(self, 'Message', restart_msg, QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
-			if reply == QtGui.QMessageBox.Yes:
-				self.runStackProcessing()
-		# clean up
-		try:
-			os.remove(macro_path)
-		except OSError:
-			pass
 
 	## Populate List widget for listing files needed for coordinate extraction
 	def populate_filelist(self,path):
@@ -432,7 +381,7 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 	def reloadFileList(self):
 		if hasattr(self, "workingdir"):
 			self.populate_filelist(self.workingdir)
-			if debug is True: print clrmsg.DEBUG + 'Working directory file list reloaded'
+			if debug is True: print clrmsg.DEBUG, 'Working directory file list reloaded'
 
 	def selectImage1(self):
 		self.lineEdit_selectImage1.setText(
@@ -462,32 +411,99 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 		else:
 			if self.lineEdit_selectImage1.text() == "":
 				self.lineEdit_selectImage1.setStyleSheet(
-					"QLineEdit{background-color: rgb(255,0,0,120);}\
-					QLineEdit:hover{border: 1px solid grey; background-color rgb(255,0,0,120);}")
+					"QLineEdit{background-color: rgb(255,0,0,80);}\
+					QLineEdit:hover{border: 1px solid grey; background-color rgb(255,0,0,80);}")
 			if self.lineEdit_selectImage2.text() == "":
 				self.lineEdit_selectImage2.setStyleSheet(
-					"QLineEdit{background-color: rgb(255,0,0,120);}\
-					QLineEdit:hover{border: 1px solid grey; background-color rgb(255,0,0,120);}")
+					"QLineEdit{background-color: rgb(255,0,0,80);}\
+					QLineEdit:hover{border: 1px solid grey; background-color rgb(255,0,0,80);}")
 
 	def imageStack(self):
+		self.progressBar_ImageStack.setVisible(True)
+		self.progressBar_ImageStack.setMaximum(0)
+		QtGui.QApplication.processEvents()
 		img_path = str(self.lineEdit_ImageStackPath.text())
-		customSaveDir = self.checkDirectoryPrivileges(os.path.split(img_path)[0])
-		if self.lineEdit_ImageStackPath.fileIsTiff is True and customSaveDir:
+		customSaveDir = self.checkDirectoryPrivileges(os.path.split(img_path)[0],question="Do you want me to save the data to another directory?")
+		if img_path and self.lineEdit_ImageStackPath.fileIsTiff is True and customSaveDir:
 			ss_in = self.doubleSpinBox_ImageStackFocusStepSizeOrig.value()
 			ss_out = self.doubleSpinBox_ImageStackFocusStepSizeReslized.value()
-			print img_path, ss_in, ss_out, customSaveDir
-			# stackProcessing.main(
-			# 	img_path, ss_in, ss_out, interpolationmethod='linear', saveorigstack=False, showgraph=False, customSaveDir=customSaveDir)
+			if debug is True: print clrmsg.DEBUG, img_path, ss_in, ss_out, customSaveDir
+			self.progressBar_ImageStack.setMaximum(100)
+			QtGui.QApplication.processEvents()
+			stackProcessing.main(
+				img_path, ss_in, ss_out, qtprocessbar=self.progressBar_ImageStack,
+				interpolationmethod='linear', saveorigstack=False, showgraph=False, customSaveDir=customSaveDir)
+			self.progressBar_ImageStack.reset()
+			self.progressBar_ImageStack.setVisible(False)
+		else:
+			self.progressBar_ImageStack.setMaximum(100)
+			self.progressBar_ImageStack.reset()
+			self.progressBar_ImageStack.setVisible(False)
 
 	def imageSequence(self):
+		self.progressBar_ImageSequence.setVisible(True)
+		self.progressBar_ImageSequence.setMaximum(0)
+		QtGui.QApplication.processEvents()
 		dirPath = str(self.lineEdit_ImageSequencePath.text())
-		customSaveDir = self.checkDirectoryPrivileges(dirPath)
+		customSaveDir = self.checkDirectoryPrivileges(dirPath,question="Do you want me to save the data to another directory?")
 		if os.path.isdir(dirPath) and customSaveDir:
-			ss_in = self.doubleSpinBox_ImageStackFocusStepSizeOrig.value()
-			ss_out = self.doubleSpinBox_ImageStackFocusStepSizeReslized.value()
-			print dirPath, ss_in, ss_out, customSaveDir
-			# stackProcessing.main(
-			# 	dirPath, ss_in, ss_out, interpolationmethod='linear', saveorigstack=False, showgraph=False, customSaveDir=customSaveDir)
+			if self.checkBox_ImageSequenceCube.isChecked():
+				ss_in = self.doubleSpinBox_ImageSequenceFocusStepSizeOrig.value()
+				ss_out = self.doubleSpinBox_ImageSequenceFocusStepSizeReslized.value()
+				if debug is True: print clrmsg.DEBUG, dirPath, ss_in, ss_out, str(self.checkBox_ImageSequenceSaveOrigStack.isChecked()), customSaveDir
+				self.progressBar_ImageSequence.setMaximum(100)
+				QtGui.QApplication.processEvents()
+				stackProcessing.main(
+					dirPath, ss_in, ss_out, qtprocessbar=self.progressBar_ImageSequence, interpolationmethod='linear',
+					saveorigstack=self.checkBox_ImageSequenceSaveOrigStack.isChecked(), showgraph=False, customSaveDir=customSaveDir)
+				self.progressBar_ImageSequence.reset()
+			else:
+				if debug is True: print clrmsg.DEBUG, 'no reslicing'
+				self.progressBar_ImageSequence.setMaximum(100)
+				QtGui.QApplication.processEvents()
+				stackProcessing.main(dirPath, 0, 0, qtprocessbar=self.progressBar_ImageSequence, saveorigstack=True, interpolationmethod='none', customSaveDir=customSaveDir)
+				self.progressBar_ImageSequence.reset()
+				self.progressBar_ImageSequence.setVisible(False)
+		else:
+			self.progressBar_ImageSequence.setMaximum(100)
+			self.progressBar_ImageSequence.reset()
+			self.progressBar_ImageSequence.setVisible(False)
+
+	def normalize(self):
+		self.progressBar_Normalize.setVisible(True)
+		self.progressBar_Normalize.setMaximum(0)
+		QtGui.QApplication.processEvents()
+		img_path = str(self.lineEdit_NormalizePath.text())
+		customSaveDir = self.checkDirectoryPrivileges(os.path.split(img_path)[0],question="Do you want me to save the data to another directory?")
+		if img_path and self.lineEdit_NormalizePath.fileIsTiff is True and customSaveDir:
+			if debug is True: print clrmsg.DEBUG, 'In/out:', img_path, customSaveDir
+			self.progressBar_Normalize.setMaximum(100)
+			QtGui.QApplication.processEvents()
+			stackProcessing.normalize(img_path, qtprocessbar=self.progressBar_Normalize, customSaveDir=customSaveDir)
+			self.progressBar_Normalize.reset()
+			self.progressBar_Normalize.setVisible(False)
+		else:
+			self.progressBar_Normalize.setMaximum(100)
+			self.progressBar_Normalize.reset()
+			self.progressBar_Normalize.setVisible(False)
+
+	def mip(self):
+		self.progressBar_Mip.setVisible(True)
+		self.progressBar_Mip.setMaximum(0)
+		QtGui.QApplication.processEvents()
+		img_path = str(self.lineEdit_MipPath.text())
+		customSaveDir = self.checkDirectoryPrivileges(os.path.split(img_path)[0],question="Do you want me to save the data to another directory?")
+		if img_path and self.lineEdit_MipPath.fileIsTiff is True and customSaveDir:
+			if debug is True: print clrmsg.DEBUG, 'In/out/normalize:', img_path, customSaveDir, self.checkBox_MipNormalize.isChecked()
+			self.progressBar_Mip.setMaximum(100)
+			QtGui.QApplication.processEvents()
+			stackProcessing.mip(img_path, qtprocessbar=self.progressBar_Mip, customSaveDir=customSaveDir, normalize=self.checkBox_MipNormalize.isChecked())
+			self.progressBar_Mip.reset()
+			self.progressBar_Mip.setVisible(False)
+		else:
+			self.progressBar_Mip.setMaximum(100)
+			self.progressBar_Mip.reset()
+			self.progressBar_Mip.setVisible(False)
 
 
 ## Class to outsource work to an independant thread. Not used anymore at the moment.
@@ -506,7 +522,7 @@ class GenericThread(QtCore.QThread):
 		return
 
 
-if debug is True: print clrmsg.DEBUG + 'Debug Test'
+if debug is True: print clrmsg.DEBUG, 'Debug Test'
 if debug is True: print clrmsg.OK + 'OK Test'
 if debug is True: print clrmsg.ERROR + 'Error Test'
 if debug is True: print clrmsg.INFO + 'Info Test'
