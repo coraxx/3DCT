@@ -38,7 +38,7 @@ kwargs:
 # @Maintainer		: Jan Arnold
 # @Date				: 2016/01
 # @Version			: 3DCT 2.0.0 module rev. 3
-# @Status			: stable
+# @Status			: beta
 # @Usage			: Can be used as standalone application, i.e. run python -u stackProcessing.py
 # 					: or import stackProcessing.py and use main function like:
 # 					: stackProcessing.main(imgpath, original_steppsize, interpolated_stepsize, interpolationmethod)
@@ -82,7 +82,11 @@ except:
 	pass
 import matplotlib.pyplot as plt
 ## Adding execution directory to include possible scripts in the same folder (e.g. tifffile.py)
-execdir = os.path.dirname(os.path.realpath(__file__))
+if getattr(sys, 'frozen', False):
+	# programm runs in a bundle (pyinstaller)
+	execdir = sys._MEIPASS
+else:
+	execdir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(execdir)
 try:
 	import tifffile as tf

@@ -15,7 +15,7 @@ to one single stack file, ...).
 # @Maintainer		: Jan Arnold
 # @Date				: 2016/01
 # @Version			: 3DCT 2.0.0 module rev. 1
-# @Status			: development
+# @Status			: beta
 # @Usage			: part of 3D Correlation Toolbox
 # @Notes			:
 # @Python_version	: 2.7.11
@@ -38,7 +38,12 @@ from tdct import clrmsg, QtCustom, csvHandler, correlation
 
 __version__ = 'v2.0.0'
 
-execdir = os.path.dirname(os.path.realpath(__file__))
+# add working directory temporarily to PYTHONPATH
+if getattr(sys, 'frozen', False):
+	# programm runs in a bundle (pyinstaller)
+	execdir = sys._MEIPASS
+else:
+	execdir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(execdir)
 
 qtCreatorFile_main = os.path.join(execdir, "TDCT_correlation.ui")
@@ -1105,7 +1110,7 @@ class SplashScreen():
 	def __init__(self):
 		QtGui.QApplication.processEvents()
 		## Load splash screen image
-		splash_pix = QtGui.QPixmap('SplashScreen.png')
+		splash_pix = QtGui.QPixmap(os.path.join(execdir,'icons/SplashScreen.png'))
 		## Add version
 		painter = QtGui.QPainter()
 		painter.begin(splash_pix)
@@ -1139,19 +1144,20 @@ class Main():
 		if workingdir is None:
 			workingdir = execdir
 
-		self.widget = MainWidget(parent=self,leftImage=leftImage, rightImage=rightImage,workingdir=workingdir)
-		self.widget.show()
+		self.window = MainWidget(parent=self,leftImage=leftImage, rightImage=rightImage,workingdir=workingdir)
+		self.window.show()
+		self.window.raise_()
 
 		if nosplash is False:
-			ss.splash.finish(self.widget)
+			ss.splash.finish(self.window)
 
 	def close(self):
 		quit_msg = "Are you sure you want to exit the\n3DCT Correlation?\n\nUnsaved data will be lost!"
-		reply = QtGui.QMessageBox.question(self.widget, 'Message', quit_msg, QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
+		reply = QtGui.QMessageBox.question(self.window, 'Message', quit_msg, QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
 		if reply == QtGui.QMessageBox.Yes:
-			self.widget.close()
+			self.window.close()
 			try:
-				del self.widget
+				del self.window
 			except Exception as e:
 				if debug is True: print clrmsg.DEBUG + str(e)
 			return 0
@@ -1171,17 +1177,18 @@ class Test():
 		global splash
 		splash = SplashScreen()
 
-		self.widget = MainWidget(parent=self,leftImage=leftImage, rightImage=rightImage)
-		self.widget.show()
+		self.window = MainWidget(parent=self,leftImage=leftImage, rightImage=rightImage)
+		self.window.show()
+		self.window.raise_()
 
-		splash.splash.finish(self.widget)
+		splash.splash.finish(self.window)
 
 	def close(self):
 		quit_msg = "Are you sure you want to exit the\n3DCT Correlation?\n\nUnsaved data will be lost!"
-		reply = QtGui.QMessageBox.question(self.widget, 'Message', quit_msg, QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
+		reply = QtGui.QMessageBox.question(self.window, 'Message', quit_msg, QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
 		if reply == QtGui.QMessageBox.Yes:
-			self.widget.close()
-			del self.widget
+			self.window.close()
+			del self.window
 			return 0
 		else:
 			return 1

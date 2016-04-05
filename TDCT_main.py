@@ -31,7 +31,7 @@ A test dataset can be downloaded from the "testdata" folder:
 # 					  Department of Molecular Structural Biology
 # @Date				: 2015/08
 # @Version			: 3DCT 2.0.0
-# @Status			: developement
+# @Status			: beta
 # @Usage			: python -u TDCT_main.py
 # @Notes			:
 # @Python_version	: 2.7.11
@@ -41,18 +41,26 @@ A test dataset can be downloaded from the "testdata" folder:
 import sys
 import os
 import tempfile
+import time
+# For pyinstaller matlab
+import FileDialog
 # from functools import partial
 from subprocess import call
 from PyQt4 import QtCore, QtGui, uic
 from tdct import clrmsg, helpdoc, stackProcessing
 import TDCT_correlation
 # add working directory temporarily to PYTHONPATH
-execdir = os.path.dirname(os.path.realpath(__file__))
+if getattr(sys, 'frozen', False):
+	# programm runs in a bundle (pyinstaller)
+	execdir = sys._MEIPASS
+else:
+	execdir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(execdir)
 
 __version__ = 'v2.0.0'
 
 debug = True
+if debug is True: print clrmsg.DEBUG, "Execdir =", execdir
 ########## GUI layout file #######################################################
 ##################################################################################
 qtCreatorFile_main = os.path.join(execdir, "TDCT_main.ui")
@@ -140,7 +148,7 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 	def printLOL(self):
 		print 'LOL'
 
-	def isValidFile(self,lineEdit):
+	def isValidFile(self, lineEdit):
 		if lineEdit.text() == "":
 			lineEdit.setStyleSheet(
 				"QLineEdit{background-color: white;} QLineEdit:hover{border: 1px solid grey; background-color white;}")
@@ -166,7 +174,7 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 			lineEdit.fileIsValid = False
 			lineEdit.fileIsTiff = False
 
-	def isValidPath(self,lineEdit):
+	def isValidPath(self, lineEdit):
 		if lineEdit.text() == "":
 			lineEdit.setStyleSheet(
 				"QLineEdit{background-color: white;} QLineEdit:hover{border: 1px solid grey; background-color white;}")
@@ -224,13 +232,26 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 
 	## About
 	def about(self):
-		QtGui.QMessageBox.about(
-								self, "About 3DCT",
-								"3D Correlation Toolbox v2.0.0\n\ndeveloped by:\n\nMax-Planck-Institute of Biochemistry\n\n" +
-								"3D Correlation Toolbox:	Jan Arnold\nCorrelation Algorithm:	Vladan Lucic"
-								)
+		gif = os.path.join(execdir, "icons/SplashScreen.gif")
+		if os.path.isfile(gif):
+			movie = QtGui.QMovie(gif)
+			print movie
+			splash = MovieSplashScreen(movie)
+			splash.show()
+			if debug is True: print clrmsg.DEBUG, 'splash screen running'
+			while movie.state() == QtGui.QMovie.Running:
+				QtGui.QApplication.processEvents()
+				time.sleep(0.01)
+			if debug is True: print clrmsg.DEBUG, 'splash screen stopped'
+		else:
+			QtGui.QMessageBox.about(
+									self, "About 3DCT",
+									"3D Correlation Toolbox {0}\n\n".format(__version__) +
+									"Max-Planck-Institute of Biochemistry\n\n" +
+									"Developed by:	Jan Arnold\nCorrelation algorithm:	Vladan Lucic"
+									)
 
-	def checkDirectoryPrivileges(self,path,question="Do you want to select another directory?"):
+	def checkDirectoryPrivileges(self, path, question="Do you want to select another directory?"):
 		try:
 			testfile = tempfile.TemporaryFile(dir=path)
 			testfile.close()
@@ -267,7 +288,7 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 				return newpath
 
 	## Open directory
-	def openDirectoy(self,path):
+	def openDirectoy(self, path):
 		if debug is True: print clrmsg.DEBUG, 'Passed path value:', path
 		directory, file = os.path.split(str(path))
 		if debug is True: print clrmsg.DEBUG, 'os split (directory, file):', directory, file
@@ -286,7 +307,7 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 		if reply == QtGui.QMessageBox.Yes:
 			# if loaded, close pointselection tool widget and sub windows
 			if hasattr(self, "correlationModul"):
-				if hasattr(self.correlationModul, "widget"):
+				if hasattr(self.correlationModul, "window"):
 					exitstatus = self.correlationModul.close()
 					if exitstatus == 1:
 						event.ignore()
@@ -362,7 +383,7 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 			self.doubleSpinBox_customFocusStepsize.setEnabled(False)
 
 	## Populate List widget for listing files needed for coordinate extraction
-	def populate_filelist(self,path):
+	def populate_filelist(self, path):
 		self.listWidget_WorkingDir.clear()
 		self.listWidget_WorkingDir.itempath = path
 		for fname in os.listdir(path):
@@ -506,6 +527,46 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 			self.progressBar_Mip.setVisible(False)
 
 
+class MovieSplashScreen(QtGui.QSplashScreen):
+
+	def __init__(self, movie, parent=None):
+		movie.jumpToFrame(0)
+		pixmap = QtGui.QPixmap(movie.frameRect().size())
+		QtGui.QSplashScreen.__init__(self, pixmap, QtCore.Qt.WindowStaysOnTopHint)
+		self.movie = movie
+		self.movie.frameChanged.connect(self.repaint)
+		self.aboutText = (
+			"Max-Planck-Institute of Biochemistry\n\n"
+			"Developed by: Jan Arnold\n"
+			"Correlation algorithm: Vladan Lucic")
+
+	def keyPressEvent(self, event):
+		if event.key() == QtCore.Qt.Key_Escape:
+			self.movie.stop()
+
+	def showEvent(self, event):
+		self.movie.start()
+
+	def hideEvent(self, event):
+		self.movie.stop()
+
+	def paintEvent(self, event):
+		painter = QtGui.QPainter(self)
+		pixmap = self.movie.currentPixmap()
+		self.setMask(pixmap.mask())
+		painter.drawPixmap(0, 0, pixmap)
+		painter.setPen(QtCore.Qt.white)
+		painter.drawText(
+			0,0,
+			pixmap.size().width()-3,pixmap.size().height()-1,QtCore.Qt.AlignBottom | QtCore.Qt.AlignRight, __version__)
+		painter.drawText(
+			5,0,
+			pixmap.size().width(),pixmap.size().height()-5,QtCore.Qt.AlignBottom | QtCore.Qt.AlignLeft, self.aboutText)
+
+	def sizeHint(self):
+		return self.movie.scaledSize()
+
+
 ## Class to outsource work to an independant thread. Not used anymore at the moment.
 class GenericThread(QtCore.QThread):
 	def __init__(self, function, *args, **kwargs):
@@ -534,4 +595,5 @@ if __name__ == "__main__":
 	app = QtGui.QApplication(sys.argv)
 	window = APP()
 	window.show()
+	window.raise_()
 	sys.exit(app.exec_())

@@ -12,7 +12,7 @@ Quadratic Interpolation of Spectral Peaks
 # @Maintainer		:
 # @Date				: 2015/12
 # @Version			: 3DCT 2.0.0 module rev. 1
-# @Status			:
+# @Status			: stable
 # @Usage			:
 # @Notes			:
 # @Python_version	: 2.7.11
