@@ -40,7 +40,7 @@ __version__ = 'v2.0.0'
 
 # add working directory temporarily to PYTHONPATH
 if getattr(sys, 'frozen', False):
-	# programm runs in a bundle (pyinstaller)
+	# program runs in a bundle (pyinstaller)
 	execdir = sys._MEIPASS
 else:
 	execdir = os.path.dirname(os.path.realpath(__file__))
@@ -50,10 +50,11 @@ qtCreatorFile_main = os.path.join(execdir, "TDCT_correlation.ui")
 Ui_WidgetWindow, QtBaseClass = uic.loadUiType(qtCreatorFile_main)
 
 debug = True
+if debug is True: print clrmsg.DEBUG + "Execdir =", execdir
 
 
 class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
-	def __init__(self, parent=None, leftImage=None, rightImage=None,workingdir=execdir):
+	def __init__(self, parent=None, leftImage=None, rightImage=None,workingdir=None):
 		if debug is True: print clrmsg.DEBUG + 'Debug messages enabled'
 		QtGui.QWidget.__init__(self)
 		Ui_WidgetWindow.__init__(self)
@@ -62,7 +63,10 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		self.counter = 0		# Just for testing (loop counter for test button)
 		self.refreshUI = QtGui.QApplication.processEvents
 		self.currentFocusedWidgetName = QtGui.QApplication.focusWidget()
-		self.workingdir = workingdir
+		if workingdir is None:
+			self.workingdir = execdir
+		else:
+			self.workingdir = workingdir
 		self.lineEdit_workingDir.setText(self.workingdir)
 
 		## Stylesheet colors:
@@ -128,7 +132,6 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 																framesize=self.doubleSpinBox_scatterPlotFrameSize.value()))
 
 		## Buttons
-		self.pushButton_test.clicked.connect(self.test)
 		self.toolButton_rotcw.clicked.connect(lambda: self.rotateImage45(direction='cw'))
 		self.toolButton_rotccw.clicked.connect(lambda: self.rotateImage45(direction='ccw'))
 		self.toolButton_brightness_reset.clicked.connect(lambda: self.horizontalSlider_brightness.setValue(0))
@@ -156,6 +159,9 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		self.lineEdit_workingDir.textChanged.connect(self.updateWorkingDir)
 
 	def keyPressEvent(self,event):
+		"""Filter key press event
+		Selected table rows can be deleted by pressing the "Del" key
+		"""
 		if event.key() == QtCore.Qt.Key_Delete:
 			if self.currentFocusedWidgetName == 'tableView_left':
 				if debug is True: print clrmsg.DEBUG + "Deleting item(s) on the left side"
@@ -171,9 +177,18 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 				self.tableView_right.updateItems()
 
 	def closeEvent(self, event):
-		exitstatus = self.parent.close()
-		if exitstatus == 1:
+		"""Warning when closing application to prevent unintentional quitting with reminder to save data"""
+		quit_msg = "Are you sure you want to exit the\n3DCT Correlation?\n\nUnsaved data will be lost!"
+		reply = QtGui.QMessageBox.question(self, 'Message', quit_msg, QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
+		if reply == QtGui.QMessageBox.Yes:
+			event.accept()
+			if self.parent:
+				self.parent.cleanUp()
+				self.parent.exitstatus = 0
+		else:
 			event.ignore()
+			if self.parent:
+				self.parent.exitstatus = 1
 
 	def selectWorkingDir(self):
 		path = str(QtGui.QFileDialog.getExistingDirectory(self, "Select working directory", self.workingdir))
@@ -205,48 +220,6 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 				"I cannot write to this folder: {0}\nFalling back to {1} as the working directory".format(path, self.workingdir))
 			return None
 
-	def test(self):
-		if self.counter == 1:
-			self.widget_matplotlib.setupScatterCanvas(width=4,height=4,dpi=52,toolbar=False)
-		if self.counter == 2:
-			self.widget_matplotlib.scatterPlot(x='random',y='random',frame=True,framesize=6,xlabel="nm",ylabel="nm")
-		if self.counter == 3:
-			self.widget_matplotlib.clearAll()
-		if self.counter == 4:
-			self.widget_matplotlib.setupScatterCanvas(width=4,height=4,dpi=72,toolbar=True)
-			self.widget_matplotlib.scatterPlot(x='random',y='random',frame=True,framesize=6,xlabel="lol",ylabel="rofl")
-
-		# lol1 = str(self.leftImage)
-		# lol2 = str(self.rightImage)
-		# self.leftImage = lol2
-		# self.rightImage = lol1
-		# self.initImageLeft()
-		# self.initImageRight()
-		# self.tableView_left._scene = self.sceneLeft
-		# self.tableView_right._scene = self.sceneRight
-
-		# for i in range(self.tableView_left._model.rowCount()): self.sceneLeft.addCircle(0.0,0.0,0.0)
-		# self.tableView_left.updateItems()
-		# for i in range(self.tableView_right._model.rowCount()): self.sceneRight.addCircle(0.0,0.0,0.0)
-		# self.tableView_right.updateItems()
-
-		itemlistL = csvHandler.csv2list(
-			testpath+'correlation_test_dataset/FIB_coordinates.txt',delimiter="\t",parent=self,sniff=True)
-		itemlistR = csvHandler.csv2list(
-			testpath+'correlation_test_dataset/LM_coordinates4FIB_POI.txt',delimiter="\t",parent=self,sniff=True)
-		for item in itemlistL: self.sceneLeft.addCircle(
-				float(item[0]),
-				float(item[1]),
-				float(item[2]) if len(item) > 2 else 0)
-		self.sceneLeft.itemsToModel()
-		for item in itemlistR: self.sceneRight.addCircle(
-				float(item[0]),
-				float(item[1]),
-				float(item[2]) if len(item) > 2 else 0)
-		self.sceneRight.itemsToModel()
-
-		self.counter += 1
-
 	def changedFocusSlot(self, former, current):
 		if debug is True: print clrmsg.DEBUG + "focus changed from/to:", former.objectName() if former else former, \
 				current.objectName() if current else current
@@ -257,7 +230,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			self.formerFocusedWidgetName = former.objectName()
 			self.formerFocusedWidget = former
 
-		## Lable showing selected image
+		## Label showing selected image
 		if self.currentFocusedWidgetName in ['spinBox_rot','spinBox_markerSize','horizontalSlider_brightness','horizontalSlider_contrast']:
 			pass
 		else:
@@ -283,7 +256,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 				self.label_imagetype.setText('(2D)' if '{0:b}'.format(self.sceneRight.imagetype)[-1] == '1' else '(3D)')
 				self.ctrlEnDisAble(True)
 
-		# ## Lable showing selected table
+		# ## Label showing selected table
 		if self.currentFocusedWidgetName != 'tableView_left' and self.currentFocusedWidgetName != 'tableView_right':
 			self.label_selectedTable.setStyleSheet(self.stylesheet_orange)
 			self.label_selectedTable.setText('none')
@@ -306,14 +279,14 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			self.spinBox_markerSize.setValue(self.sceneLeft.markerSize)
 			self.horizontalSlider_brightness.setValue(self.brightness_left)
 			self.horizontalSlider_contrast.setValue(self.contrast_left)
-			self.label_imgpxsize.setText(str(self.sceneLeft.pixelSize))  # + ' um') # breaks markersize adjustments check
+			self.label_imgpxsize.setText(str(self.sceneLeft.pixelSize))  # + ' um') # breaks marker size adjustments check
 			self.label_imgpxsizeUnit.setText('um') if self.sceneLeft.pixelSize else self.label_imgpxsizeUnit.setText('')
 		elif self.currentFocusedWidgetName == 'graphicsView_right':
 			self.spinBox_rot.setValue(self.sceneRight.rotangle)
 			self.spinBox_markerSize.setValue(self.sceneRight.markerSize)
 			self.horizontalSlider_brightness.setValue(self.brightness_right)
 			self.horizontalSlider_contrast.setValue(self.contrast_right)
-			self.label_imgpxsize.setText(str(self.sceneRight.pixelSize))  # + ' um') # breaks markersize adjustments check
+			self.label_imgpxsize.setText(str(self.sceneRight.pixelSize))  # + ' um') # breaks marker size adjustments check
 			self.label_imgpxsizeUnit.setText('um') if self.sceneRight.pixelSize else self.label_imgpxsizeUnit.setText('')
 		# Unblock emitting signals.
 		self.horizontalSlider_brightness.blockSignals(False)
@@ -321,7 +294,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		# update marker size in nm
 		self.changeMarkerSize()
 
-	## Funtion to dis-/enabling the buttons controlling rotation and contrast/brightness
+	## Function to dis-/enabling the buttons controlling rotation and contrast/brightness
 	def ctrlEnDisAble(self,status):
 		self.spinBox_rot.setEnabled(status)
 		self.spinBox_markerSize.setEnabled(status)
@@ -352,7 +325,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			if '{0:b}'.format(self.sceneLeft.imagetype)[-1] == '0':
 				color_overflow = (105,220,0,alpha)  # green if entries are used as POIs
 			else:
-				color_overflow = (220,25,105,alpha)  # red(ish) color to indicate unballanced amount of markers for correlation
+				color_overflow = (220,25,105,alpha)  # red(ish) color to indicate unbalanced amount of markers for correlation
 			for row in range(rowsRight,rowsLeft):
 				self.modelLleft.item(row, 0).setBackground(QtGui.QColor(*color_overflow))
 				self.modelLleft.item(row, 1).setBackground(QtGui.QColor(*color_overflow))
@@ -361,7 +334,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			if '{0:b}'.format(self.sceneRight.imagetype)[-1] == '0':
 				color_overflow = (105,220,0,alpha)  # green if entries are used as POIs
 			else:
-				color_overflow = (220,25,105,alpha)  # red(ish) color to indicate unballanced amount of markers for correlation
+				color_overflow = (220,25,105,alpha)  # red(ish) color to indicate unbalanced amount of markers for correlation
 			for row in range(rowsLeft,rowsRight):
 				self.modelRight.item(row, 0).setBackground(QtGui.QColor(*color_overflow))
 				self.modelRight.item(row, 1).setBackground(QtGui.QColor(*color_overflow))
@@ -378,8 +351,9 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			self.sceneLeft.pen = QtGui.QPen(QtCore.Qt.red)
 			## Splash screen message
 			try:
-				splash.splash.showMessage("Loading images... "+self.leftImage,color=QtCore.Qt.white)
-			except:
+				splashscreen.splash.showMessage("Loading images... "+self.leftImage,color=QtCore.Qt.white)
+			except Exception as e:
+				print clrmsg.WARNING, e
 				pass
 			QtGui.QApplication.processEvents()
 			## Get pixel size
@@ -400,7 +374,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			# self.pixmap_left = QtGui.QPixmap(self.leftImage)
 			self.pixmap_left = self.cv2Qimage(self.img_left_displayed)
 			self.pixmap_item_left = QtGui.QGraphicsPixmapItem(self.pixmap_left, None, self.sceneLeft)
-			## connect scenes to gui elements
+			## connect scenes to GUI elements
 			self.graphicsView_left.setScene(self.sceneLeft)
 			## reset scaling (needed for reinitialization)
 			self.graphicsView_left.resetMatrix()
@@ -415,8 +389,9 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			self.sceneRight.pen = QtGui.QPen(QtCore.Qt.yellow)
 			## Splash screen message
 			try:
-				splash.splash.showMessage("Loading images... "+self.rightImage,color=QtCore.Qt.white)
-			except:
+				splashscreen.splash.showMessage("Loading images... "+self.rightImage,color=QtCore.Qt.white)
+			except Exception as e:
+				print clrmsg.WARNING, e
 				pass
 			QtGui.QApplication.processEvents()
 			## Get pixel size
@@ -437,7 +412,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			# self.pixmap_right = QtGui.QPixmap(self.rightImage)
 			self.pixmap_right = self.cv2Qimage(self.img_right_displayed)
 			self.pixmap_item_right = QtGui.QGraphicsPixmapItem(self.pixmap_right, None, self.sceneRight)
-			## connect scenes to gui elements
+			## connect scenes to GUI elements
 			self.graphicsView_right.setScene(self.sceneRight)
 			## reset scaling (needed for reinitialization)
 			self.graphicsView_right.resetMatrix()
@@ -446,7 +421,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			self.graphicsView_right.scale(scaling_factor,scaling_factor)
 
 	def openImageLeft(self):
-		## *.png *.jpg *.bmp not yet supportes
+		## *.png *.jpg *.bmp not yet supported
 		path = str(QtGui.QFileDialog.getOpenFileName(
 			None,"Select image file for correlation", self.workingdir,"Image Files (*.tif *.tiff);; All (*.*)"))
 		if path != '':
@@ -458,7 +433,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			self.tableView_left.updateItems()
 
 	def openImageRight(self):
-		## *.png *.jpg *.bmp not yet supportes
+		## *.png *.jpg *.bmp not yet supported
 		path = str(QtGui.QFileDialog.getOpenFileName(
 			None,"Select image file for correlation", self.workingdir,"Image Files (*.tif *.tiff);; All (*.*)"))
 		if path != '':
@@ -580,14 +555,14 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 												#################### START ####################
 	## Read image
 	def imread(self,path,normalize=True):
-		'''
-		return code in 5bit just for fun:
+		"""
+		return 5 bit encoded image property:
 			1 = 2D
 			2 = 3D (always normalized, +16)
 			4 = gray scale
 			8 = multicolor/multichannel
 			16= normalized
-		'''
+		"""
 		if debug is True: print clrmsg.DEBUG + "===== imread"
 		img = tf.imread(path)
 		if debug is True: print clrmsg.DEBUG + "Image shape/dtype:", img.shape, img.dtype
@@ -598,10 +573,10 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			if debug is True: print clrmsg.DEBUG + "Image dtype converted to:", img.shape, img.dtype
 		if img.ndim == 4:
 			if debug is True: print clrmsg.DEBUG + "Calculating multichannel MIP"
-			## return mip, code 2+8+16 and image stack
+			## return MIP, code 2+8+16 and image stack
 			return np.amax(img, axis=1), 26, img
 		## this can only handle rgb. For more channels set "3" to whatever max number of channels should be handled
-		elif img.ndim == 3 and any([True for dim in img.shape if dim <= 3]) or img.ndim == 2:
+		elif img.ndim == 3 and any([True for dim in img.shape if dim <= 4]) or img.ndim == 2:
 			if debug is True: print clrmsg.DEBUG + "Loading regular 2D image... multicolor/normalize:", \
 				[True for x in [img.ndim] if img.ndim == 3],'/',[normalize]
 			if normalize is True:
@@ -613,7 +588,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 				return img, 9 if img.ndim == 3 else 5, None
 		elif img.ndim == 3:
 			if debug is True: print clrmsg.DEBUG + "Calculating MIP"
-			## return mip and code 2+4+16
+			## return MIP and code 2+4+1E6
 			return np.amax(img, axis=0), 22, img
 
 	def pxSize(self,img_path):
@@ -658,16 +633,18 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 	## Convert opencv image (numpy array in BGR) to RGB QImage and return pixmap. Only takes 2D images
 	def cv2Qimage(self,img):
 		if debug is True: print clrmsg.DEBUG + "===== cv2Qimage"
-		## Format 2D greyscale to RGB for QImage
+		## Format 2D gray-scale to RGB for QImage
 		if img.ndim == 2:
 			img = cv2.cvtColor(img,cv2.COLOR_GRAY2RGB)
-		if img.shape[0] <= 3:
-			if debug is True: print clrmsg.DEBUG + "Swaping image axes from c,y,x to y,x,c."
+		if img.shape[0] <= 4:
+			if debug is True: print clrmsg.DEBUG + "Swapping image axes from c,y,x to y,x,c."
 			img = img.swapaxes(0,2).swapaxes(0,1)
 		if debug is True: print clrmsg.DEBUG + "Image shape:", img.shape
-		image = QtGui.QImage(img.tobytes(), img.shape[1], img.shape[0], QtGui.QImage.Format_RGB888)  # .rgbSwapped()
+		if img.shape[-1] == 4:
+			image = QtGui.QImage(img.tobytes(), img.shape[1], img.shape[0], QtGui.QImage.Format_ARGB32).rgbSwapped()
+		else:
+			image = QtGui.QImage(img.tobytes(), img.shape[1], img.shape[0], QtGui.QImage.Format_RGB888)  # .rgbSwapped()
 		return QtGui.QPixmap.fromImage(image)
-		# return QtGui.QPixmap('/Users/jan/Desktop/160202/LM-SEM.tif')
 
 	## Adjust Brightness and Contrast by sliders
 	def adjustBrightCont(self):
@@ -744,40 +721,16 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		if img.ndim == 2: img *= typesize/img.max()
 		## 3D or multichannel image
 		elif img.ndim == 3:
-			## tiffimage reads z,y,x for stacks but y,x,c if it is multichannel image (or z,c,y,x if it is a multicolor image stack)
-			if img.shape[-1] > 3:
+			## tifffile reads z,y,x for stacks but y,x,c if it is multichannel image (or z,c,y,x if it is a multicolor image stack)
+			if img.shape[-1] > 4:
+				if debug is True: print clrmsg.DEBUG + "image stack"
 				for i in range(int(img.shape[0])):
 					img[i,:,:] *= typesize/img[i,:,:].max()
 			else:
+				if debug is True: print clrmsg.DEBUG + "multichannel image"
 				for i in range(int(img.shape[2])):
 					img[:,:,i] *= typesize/img[:,:,i].max()
 		return img
-
-	## function is now done via numpay axis max
-	# ## Create Maximum Intensity Projection (MIP)
-	# def mip(self,img):
-	# 	if debug is True: print clrmsg.DEBUG + "===== mip"
-	# 	if len(img.shape) == 4:
-	# 		img_MIP = np.zeros((img.shape[0], img.shape[2],img.shape[3]), dtype=img.dtype)
-	# 		for i in range(0,img.shape[0]):
-	# 			for ii in range(0,img.shape[2]):
-	# 				for iii in range(0,img.shape[3]):
-	# 					img_MIP[i,ii,iii] = img[i,:,ii,iii].max()
-	# 		if debug is True: print clrmsg.DEBUG + "Image shape original/MIP:", img.shape, img_MIP.shape
-	# 		img_MIP = self.norm_img(img_MIP)
-	# 		if debug is True: print clrmsg.DEBUG + "Image shape normalized MIP:", img_MIP.shape
-	# 		return img_MIP
-	# 	elif len(img.shape) == 3:
-	# 		img_MIP = np.zeros((img.shape[1],img.shape[2]), dtype=img.dtype)
-	# 		for i in range(0,img.shape[1]):
-	# 			for ii in range(0,img.shape[2]):
-	# 				img_MIP[i,ii] = img[:,i,ii].max()
-	# 		if debug is True: print clrmsg.DEBUG + "Image shape original/MIP:", img.shape, img_MIP.shape
-	# 		img_MIP = self.norm_img(img_MIP)
-	# 		if debug is True: print clrmsg.DEBUG + "Image shape normalized MIP:", img_MIP.shape
-	# 		return img_MIP
-	# 	else:
-	# 		print clrmsg.ERROR + "I'm sorry, I don't know this image shape: {0}".format(img.shape)
 
 												##################### END #####################
 												######    Image processing functions    #######
@@ -798,11 +751,11 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			model = self.modelLleft
 		elif self.label_selectedTable.text() == 'right':
 			model = self.modelRight
-		## Export Dioalog. Needs check for extension or add default extension
+		## Export Dialog. Needs check for extension or add default extension
 		csv_file_out, filterdialog = QtGui.QFileDialog.getSaveFileNameAndFilter(
 			self, 'Export file as',
 			os.path.dirname(self.leftImage) if self.label_selectedTable.text() == 'left' else os.path.dirname(self.rightImage),
-			"Tabstop sepperated (*.csv *.txt);;Comma sepperated (*.csv *.txt)")
+			"Tabstop separated (*.csv *.txt);;Comma separated (*.csv *.txt)")
 		if str(filterdialog).startswith('Comma') is True:
 			csvHandler.model2csv(model,csv_file_out,delimiter=",")
 		elif str(filterdialog).startswith('Tabstop') is True:
@@ -812,7 +765,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		csv_file_in, filterdialog = QtGui.QFileDialog.getOpenFileNameAndFilter(
 			self, 'Import file as',
 			os.path.dirname(self.leftImage) if self.label_selectedTable.text() == 'left' else os.path.dirname(self.rightImage),
-			"Tabstop sepperated (*.csv *.txt);;Comma sepperated (*.csv *.txt)")
+			"Tabstop separated (*.csv *.txt);;Comma separated (*.csv *.txt)")
 		if str(filterdialog).startswith('Comma') is True:
 			itemlist = csvHandler.csv2list(csv_file_in,delimiter=",",parent=self,sniff=True)
 		elif str(filterdialog).startswith('Tabstop') is True:
@@ -856,7 +809,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			## Temporary img to draw results and save it
 			img = np.copy(self.img_left)
 			if img.ndim == 2:
-				## Nees RGB for colored markers
+				## Need RGB for colored markers
 				img = cv2.cvtColor(img,cv2.COLOR_GRAY2BGR)
 		elif '{0:b}'.format(self.sceneLeft.imagetype)[-1] == '0' and '{0:b}'.format(self.sceneRight.imagetype)[-1] == '1':
 			model2D = self.modelRight
@@ -864,7 +817,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			## Temporary img to draw results and save it
 			img = np.copy(self.img_right)
 			if img.ndim == 2:
-				## Nees RGB for colored markers
+				## Need RGB for colored markers
 				img = cv2.cvtColor(img,cv2.COLOR_GRAY2BGR)
 		else:
 			if '{0:b}'.format(self.sceneLeft.imagetype)[-1] == '0' and '{0:b}'.format(self.sceneRight.imagetype)[-1] == '0':
@@ -943,6 +896,17 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 				model2D,[0,nrRowsModel2D])[i,:2],self.correlation_results[1][:2,i],arrowangle=45,color=QtCore.Qt.red)
 
 	def displayResults(self,frame=False,framesize=None):
+		"""Populates the result tab with the appropriate information from the correlation result
+
+		This also includes a scatter plot of the clicked markers' deviation from their calculated coordinates.
+
+		Optionally a "frame" (boolean) with the pixel size of "framesize" (int or float) can be drawn to validate
+		graphically how large the deviation is. E.g. if the correlation deviation should ideally be lower than 300 um
+		at a pixel size of 161 nm, a frame with the size of 1.863 could be drawn to validate if the deviation is inside
+		this margin.
+
+		The frame is drawn in x and y from -framesize/2 to framesize/2.
+		"""
 		if hasattr(self, "correlation_results"):
 			## get data
 			transf = self.correlation_results[0]
@@ -1007,6 +971,11 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			pass
 
 	def showSelectedResidual(self,doubleclick=False):
+		"""Show position of selected residual (results tab)
+
+		Simply selected will color the corresponding point in the image green.
+		A double click will center and zoom on the selected point.
+		"""
 		indices = self.tableView_results.selectedIndexes()
 		if '{0:b}'.format(self.sceneLeft.imagetype)[-1] == '1':
 			tableView1 = self.tableView_left
@@ -1028,8 +997,8 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			tableView1.clearSelection()
 			tableView2.clearSelection()
 		if doubleclick is True:
-			print 'double click'
-			print graphicsView.transform().m11(), graphicsView.transform().m22()
+			if debug is True: print clrmsg.DEBUG + 'double click'
+			if debug is True: print clrmsg.DEBUG, graphicsView.transform().m11(), graphicsView.transform().m22()
 			graphicsView.setTransform(QtGui.QTransform(
 				20,  # m11
 				graphicsView.transform().m12(),
@@ -1041,13 +1010,14 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 				graphicsView.transform().m32(),
 				graphicsView.transform().m33(),
 				))
-			print graphicsView.transform().m11(), graphicsView.transform().m22()
+			if debug is True: print clrmsg.DEBUG, graphicsView.transform().m11(), graphicsView.transform().m22()
 			## Center on coordinate
 			graphicsView.centerOn(
 				float(tableView1._model.data(tableView1._model.index(markerNr, 0)).toString()),
 				float(tableView1._model.data(tableView1._model.index(markerNr, 1)).toString()))
 
 	def cmTableViewResults(self,pos):
+		"""Context menu for residuals table (results tab)"""
 		indices = self.tableView_results.selectedIndexes()
 		if indices:
 			cmApplyShift = QtGui.QAction('Apply shift to marker', self)
@@ -1057,6 +1027,11 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			self.contextMenu.popup(QtGui.QCursor.pos())
 
 	def applyResidualShift(self):
+		"""Applies the selected residual from the correlation to the corresponding clicked 2D values
+
+		The correlation returns the delta between the clicked fiducial 2D and the calculated 2D coordinates derived
+		from the applied correlation to the corresponding fiducial 3D coordinate.
+		"""
 		indices = self.tableView_results.selectedIndexes()
 		if '{0:b}'.format(self.sceneLeft.imagetype)[-1] == '1':
 			tableView = self.tableView_left
@@ -1108,9 +1083,13 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 
 class SplashScreen():
 	def __init__(self):
+		"""Splash screen
+
+		The splash screen, besides being fancy, shows the path to image being loaded at the moment.
+		"""
 		QtGui.QApplication.processEvents()
 		## Load splash screen image
-		splash_pix = QtGui.QPixmap(os.path.join(execdir,'icons/SplashScreen.png'))
+		splash_pix = QtGui.QPixmap(os.path.join(execdir,'icons','SplashScreen.png'))
 		## Add version
 		painter = QtGui.QPainter()
 		painter.begin(splash_pix)
@@ -1134,12 +1113,53 @@ class SplashScreen():
 
 class Main():
 	def __init__(self,leftImage=None,rightImage=None,nosplash=False,workingdir=None):
+		"""Class for running this application either as standalone or as imported QT Widget
+
+		args:
+				self:		self is another QT (main) widget passed as parent when this file's main widget is called
+							from it.
+
+		kwargs:
+				leftImage:	string, required
+							Path to first image.
+							The image has to be a tiff file. It can be a gray-scale 2D image (y,x)
+							or 3D image stack (z,y,x). Color channels are supported as well like (y,x,c) or (z,c,y,x)
+							respectively. Color channels are detected by checking the third (images with 3 dimensions)
+							or the second (images with 4 dimensions) dimension for values equal or less then 3. That
+							means, if the image contains more than 3 channels, the color channel detection can result
+							in funny and wrong image reads.
+
+				rightImage:	string, required
+							Path to first image.
+							See "leftImage".
+
+				nosplash:	bool, optional
+							If True, a splash screen showing which image is being loaded at the moment is rendered at
+							startup.
+
+				workingdir:	string, optional
+							If None, the execution directory is used as the working directory.
+
+
+		For standalone mode, just run python -u TDCT_correlation.py
+		For loading this widget from another main QT application:
+
+		import TDCT_correlation
+		# inside of the qt (main) widget:
+			...
+			self.correlationModul = TDCT_correlation.Main(
+														leftImage="path/to/first/image.tif",
+														rightImage="path/to/second/image.tif",
+														nosplash=False,
+														workingdir="path/to/workingdir")
+		"""
+		self.exitstatus = 1
 		if leftImage is None or rightImage is None:
 			sys.exit("Please pass 'leftImage=PATH' and 'rightImage=PATH' to this function")
 
 		if nosplash is False:
-			global splash
-			ss = SplashScreen()
+			global splashscreen
+			splashscreen = SplashScreen()
 
 		if workingdir is None:
 			workingdir = execdir
@@ -1149,70 +1169,37 @@ class Main():
 		self.window.raise_()
 
 		if nosplash is False:
-			ss.splash.finish(self.window)
+			splashscreen.splash.finish(self.window)
 
-	def close(self):
-		quit_msg = "Are you sure you want to exit the\n3DCT Correlation?\n\nUnsaved data will be lost!"
-		reply = QtGui.QMessageBox.question(self.window, 'Message', quit_msg, QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
-		if reply == QtGui.QMessageBox.Yes:
-			self.window.close()
-			try:
-				del self.window
-			except Exception as e:
-				if debug is True: print clrmsg.DEBUG + str(e)
-			return 0
-		else:
-			return 1
-
-
-class Test():
-	def __init__(self):
-		## Testing paths
-		global testpath
-		testpath = '/Users/jan/Desktop/'
-		# testpath = 'F:/jan_temp/'
-		leftImage = testpath+'correlation_test_dataset/IB_030.tif'
-		rightImage = testpath+'correlation_test_dataset/LM_green_reslized.tif'
-
-		global splash
-		splash = SplashScreen()
-
-		self.window = MainWidget(parent=self,leftImage=leftImage, rightImage=rightImage)
-		self.window.show()
-		self.window.raise_()
-
-		splash.splash.finish(self.window)
-
-	def close(self):
-		quit_msg = "Are you sure you want to exit the\n3DCT Correlation?\n\nUnsaved data will be lost!"
-		reply = QtGui.QMessageBox.question(self.window, 'Message', quit_msg, QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
-		if reply == QtGui.QMessageBox.Yes:
-			self.window.close()
+	def cleanUp(self):
+		"""Clean up instance mostly for external call case, to check if the window still exists."""
+		try:
 			del self.window
-			return 0
-		else:
-			return 1
+		except Exception as e:
+			if debug is True: print clrmsg.DEBUG + str(e)
 
 
 if __name__ == "__main__":
-	print clrmsg.DEBUG + 'Debug Test'
-	print clrmsg.OK + 'OK Test'
-	print clrmsg.ERROR + 'Error Test'
-	print clrmsg.INFO + 'Info Test'
-	print clrmsg.WARNING + 'Warning Test'
-	print '='*20, 'Initializing', '='*20
+	if debug is True:
+		print clrmsg.DEBUG + 'Debug Test'
+		print clrmsg.OK + 'OK Test'
+		print clrmsg.ERROR + 'Error Test'
+		print clrmsg.INFO + 'Info Test'
+		print clrmsg.INFO + 'Info Test'
+		print clrmsg.WARNING + 'Warning Test'
+		print '='*20, 'Initializing', '='*20
 
 	app = QtGui.QApplication(sys.argv)
-	test = Test()
-	# ## File dialogs for standalone mode
-	# ## *.png *.jpg *.bmp not yet supportes
-	# left = str(QtGui.QFileDialog.getOpenFileName(
-	# 	None,"Select first image file for correlation", execdir,"Image Files (*.tif *.tiff);; All (*.*)"))
-	# if left == '': sys.exit()
-	# right = str(QtGui.QFileDialog.getOpenFileName(
-	# 	None,"Select second image file for correlation", execdir,"Image Files (*.tif *.tiff);; All (*.*)"))
-	# if right == '': sys.exit()
 
-	# Main(leftImage=left,rightImage=right)
+	## File dialogs for standalone mode
+	## *.png *.jpg *.bmp not yet supported
+	left = str(QtGui.QFileDialog.getOpenFileName(
+		None,"Select first image file for correlation", execdir,"Image Files (*.tif *.tiff);; All (*.*)"))
+	if left == '': sys.exit()
+	right = str(QtGui.QFileDialog.getOpenFileName(
+		None,"Select second image file for correlation", execdir,"Image Files (*.tif *.tiff);; All (*.*)"))
+	if right == '': sys.exit()
+
+	main = Main(leftImage=left,rightImage=right)
 
 	sys.exit(app.exec_())

@@ -219,3 +219,5 @@ ModelManifest.xml
 *.pyc
 *.pyo
 .idea
+3DCT_Icon
+*.spec

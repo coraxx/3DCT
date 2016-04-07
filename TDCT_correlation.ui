@@ -116,10 +116,22 @@
         </item>
         <item>
          <widget class="QTabWidget" name="tabWidget_ctrl_result">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>0</height>
+           </size>
+          </property>
           <property name="currentIndex">
            <number>0</number>
           </property>
           <widget class="QWidget" name="ctrl">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>466</height>
+            </size>
+           </property>
            <attribute name="title">
             <string>Control</string>
            </attribute>
@@ -457,21 +469,14 @@
              </layout>
             </item>
             <item>
-             <widget class="QPushButton" name="pushButton_test">
-              <property name="text">
-               <string>Test</string>
-              </property>
-             </widget>
-            </item>
-            <item>
              <spacer name="verticalSpacer">
               <property name="orientation">
                <enum>Qt::Vertical</enum>
               </property>
               <property name="sizeHint" stdset="0">
                <size>
-                <width>5</width>
-                <height>5</height>
+                <width>20</width>
+                <height>40</height>
                </size>
               </property>
              </spacer>
@@ -1137,7 +1142,7 @@ rotation center at:</string>
           <property name="font">
            <font>
             <family>Segoe UI</family>
-            <pointsize>11</pointsize>
+            <pointsize>8</pointsize>
            </font>
           </property>
           <property name="text">

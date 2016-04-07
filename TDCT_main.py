@@ -60,7 +60,7 @@ sys.path.append(execdir)
 __version__ = 'v2.0.0'
 
 debug = True
-if debug is True: print clrmsg.DEBUG, "Execdir =", execdir
+if debug is True: print clrmsg.DEBUG + "Execdir =", execdir
 ########## GUI layout file #######################################################
 ##################################################################################
 qtCreatorFile_main = os.path.join(execdir, "TDCT_main.ui")
@@ -82,9 +82,6 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 		self.actionQuit.setShortcuts(['Ctrl+Q','Esc'])
 		self.actionQuit.setStatusTip('Exit application')
 		self.helpdoc = helpdoc.help(self)
-
-		QtGui.QShortcut(QtGui.QKeySequence(QtCore.Qt.CTRL + QtCore.Qt.Key_0), self, self.showDebugMenu)
-		self.actionLoad_Test_Dataset.triggered.connect(self.loadTestDataset)
 
 		self.actionAbout.triggered.connect(self.about)
 
@@ -120,7 +117,6 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 		self.toolButton_FileListReload.clicked.connect(self.reloadFileList)
 		self.toolButton_ImageStackGetPixelSize.clicked.connect(self.getPixelSize)
 		self.toolButton_ImageSequenceGetPixelSize.clicked.connect(self.getPixelSize)
-		self.testButton.clicked.connect(self.tester)
 
 		## QLineEdits
 		self.lineEdit_WorkingDirPath.textChanged.connect(lambda: self.isValidPath(self.lineEdit_WorkingDirPath))
@@ -144,9 +140,6 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 		self.workingdir = os.path.expanduser("~")
 		self.lineEdit_WorkingDirPath.setText(self.workingdir)
 		self.populate_filelist(self.workingdir)
-
-	def printLOL(self):
-		print 'LOL'
 
 	def isValidFile(self, lineEdit):
 		if lineEdit.text() == "":
@@ -205,34 +198,9 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 	def focusInEvent(self, event):
 		if debug is True: print clrmsg.DEBUG, 'Got focus'
 
-		# List Widget Test
-		# self.listWidget_coordEx_LMfiles.itemSelectionChanged.connect(self.dostuff)
-
-	# def dostuff(self):
-	# 	print self.listWidget_coordEx_LMfiles.itempath+"/"+self.listWidget_coordEx_LMfiles.selectedItems()[0].text()
-	# 	print os.path.join(self.listWidget_coordEx_LMfiles.itempath, str(self.listWidget_coordEx_LMfiles.selectedItems()[0].text()))
-
-	## only for quick load of test datasets - REMOVE FROM FINAL VERSION
-	def showDebugMenu(self):
-		self.menuDebug.menuAction().setVisible(True)
-		self.loadTestDataset()
-
-	## only for quick load of test datasets - REMOVE FROM FINAL VERSION
-	def loadTestDataset(self):
-		print 'nope'
-
-	## only for quick load of test datasets - REMOVE FROM FINAL VERSION
-	def tester(self):
-		testpath = '/Users/jan/Desktop/'
-		testpath = 'F:/jan_temp/'
-		leftImage = testpath+'correlation_test_dataset/IB_030.tif'
-		rightImage = testpath+'correlation_test_dataset/LM_green_reslized.tif'
-		import TDCT_correlation
-		self.correlationModul = TDCT_correlation.Main(leftImage=leftImage,rightImage=rightImage,nosplash=False,workingdir=self.workingdir)
-
 	## About
 	def about(self):
-		gif = os.path.join(execdir, "icons/SplashScreen.gif")
+		gif = os.path.join(execdir,'icons','SplashScreen.gif')
 		if os.path.isfile(gif):
 			movie = QtGui.QMovie(gif)
 			print movie
@@ -308,11 +276,15 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 			# if loaded, close pointselection tool widget and sub windows
 			if hasattr(self, "correlationModul"):
 				if hasattr(self.correlationModul, "window"):
-					exitstatus = self.correlationModul.close()
-					if exitstatus == 1:
+					self.correlationModul.window.close()
+					if self.correlationModul.exitstatus == 1:
 						event.ignore()
 					else:
 						event.accept()
+				else:
+					event.accept()
+			else:
+				event.accept()
 		else:
 			event.ignore()
 
@@ -444,7 +416,8 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 		self.progressBar_ImageStack.setMaximum(0)
 		QtGui.QApplication.processEvents()
 		img_path = str(self.lineEdit_ImageStackPath.text())
-		customSaveDir = self.checkDirectoryPrivileges(os.path.split(img_path)[0],question="Do you want me to save the data to another directory?")
+		customSaveDir = self.checkDirectoryPrivileges(
+			os.path.split(img_path)[0],question="Do you want me to save the data to another directory?")
 		if img_path and self.lineEdit_ImageStackPath.fileIsTiff is True and customSaveDir:
 			ss_in = self.doubleSpinBox_ImageStackFocusStepSizeOrig.value()
 			ss_out = self.doubleSpinBox_ImageStackFocusStepSizeReslized.value()
@@ -471,7 +444,8 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 			if self.checkBox_ImageSequenceCube.isChecked():
 				ss_in = self.doubleSpinBox_ImageSequenceFocusStepSizeOrig.value()
 				ss_out = self.doubleSpinBox_ImageSequenceFocusStepSizeReslized.value()
-				if debug is True: print clrmsg.DEBUG, dirPath, ss_in, ss_out, str(self.checkBox_ImageSequenceSaveOrigStack.isChecked()), customSaveDir
+				if debug is True: print clrmsg.DEBUG, dirPath, ss_in, ss_out, str(
+					self.checkBox_ImageSequenceSaveOrigStack.isChecked()), customSaveDir
 				self.progressBar_ImageSequence.setMaximum(100)
 				QtGui.QApplication.processEvents()
 				stackProcessing.main(
@@ -482,7 +456,10 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 				if debug is True: print clrmsg.DEBUG, 'no reslicing'
 				self.progressBar_ImageSequence.setMaximum(100)
 				QtGui.QApplication.processEvents()
-				stackProcessing.main(dirPath, 0, 0, qtprocessbar=self.progressBar_ImageSequence, saveorigstack=True, interpolationmethod='none', customSaveDir=customSaveDir)
+				stackProcessing.main(
+					dirPath, 0, 0,
+					qtprocessbar=self.progressBar_ImageSequence,
+					saveorigstack=True, interpolationmethod='none', customSaveDir=customSaveDir)
 				self.progressBar_ImageSequence.reset()
 				self.progressBar_ImageSequence.setVisible(False)
 		else:
@@ -495,7 +472,8 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 		self.progressBar_Normalize.setMaximum(0)
 		QtGui.QApplication.processEvents()
 		img_path = str(self.lineEdit_NormalizePath.text())
-		customSaveDir = self.checkDirectoryPrivileges(os.path.split(img_path)[0],question="Do you want me to save the data to another directory?")
+		customSaveDir = self.checkDirectoryPrivileges(
+			os.path.split(img_path)[0],question="Do you want me to save the data to another directory?")
 		if img_path and self.lineEdit_NormalizePath.fileIsTiff is True and customSaveDir:
 			if debug is True: print clrmsg.DEBUG, 'In/out:', img_path, customSaveDir
 			self.progressBar_Normalize.setMaximum(100)
@@ -513,12 +491,15 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 		self.progressBar_Mip.setMaximum(0)
 		QtGui.QApplication.processEvents()
 		img_path = str(self.lineEdit_MipPath.text())
-		customSaveDir = self.checkDirectoryPrivileges(os.path.split(img_path)[0],question="Do you want me to save the data to another directory?")
+		customSaveDir = self.checkDirectoryPrivileges(
+			os.path.split(img_path)[0],question="Do you want me to save the data to another directory?")
 		if img_path and self.lineEdit_MipPath.fileIsTiff is True and customSaveDir:
 			if debug is True: print clrmsg.DEBUG, 'In/out/normalize:', img_path, customSaveDir, self.checkBox_MipNormalize.isChecked()
 			self.progressBar_Mip.setMaximum(100)
 			QtGui.QApplication.processEvents()
-			stackProcessing.mip(img_path, qtprocessbar=self.progressBar_Mip, customSaveDir=customSaveDir, normalize=self.checkBox_MipNormalize.isChecked())
+			stackProcessing.mip(
+				img_path, qtprocessbar=self.progressBar_Mip,
+				customSaveDir=customSaveDir, normalize=self.checkBox_MipNormalize.isChecked())
 			self.progressBar_Mip.reset()
 			self.progressBar_Mip.setVisible(False)
 		else:
@@ -583,15 +564,17 @@ class GenericThread(QtCore.QThread):
 		return
 
 
-if debug is True: print clrmsg.DEBUG, 'Debug Test'
-if debug is True: print clrmsg.OK + 'OK Test'
-if debug is True: print clrmsg.ERROR + 'Error Test'
-if debug is True: print clrmsg.INFO + 'Info Test'
-if debug is True: print clrmsg.WARNING + 'Warning Test'
 ########## Executed when running in standalone ###################################
 ##################################################################################
 
 if __name__ == "__main__":
+	if debug is True:
+		print clrmsg.DEBUG + 'Debug Test'
+		print clrmsg.OK + 'OK Test'
+		print clrmsg.ERROR + 'Error Test'
+		print clrmsg.INFO + 'Info Test'
+		print clrmsg.WARNING + 'Warning Test'
+
 	app = QtGui.QApplication(sys.argv)
 	window = APP()
 	window.show()

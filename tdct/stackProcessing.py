@@ -439,7 +439,7 @@ def norm_img(img,copy=False,qtprocessbar=None):
 	## 3D or multichannel image
 	elif img.ndim == 3:
 		## tiffimage reads z,y,x for stacks but y,x,c if it is multichannel image (or z,c,y,x if it is a multicolor image stack)
-		if img.shape[-1] > 3:
+		if img.shape[-1] > 4:
 			if debug is True: print clrmsg.DEBUG, "Image stack"
 			if qtprocessbar:
 				maximum = int(int(img.shape[0])*1.25)
