@@ -34,6 +34,7 @@ kwargs:
 # @Description		: Process image stack files (.tif)
 # @Author			: Jan Arnold
 # @Email			: jan.arnold (at) coraxx.net
+# @License			: GPLv3 (see LICENSE file)
 # @Credits			:
 # @Maintainer		: Jan Arnold
 # @Date				: 2016/01

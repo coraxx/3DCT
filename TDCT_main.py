@@ -3,9 +3,29 @@
 """
 3D Correlation Toolbox - 3DCT
 
+Copyright (C) 2016  Jan Arnold
+
+	This program is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
 This Toolbox is build for 3D correlative microscopy. It helps with 3D to 2D correlation of three
 dimensional confocal image stacks to two dimensional SEM/FIB dual beam microscope images.
 But it is not limited to that.
+
+It also includes preprocessing tools to convert stack sequences from FEI's CorrSight to single
+image stacks, the generation of maximum intensity projections (MIP) and normalization of single
+images and image stacks (gray scale and multichannel images up to 3 colors or RGBA).
 
 The Toolbox comes with a PyQt4 GUI. Further dependencies as of now are:
 
@@ -24,6 +44,7 @@ A test dataset can be downloaded from the "testdata" folder:
 # @Description		: 3D Correlation Toolbox - 3DCT
 # @Author			: Jan Arnold
 # @Email			: jan.arnold (at) coraxx.net
+# @License			: GPLv3 (see LICENSE file)
 # @Credits			: Vladan Lucic for the 3D to 2D correlation code
 # 					: and the stackoverflow community for all the bits and pieces
 # @Maintainer		: Jan Arnold
@@ -57,6 +78,10 @@ else:
 	execdir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(execdir)
 
+if sys.platform == 'win32':
+	print clrmsg.INFO + 'PATH before:', os.environ.get('PATH','')
+	os.environ['PATH'] = execdir + '\;' + os.environ.get('PATH','')
+	print clrmsg.INFO + 'PATH after: ', os.environ.get('PATH','')
 __version__ = 'v2.0.0'
 
 debug = True
@@ -97,8 +122,10 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 		self.toolButton_ImageSequenceSelect.clicked.connect(lambda: self.selectPath(self.lineEdit_ImageSequencePath))
 		self.toolButton_NormalizeSelect.clicked.connect(lambda: self.selectFile(self.lineEdit_NormalizePath))
 		self.toolButton_MipSelect.clicked.connect(lambda: self.selectFile(self.lineEdit_MipPath))
-		self.toolButton_selectImage1.clicked.connect(self.selectImage1)
-		self.toolButton_selectImage2.clicked.connect(self.selectImage2)
+		self.toolButton_selectAsImage1.clicked.connect(self.selectImage1)
+		self.toolButton_selectAsImage2.clicked.connect(self.selectImage2)
+		self.toolButton_selectImage1.clicked.connect(lambda: self.selectFile(self.lineEdit_selectImage1))
+		self.toolButton_selectImage2.clicked.connect(lambda: self.selectFile(self.lineEdit_selectImage2))
 		## Command Buttons
 		self.commandLinkButton_correlate.clicked.connect(self.runCorrelationModule)
 		self.commandLinkButton_Reslice.clicked.connect(self.imageStack)
@@ -215,6 +242,17 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 			QtGui.QMessageBox.about(
 									self, "About 3DCT",
 									"3D Correlation Toolbox {0}\n\n".format(__version__) +
+									"Copyright (C) 2016  Jan Arnold\n\n"
+									"This program is free software: you can redistribute it and/or modify " +
+									"it under the terms of the GNU General Public License as published by " +
+									"the Free Software Foundation, either version 3 of the License, or " +
+									"(at your option) any later version.\n\n" +
+									"This program is distributed in the hope that it will be useful, " +
+									"but WITHOUT ANY WARRANTY; without even the implied warranty of " +
+									"MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the " +
+									"GNU General Public License for more details.\n\n" +
+									"You should have received a copy of the GNU General Public License " +
+									"along with this program.  If not, see <http://www.gnu.org/licenses/>.\n\n" +
 									"Max-Planck-Institute of Biochemistry\n\n" +
 									"Developed by:	Jan Arnold\nCorrelation algorithm:	Vladan Lucic"
 									)
@@ -520,6 +558,18 @@ class MovieSplashScreen(QtGui.QSplashScreen):
 			"Max-Planck-Institute of Biochemistry\n\n"
 			"Developed by: Jan Arnold\n"
 			"Correlation algorithm: Vladan Lucic")
+		self.versionLicText = (
+			"Copyright (C) 2016  Jan Arnold\n\n"
+			"This program is free software: you can redistribute it and/or modify it\n"
+			"under the terms of the GNU General Public License as published by \n"
+			"the Free Software Foundation, either version 3 of the License, or \n"
+			"(at your option) any later version.\n\n"
+			"This program is distributed in the hope that it will be useful, \n"
+			"but WITHOUT ANY WARRANTY; without even the implied warranty of \n"
+			"MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. \n"
+			"See the GNU General Public License for more details.\n\n"
+			"You should have received a copy of the GNU General Public License \n"
+			"along with this program.  If not, see <http://www.gnu.org/licenses/>.\n\n"+str(__version__))
 
 	def keyPressEvent(self, event):
 		if event.key() == QtCore.Qt.Key_Escape:
@@ -539,7 +589,7 @@ class MovieSplashScreen(QtGui.QSplashScreen):
 		painter.setPen(QtCore.Qt.white)
 		painter.drawText(
 			0,0,
-			pixmap.size().width()-3,pixmap.size().height()-1,QtCore.Qt.AlignBottom | QtCore.Qt.AlignRight, __version__)
+			pixmap.size().width()-3,pixmap.size().height()-1,QtCore.Qt.AlignBottom | QtCore.Qt.AlignRight, self.versionLicText)
 		painter.drawText(
 			5,0,
 			pixmap.size().width(),pixmap.size().height()-5,QtCore.Qt.AlignBottom | QtCore.Qt.AlignLeft, self.aboutText)

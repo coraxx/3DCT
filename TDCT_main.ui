@@ -1421,14 +1421,14 @@
           <number>6</number>
          </property>
          <item>
-          <widget class="QToolButton" name="toolButton_selectImage1">
+          <widget class="QToolButton" name="toolButton_selectAsImage1">
            <property name="text">
             <string>select for correlation -&gt; Image file 1</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QToolButton" name="toolButton_selectImage2">
+          <widget class="QToolButton" name="toolButton_selectAsImage2">
            <property name="text">
             <string>select for correlation -&gt; Image file 2</string>
            </property>
@@ -1533,6 +1533,13 @@
           </widget>
          </item>
          <item>
+          <widget class="QToolButton" name="toolButton_selectImage1">
+           <property name="text">
+            <string>Select ...</string>
+           </property>
+          </widget>
+         </item>
+         <item>
           <widget class="QLineEditFilePath" name="lineEdit_selectImage1">
            <property name="minimumSize">
             <size>
@@ -1562,6 +1569,13 @@
           <widget class="QLabel" name="label_6">
            <property name="text">
             <string>Image file 2:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QToolButton" name="toolButton_selectImage2">
+           <property name="text">
+            <string>Select ...</string>
            </property>
           </widget>
          </item>
@@ -1763,15 +1777,13 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuTest">
     <property name="title">
      <string>File</string>
     </property>
-    <addaction name="actionOpen"/>
-    <addaction name="separator"/>
     <addaction name="actionQuit"/>
    </widget>
    <widget class="QMenu" name="menuHelp">

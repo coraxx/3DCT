@@ -10,6 +10,7 @@ This generates the matlab script and runs in the matlab -nodisplay console.
 # @Description		: Rotate original light microscope volume
 # @Author			: Jan Arnold
 # @Email			: jan.arnold (at) coraxx.net
+# @License			: GPLv3 (see LICENSE file)
 # @Credits			: Florian Beck, Max-Planck-Institute for Biochemistry
 # @Maintainer		: Jan Arnold
 # @Date				: 2016/01

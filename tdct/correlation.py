@@ -3,6 +3,22 @@
 """
 Establishes 2D to 3D correlation and correlates spots (Point of Interests) between e.g. EM and LM
 
+Copyright (C) 2016  Vladan Lucic
+
+	This program is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
 The procedure is organized as follows:
 
 	1) Find transformation between LM and EM overview systems using specified
@@ -88,6 +104,7 @@ The procedure is organized as follows:
 # @Project			: 3DCTv2
 # @Description		: Establishes EM - LM correlation and correlates spots between EM and LM
 # @Author			: Vladan Lucic (Max Planck Institute for Biochemistry)
+# @License			: GPLv3 (see LICENSE file)
 # @Email			:
 # @Credits			:
 # @Maintainer		: Vladan Lucic, Jan Arnold

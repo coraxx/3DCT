@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>MainWindow</class>
- <widget class="QMainWindow" name="MainWindow">
+ <class>mainWindow</class>
+ <widget class="QMainWindow" name="mainWindow">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>3D Correlation</string>
   </property>
   <property name="windowIcon">
    <iconset resource="icons.qrc">
@@ -1173,7 +1173,7 @@ rotation center at:</string>
      <x>0</x>
      <y>0</y>
      <width>1400</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
   </widget>

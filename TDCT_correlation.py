@@ -11,6 +11,7 @@ to one single stack file, ...).
 # @Description		: Extracting 2D and 3D points for 2D to 3D correlation
 # @Author			: Jan Arnold
 # @Email			: jan.arnold (at) coraxx.net
+# @License			: GPLv3 (see LICENSE file)
 # @Credits			:
 # @Maintainer		: Jan Arnold
 # @Date				: 2016/01

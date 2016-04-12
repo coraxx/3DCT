@@ -13,6 +13,7 @@ Custom Qt classes. Some widgets in QT Designer are promoted to these classes:
 # @Description		: Custom Qt classes
 # @Author			: Jan Arnold
 # @Email			: jan.arnold (at) coraxx.net
+# @License			: GPLv3 (see LICENSE file)
 # @Credits			:
 # @Maintainer		: Jan Arnold
 # @Date				: 2016/02/27
