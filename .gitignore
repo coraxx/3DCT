@@ -221,3 +221,5 @@ ModelManifest.xml
 .idea
 3DCT_Icon
 *.spec
+__init__.py
+test/
