@@ -15,6 +15,7 @@ e.g. export:
 # @Description		: Import and export PyQt model data from/to csv files
 # @Author			: Jan Arnold
 # @Email			: jan.arnold (at) coraxx.net
+# @Copyright		: Copyright (C) 2016  Jan Arnold
 # @License			: GPLv3 (see LICENSE file)
 # @Credits			:
 # @Maintainer		: Jan Arnold

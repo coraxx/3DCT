@@ -33,8 +33,10 @@ The Toolbox comes with a PyQt4 GUI. Further dependencies as of now are:
 	- numpy
 	- scipy
 	- matplotlib
-	- cv2 (opencv)
+	- opencv
+	- cv2
 	- tifffile (Christoph Gohlke)
+	- colorama (optinal for colored stdout when debugging)
 
 A test dataset can be downloaded from the "testdata" folder:
 	https://bitbucket.org/splo0sh/3dctv2/src/ab8914cf71aea77949bc5037ba090df42cfa3abc/testdata/?at=master
@@ -44,6 +46,7 @@ A test dataset can be downloaded from the "testdata" folder:
 # @Description		: 3D Correlation Toolbox - 3DCT
 # @Author			: Jan Arnold
 # @Email			: jan.arnold (at) coraxx.net
+# @Copyright		: Copyright (C) 2016  Jan Arnold
 # @License			: GPLv3 (see LICENSE file)
 # @Credits			: Vladan Lucic for the 3D to 2D correlation code
 # 					: and the stackoverflow community for all the bits and pieces
@@ -349,26 +352,37 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 		sender = self.sender()
 		if sender == self.toolButton_ImageStackGetPixelSize:
 			try:
-				pixelSize = stackProcessing.pxSize(str(self.lineEdit_ImageStackPath.text()))
-				if debug is True: print clrmsg.DEBUG, pixelSize
-				if pixelSize:
-					self.doubleSpinBox_ImageStackFocusStepSizeOrig.setValue(pixelSize*1000)
-					self.doubleSpinBox_ImageStackFocusStepSizeReslized.setValue(pixelSize*1000)
+				pixelSizeXY = stackProcessing.pxSize(str(self.lineEdit_ImageStackPath.text()))
+				pixelSizeZ = stackProcessing.pxSize(str(self.lineEdit_ImageStackPath.text()),z=True)
+				if debug is True: print clrmsg.DEBUG + "Pixelsize xy/z", pixelSizeXY, pixelSizeZ
+				if pixelSizeXY:
+					self.doubleSpinBox_ImageStackFocusStepSizeOrig.setValue(pixelSizeXY*1000)
 				else:
-					raise Exception('No pixel size information found!')
+					raise Exception('No xy pixel size information found!')
+				if pixelSizeZ:
+					self.doubleSpinBox_ImageStackFocusStepSizeReslized.setValue(pixelSizeZ*1000)
+				else:
+					raise Exception('No focus step size information found!')
 			except Exception as e:
 				QtGui.QMessageBox.warning(
 						self,"Warning",
 						"Unable to extract pixel size.\n\n{0}".format(e))
 		elif sender == self.toolButton_ImageSequenceGetPixelSize:
 			try:
-				pixelSize = stackProcessing.pxSize(os.path.join(str(self.lineEdit_ImageSequencePath.text()),"Tile_001-001-000_0-000.tif"))
-				if debug is True: print clrmsg.DEBUG, pixelSize
-				if pixelSize:
-					self.doubleSpinBox_ImageSequenceFocusStepSizeOrig.setValue(pixelSize*1000)
-					self.doubleSpinBox_ImageSequenceFocusStepSizeReslized.setValue(pixelSize*1000)
+				print os.path.join(str(self.lineEdit_ImageSequencePath.text()),"Tile_001-001-000_0-000.tif")
+				pixelSizeXY = stackProcessing.pxSize(
+					os.path.join(str(self.lineEdit_ImageSequencePath.text()),"Tile_001-001-000_0-000.tif"))
+				pixelSizeZ = stackProcessing.pxSize(
+					os.path.join(str(self.lineEdit_ImageSequencePath.text()),"Tile_001-001-000_0-000.tif"),z=True)
+				if debug is True: print clrmsg.DEBUG + "Pixelsize xy/z", pixelSizeXY, pixelSizeZ
+				if pixelSizeXY:
+					self.doubleSpinBox_ImageSequenceFocusStepSizeReslized.setValue(pixelSizeXY*1000)
 				else:
-					raise Exception('No pixel size information found!')
+					raise Exception('No xy pixel size information found!')
+				if pixelSizeZ:
+					self.doubleSpinBox_ImageSequenceFocusStepSizeOrig.setValue(pixelSizeZ*1000)
+				else:
+					raise Exception('No focus step size information found!')
 			except Exception as e:
 				QtGui.QMessageBox.warning(
 						self,"Warning",

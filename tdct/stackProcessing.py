@@ -34,6 +34,7 @@ kwargs:
 # @Description		: Process image stack files (.tif)
 # @Author			: Jan Arnold
 # @Email			: jan.arnold (at) coraxx.net
+# @Copyright		: Copyright (C) 2016  Jan Arnold
 # @License			: GPLv3 (see LICENSE file)
 # @Credits			:
 # @Maintainer		: Jan Arnold
@@ -151,7 +152,7 @@ def main(img_path, ss_in, ss_out, qtprocessbar=None, interpolationmethod='linear
 		if img_int is not None:
 			if debug is True: print clrmsg.DEBUG, "Saving interpolated stack as: ", file_out_int
 			if px_info is True:
-				tf.imsave(file_out_int, img_int, metadata={'PixelSize': str(pixelsize)})
+				tf.imsave(file_out_int, img_int, metadata={'PixelSize': str(pixelsize),'FocusStepSize': str(ss_out/1000)})
 			else:
 				tf.imsave(file_out_int, img_int)
 			if debug is True: print clrmsg.DEBUG, "		...done."
@@ -188,6 +189,7 @@ def main(img_path, ss_in, ss_out, qtprocessbar=None, interpolationmethod='linear
 			for filename in files:
 				if fnmatch.fnmatch(filename, 'Tile_*.tif'):
 					pixelsize = pxSize(os.path.join(img_path,filename))
+					pixelsizeZ = pxSize(os.path.join(img_path,filename),z=True)
 					break
 			if pixelsize is not None:
 				px_info = True
@@ -230,7 +232,7 @@ def main(img_path, ss_in, ss_out, qtprocessbar=None, interpolationmethod='linear
 					file_out_orig = os.path.join(img_path, os.path.basename(os.path.normpath(img_path))+"_"+str(i)+".tif")
 				if debug is True: print clrmsg.DEBUG, "Saving original image stack as single stack file: {0} |shape: {1}".format(file_out_orig,img.shape)
 				if px_info is True:
-					tf.imsave(file_out_orig, img, metadata={'PixelSize': str(pixelsize)})
+					tf.imsave(file_out_orig, img, metadata={'PixelSize': str(pixelsize),'FocusStepSize': str(pixelsizeZ)})
 				else:
 					tf.imsave(file_out_orig, img)
 				if debug is True: print clrmsg.DEBUG, "		...done."
@@ -250,7 +252,7 @@ def main(img_path, ss_in, ss_out, qtprocessbar=None, interpolationmethod='linear
 				elif img_int is not None:
 					if debug is True: print clrmsg.DEBUG, "Saving interpolated stack as: ", file_out_int
 					if px_info is True:
-						tf.imsave(file_out_int, img_int, metadata={'PixelSize': str(pixelsize)})
+						tf.imsave(file_out_int, img_int, metadata={'PixelSize': str(pixelsize),'FocusStepSize': str(ss_out/1000)})
 					else:
 						tf.imsave(file_out_int, img_int)
 					if debug is True: print clrmsg.DEBUG, "		...done."
@@ -264,17 +266,17 @@ def main(img_path, ss_in, ss_out, qtprocessbar=None, interpolationmethod='linear
 		print clrmsg.ERROR, 'ERROR: Path is neither a valid file nor a valid directory!'
 
 
-def pxSize(img_path):
+def pxSize(img_path,z=False):
 	"""Extract pixel size from meta/exif data. Tailored for image headers from FEI dual beam electron microscopes
 	and CorrSight light microscope"""
 	with tf.TiffFile(img_path) as tif:
 		for page in tif:
 			for tag in page.tags.values():
 				if isinstance(tag.value, str):
-					for keyword in ['PhysicalSizeX','PixelWidth','PixelSize']:
+					for keyword in ['PhysicalSizeX','PixelWidth','PixelSize'] if not z else ['PhysicalSizeZ','FocusStepSize']:
 						tagposs = [m.start() for m in re.finditer(keyword, tag.value)]
 						for tagpos in tagposs:
-							if keyword == 'PhysicalSizeX':
+							if keyword == 'PhysicalSizeX' or 'PhysicalSizeZ':
 								for piece in tag.value[tagpos:tagpos+30].split('"'):
 									try:
 										pixelsize = float(piece)
@@ -288,7 +290,7 @@ def pxSize(img_path):
 										return pixelsize
 									except:
 										pass
-							elif keyword == 'PixelSize':
+							elif keyword == 'PixelSize' or 'FocusStepSize':
 								for piece in tag.value[tagpos:tagpos+30].split('"'):
 									try:
 										pixelsize = float(piece)

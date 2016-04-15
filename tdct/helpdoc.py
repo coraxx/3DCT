@@ -8,6 +8,7 @@
 # @Description		: Contains Qt dialogs for quick help buttons
 # @Author			: Jan Arnold
 # @Email			: jan.arnold (at) coraxx.net
+# @Copyright		: Copyright (C) 2016  Jan Arnold
 # @License			: GPLv3 (see LICENSE file)
 # @Credits			:
 # @Maintainer		: Jan Arnold

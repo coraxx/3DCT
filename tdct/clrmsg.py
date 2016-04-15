@@ -15,6 +15,7 @@ and it will print:
 # @Description		: Colored stdout status powered by "Colorama"
 # @Author			: Jan Arnold
 # @Email			: jan.arnold (at) coraxx.net
+# @Copyright		: Copyright (C) 2016  Jan Arnold
 # @License			: GPLv3 (see LICENSE file)
 # @Credits			: Arnon Yaari
 # 					: https://github.com/tartley/colorama

@@ -11,6 +11,7 @@ to get an optimized bead position (optimization of x, y and z)
 # @Description		: Get bead z axis position from 3D image stacks (tiff z-stack)
 # @Author			: Jan Arnold
 # @Email			: jan.arnold (at) coraxx.net
+# @Copyright		: Copyright (C) 2016  Jan Arnold
 # @License			: GPLv3 (see LICENSE file)
 # @Credits			: endolith https://gist.github.com/endolith/255291 for parabolic fitting function
 # 					  2D Gaussian fit from http://scipy.github.io/old-wiki/pages/Cookbook/FittingData

@@ -11,6 +11,7 @@ to one single stack file, ...).
 # @Description		: Extracting 2D and 3D points for 2D to 3D correlation
 # @Author			: Jan Arnold
 # @Email			: jan.arnold (at) coraxx.net
+# @Copyright		: Copyright (C) 2016  Jan Arnold
 # @License			: GPLv3 (see LICENSE file)
 # @Credits			:
 # @Maintainer		: Jan Arnold
@@ -592,20 +593,22 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			## return MIP and code 2+4+1E6
 			return np.amax(img, axis=0), 22, img
 
-	def pxSize(self,img_path):
+	def pxSize(self,img_path,z=False):
 		with tf.TiffFile(img_path) as tif:
 			for page in tif:
 				for tag in page.tags.values():
 					if isinstance(tag.value, str):
-						for keyword in ['PhysicalSizeX','PixelWidth','PixelSize']:
+						for keyword in ['PhysicalSizeX','PixelWidth','PixelSize'] if not z else ['PhysicalSizeZ','FocusStepSize']:
 							tagposs = [m.start() for m in re.finditer(keyword, tag.value)]
 							for tagpos in tagposs:
-								if keyword == 'PhysicalSizeX':
+								if keyword == 'PhysicalSizeX' or 'PhysicalSizeZ':
 									for piece in tag.value[tagpos:tagpos+30].split('"'):
 										try:
 											pixelSize = float(piece)
 											if debug is True: print clrmsg.DEBUG + "Pixel size from exif metakey:", keyword
 											## Value is in um from CorrSight/LA tiff files
+											if z:
+												pixelSize = pixelSize*1000
 											return pixelSize
 										except Exception as e:
 											if debug is True: print clrmsg.DEBUG + "Pixel size parser:", e
@@ -620,7 +623,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 										except Exception as e:
 											if debug is True: print clrmsg.DEBUG + "Pixel size parser:", e
 											pass
-								elif keyword == 'PixelSize':
+								elif keyword == 'PixelSize' or 'FocusStepSize':
 									for piece in tag.value[tagpos:tagpos+30].split('"'):
 										try:
 											pixelSize = float(piece)
