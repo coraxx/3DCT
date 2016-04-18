@@ -2,7 +2,7 @@
 
 This Toolbox is build for 3D correlative microscopy. It helps with 3D to 2D correlation of three dimensional confocal image stacks to two dimensional SEM/FIB dual beam microscope images. Though it is not limited to that.
 
-It was develped at the Max Planck Institute of Biochemistry, Department of Molecular Structural Biology at the basis of the paper [Site-Specific Cryo-focused Ion Beam Sample Preparation Guided by 3D Correlative Microscopy](http://dx.doi.org/10.1016/j.bpj.2015.10.053)
+The 3D Correlation Toolbox was develped at the Max Planck Institute of Biochemistry, Department of Molecular Structural Biology on the basis of the paper [Site-Specific Cryo-focused Ion Beam Sample Preparation Guided by 3D Correlative Microscopy](http://dx.doi.org/10.1016/j.bpj.2015.10.053)
 
 Further information can be found on [http://www.biochem.mpg.de/en/rd/baumeister](http://www.biochem.mpg.de/en/rd/baumeister) and [http://3dct.semper.space](http://3dct.semper.space)
 
@@ -20,9 +20,9 @@ The Toolbox is written in Python 2.7 and comes with a PyQt4 GUI. Further depende
 [^1]: usually available via your favorite package manager
 [^2]: available via pip
 
-A test dataset can be downloaded here: http://3dct.semper.space/download/3D_correlation_test_dataset.zip
+A test dataset can be downloaded here: [http://3dct.semper.space/download/3D_correlation_test_dataset.zip](http://3dct.semper.space/download/3D_correlation_test_dataset.zip)
 
-An introduction video can be viewed here: https://www.youtube.com/watch?v=nZnUZ877-TU
+An introduction video can be viewed here: [https://www.youtube.com/watch?v=nZnUZ877-TU](https://www.youtube.com/watch?v=nZnUZ877-TU)
 
 ### License ###
 
