@@ -94,10 +94,11 @@ try:
 	import tifffile as tf
 	from PyQt4 import QtGui
 	import clrmsg
+	import TDCT_debug
 except:
 	sys.exit("Please install tifffile, e.g.: pip install tifffile")
 
-debug = True
+debug = TDCT_debug.debug
 
 
 def main(img_path, ss_in, ss_out, qtprocessbar=None, interpolationmethod='linear', saveorigstack=True, showgraph=False, customSaveDir=None):

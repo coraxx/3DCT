@@ -71,7 +71,7 @@ import FileDialog
 # from functools import partial
 from subprocess import call
 from PyQt4 import QtCore, QtGui, uic
-from tdct import clrmsg, helpdoc, stackProcessing
+from tdct import clrmsg, TDCT_debug, helpdoc, stackProcessing
 import TDCT_correlation
 # add working directory temporarily to PYTHONPATH
 if getattr(sys, 'frozen', False):
@@ -87,7 +87,7 @@ if sys.platform == 'win32':
 	print clrmsg.INFO + 'PATH after: ', os.environ.get('PATH','')
 __version__ = 'v2.0.0'
 
-debug = True
+debug = TDCT_debug.debug
 if debug is True: print clrmsg.DEBUG + "Execdir =", execdir
 ########## GUI layout file #######################################################
 ##################################################################################
@@ -356,11 +356,11 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 				pixelSizeZ = stackProcessing.pxSize(str(self.lineEdit_ImageStackPath.text()),z=True)
 				if debug is True: print clrmsg.DEBUG + "Pixelsize xy/z", pixelSizeXY, pixelSizeZ
 				if pixelSizeXY:
-					self.doubleSpinBox_ImageStackFocusStepSizeOrig.setValue(pixelSizeXY*1000)
+					self.doubleSpinBox_ImageStackFocusStepSizeReslized.setValue(pixelSizeXY*1000)
 				else:
 					raise Exception('No xy pixel size information found!')
 				if pixelSizeZ:
-					self.doubleSpinBox_ImageStackFocusStepSizeReslized.setValue(pixelSizeZ*1000)
+					self.doubleSpinBox_ImageStackFocusStepSizeOrig.setValue(pixelSizeZ*1000)
 				else:
 					raise Exception('No focus step size information found!')
 			except Exception as e:

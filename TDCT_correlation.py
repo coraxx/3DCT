@@ -36,7 +36,7 @@ import cv2
 import tifffile as tf
 ## Colored stdout, custom Qt functions (mostly to handle events), CSV handler
 ## and correlation algorithm
-from tdct import clrmsg, QtCustom, csvHandler, correlation
+from tdct import clrmsg, TDCT_debug, QtCustom, csvHandler, correlation
 
 __version__ = 'v2.0.0'
 
@@ -51,7 +51,7 @@ sys.path.append(execdir)
 qtCreatorFile_main = os.path.join(execdir, "TDCT_correlation.ui")
 Ui_WidgetWindow, QtBaseClass = uic.loadUiType(qtCreatorFile_main)
 
-debug = True
+debug = TDCT_debug.debug
 if debug is True: print clrmsg.DEBUG + "Execdir =", execdir
 
 
@@ -601,7 +601,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 						for keyword in ['PhysicalSizeX','PixelWidth','PixelSize'] if not z else ['PhysicalSizeZ','FocusStepSize']:
 							tagposs = [m.start() for m in re.finditer(keyword, tag.value)]
 							for tagpos in tagposs:
-								if keyword == 'PhysicalSizeX' or 'PhysicalSizeZ':
+								if keyword == 'PhysicalSizeX' or keyword == 'PhysicalSizeZ':
 									for piece in tag.value[tagpos:tagpos+30].split('"'):
 										try:
 											pixelSize = float(piece)
@@ -861,8 +861,11 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			return
 
 		transf_3d = self.correlation_results[1]
+		alpha = self.doubleSpinBox_markerAlpha.value()
+		radius = self.spinBox_markerRadius.value()
 		for i in range(transf_3d.shape[1]):
-			cv2.circle(img, (int(round(transf_3d[0,i])), int(round(transf_3d[1,i]))), 3, (0,255,0), -1)
+			cv2.circle(img, (int(round(transf_3d[0,i])), int(round(transf_3d[1,i]))), radius, (0,255,0), -1)
+			img = cv2.addWeighted(img, alpha, np.copy(self.img_left), 1-alpha, 0.0)
 		if self.correlation_results[2] is not None:
 			calc_spots_2d = self.correlation_results[2]
 			# draw POI cv2.circle(img, (center x, center y), radius, [b,g,r], thickness(-1 for filled))

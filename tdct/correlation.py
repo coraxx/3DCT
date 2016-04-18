@@ -156,9 +156,9 @@ def write_results(
 		"#   - rotation (Euler phi, psi, theta): [%6.3f, %6.3f, %6.3f]"
 		% (eulers[0], eulers[2], eulers[1]),
 		"#   - scale = %6.3f" % transf.s_scalar,
-		"#   - translation for rotationaround [0,0,0] = [%6.3f, %6.3f, %6.3f]"
+		"#   - translation for rotation around [0,0,0] = [%6.3f, %6.3f, %6.3f]"
 		% (transf.d[0], transf.d[1], transf.d[2]),
-		"#   - translation for rotationaround [%5.2f, %5.2f, %5.2f] = [%6.3f, %6.3f, %6.3f]"
+		"#   - translation for rotation around [%5.2f, %5.2f, %5.2f] = [%6.3f, %6.3f, %6.3f]"
 		% (rotation_center[0], rotation_center[1], rotation_center[2],
 					modified_translation[0], modified_translation[1], modified_translation[2]),
 		"#   - rms error (in 2d pixels) = %6.2f" % transf.rmsError

@@ -37,11 +37,12 @@ import parabolic
 
 try:
 	import clrmsg
+	import TDCT_debug
 except:
 	pass
 
 repeat = 0
-
+debug = TDCT_debug.debug
 
 def getzPoly(x,y,img,n=None,optimize=False):
 	"""x and y are coordinates
@@ -50,7 +51,6 @@ def getzPoly(x,y,img,n=None,optimize=False):
 	leave n to use the maximum amount of points
 	If optimize is set to True, the algorithm will try to optimize the x,y,z position
 	!! if optimize is True, 3 values are returned: x,y,z"""
-	debug = True
 
 	if not isinstance(img, str) and not isinstance(img, np.ndarray):
 		if clrmsg and debug is True: print clrmsg.ERROR
@@ -96,7 +96,6 @@ def getzGauss(x,y,img,parent=None,optimize=False,threshold=None,threshVal=0.6,cu
 	optimize == True kicks off the 2D Gaussian fit and this function will return x,y,z
 	threshold == True filters the image where it cuts off at max - min * threshVal (threshVal between 0.1 and 1)
 	cutout specifies the FOV for the 2D Gaussian fit"""
-	debug = True
 
 	if not isinstance(img, str) and not isinstance(img, np.ndarray):
 		if clrmsg and debug is True: print clrmsg.ERROR
@@ -137,7 +136,6 @@ def getzGauss(x,y,img,parent=None,optimize=False,threshold=None,threshVal=0.6,cu
 
 
 def optimize_z(x,y,z,image,n=None):
-	debug = True
 	if type(image) == str:
 		img = tf.imread(image)
 	elif type(image) == np.ndarray:
@@ -186,7 +184,6 @@ def optimize_xy(x,y,z,image,nx=None,ny=None):
 	image can be either the path to the z-stack tiff file or the np.array data of itself
 	n is the number of points around the max value that are used in the polyfit
 	leave n to use the maximum amount of points"""
-	debug = True
 	get_nx, get_ny = False, False
 	if type(image) == str:
 		img = tf.imread(image)
@@ -292,7 +289,6 @@ def gauss(x, *p):
 
 
 def gaussfit(data,parent=None,hold=False):
-	debug = True
 	## Fitting gaussian to data
 	data[1] = data[1]-data[1].min()
 	p0 = [data[1].max(), data[1].argmax(), 1]
@@ -329,7 +325,6 @@ def gaussfit(data,parent=None,hold=False):
 
 
 def test1Dgauss(data=None):
-	debug = True
 	if not data:
 		data = np.random.normal(loc=5., size=10000)
 	hist, bin_edges = np.histogram(data, density=True)

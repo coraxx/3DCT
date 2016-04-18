@@ -39,8 +39,9 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 import math
 import beadPos
 import clrmsg
+import TDCT_debug
 
-debug = True
+debug = TDCT_debug.debug
 ##############################
 # QTableViewCustom
 
