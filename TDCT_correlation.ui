@@ -109,7 +109,7 @@
           <property name="maximumSize">
            <size>
             <width>256</width>
-            <height>16777215</height>
+            <height>300</height>
            </size>
           </property>
          </widget>
@@ -1114,7 +1114,7 @@ rotation center at:</string>
                     <double>0.100000000000000</double>
                    </property>
                    <property name="value">
-                    <double>0.800000000000000</double>
+                    <double>0.500000000000000</double>
                    </property>
                   </widget>
                  </item>

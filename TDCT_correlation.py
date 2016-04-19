@@ -812,6 +812,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			model3D = self.modelRight
 			## Temporary img to draw results and save it
 			img = np.copy(self.img_left)
+			fibImageProps = [img.shape,self.sceneLeft.pixelSize]
 			if img.ndim == 2:
 				## Need RGB for colored markers
 				img = cv2.cvtColor(img,cv2.COLOR_GRAY2BGR)
@@ -820,6 +821,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			model3D = self.modelLleft
 			## Temporary img to draw results and save it
 			img = np.copy(self.img_right)
+			fibImageProps = [img.shape,self.sceneRight.pixelSize]
 			if img.ndim == 2:
 				## Need RGB for colored markers
 				img = cv2.cvtColor(img,cv2.COLOR_GRAY2BGR)
@@ -851,7 +853,8 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 														rotation_center=self.rotation_center,
 														results_file=''.join([
 															self.workingdir,'/',timestamp, '_correlation.txt'
-															] if self.checkBox_writeReport.isChecked() else '')
+															] if self.checkBox_writeReport.isChecked() else ''),
+														fibImageProps=fibImageProps
 														)
 			else:
 				QtGui.QMessageBox.critical(self, "Data Structure", "The two datasets do not contain the same amount of markers!")
@@ -865,7 +868,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		radius = self.spinBox_markerRadius.value()
 		for i in range(transf_3d.shape[1]):
 			cv2.circle(img, (int(round(transf_3d[0,i])), int(round(transf_3d[1,i]))), radius, (0,255,0), -1)
-			img = cv2.addWeighted(img, alpha, np.copy(self.img_left), 1-alpha, 0.0)
+		img = cv2.addWeighted(img, alpha, np.copy(self.img_left), 1-alpha, 0.0)
 		if self.correlation_results[2] is not None:
 			calc_spots_2d = self.correlation_results[2]
 			# draw POI cv2.circle(img, (center x, center y), radius, [b,g,r], thickness(-1 for filled))
