@@ -472,14 +472,14 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		# rotate 45 degree clockwise
 		elif direction == 'cw':
 			if self.label_selimg.text() == 'left':
-				self.sceneLeft.rotangle = self.sceneLeft.rotangle+45
+				self.sceneLeft.rotangle += 45
 				self.graphicsView_left.rotate(45)
 				self.sceneLeft.rotangle = self.anglectrl(angle=self.sceneLeft.rotangle)
 				self.spinBox_rot.setValue(self.sceneLeft.rotangle)
 				## Update graphics
 				self.sceneLeft.enumeratePoints()
 			elif self.label_selimg.text() == 'right':
-				self.sceneRight.rotangle = self.sceneRight.rotangle+45
+				self.sceneRight.rotangle += 45
 				self.graphicsView_right.rotate(45)
 				self.sceneRight.rotangle = self.anglectrl(angle=self.sceneRight.rotangle)
 				self.spinBox_rot.setValue(self.sceneRight.rotangle)
@@ -488,12 +488,12 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		# rotate 45 degree anticlockwise
 		elif direction == 'ccw':
 			if self.label_selimg.text() == 'left':
-				self.sceneLeft.rotangle = self.sceneLeft.rotangle-45
+				self.sceneLeft.rotangle -= 45
 				self.graphicsView_left.rotate(-45)
 				self.sceneLeft.rotangle = self.anglectrl(angle=self.sceneLeft.rotangle)
 				self.spinBox_rot.setValue(self.sceneLeft.rotangle)
 			elif self.label_selimg.text() == 'right':
-				self.sceneRight.rotangle = self.sceneRight.rotangle-45
+				self.sceneRight.rotangle -= 45
 				self.graphicsView_right.rotate(-45)
 				self.sceneRight.rotangle = self.anglectrl(angle=self.sceneRight.rotangle)
 				self.spinBox_rot.setValue(self.sceneRight.rotangle)
@@ -502,9 +502,9 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		if angle is None:
 			print clrmsg.ERROR + "Please specify side, e.g. anglectrl(angle=self.sceneLeft.rotangle)"
 		elif angle >= 360:
-			angle = angle-360
+			angle -= 360
 		elif angle < 0:
-			angle = angle+360
+			angle += 360
 		return angle
 
 	def changeMarkerSize(self):
@@ -866,9 +866,10 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		transf_3d = self.correlation_results[1]
 		alpha = self.doubleSpinBox_markerAlpha.value()
 		radius = self.spinBox_markerRadius.value()
+		img_orig = np.copy(img)
 		for i in range(transf_3d.shape[1]):
 			cv2.circle(img, (int(round(transf_3d[0,i])), int(round(transf_3d[1,i]))), radius, (0,255,0), -1)
-		img = cv2.addWeighted(img, alpha, np.copy(self.img_left), 1-alpha, 0.0)
+		img = cv2.addWeighted(img, alpha, img_orig, 1-alpha, 0.0)
 		if self.correlation_results[2] is not None:
 			calc_spots_2d = self.correlation_results[2]
 			# draw POI cv2.circle(img, (center x, center y), radius, [b,g,r], thickness(-1 for filled))

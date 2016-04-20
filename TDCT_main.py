@@ -38,8 +38,7 @@ The Toolbox comes with a PyQt4 GUI. Further dependencies as of now are:
 	- tifffile (Christoph Gohlke)
 	- colorama (optinal for colored stdout when debugging)
 
-A test dataset can be downloaded from the "testdata" folder:
-	https://bitbucket.org/splo0sh/3dctv2/src/ab8914cf71aea77949bc5037ba090df42cfa3abc/testdata/?at=master
+A test dataset can be downloaded here: http://3dct.semper.space/download/3D_correlation_test_dataset.zip
 
 # @Title			: TDCT_main
 # @Project			: 3DCTv2

@@ -225,7 +225,7 @@ def write_results(
 			"# POI distance from the center of the FIB image in px and um",
 			"# The center of the dual beam microscope view is 0,0 and distances are measured in um",
 			"#",
-			"#	Distance in px			Distance in um"])
+			"#	Distance in px		Distance in um"])
 		out_vars = [
 					spots_2d[0,:]-fibImageProps[0][1]*0.5, fibImageProps[0][0]*0.5-spots_2d[1,:],
 					(spots_2d[0,:]-fibImageProps[0][1]*0.5)*fibImageProps[1], (fibImageProps[0][0]*0.5-spots_2d[1,:])*fibImageProps[1]
