@@ -80,13 +80,14 @@ else:
 	execdir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(execdir)
 
+debug = TDCT_debug.debug
+
 if sys.platform == 'win32':
-	print clrmsg.INFO + 'PATH before:', os.environ.get('PATH','')
+	if debug is True: print clrmsg.INFO + 'PATH before:', os.environ.get('PATH','')
 	os.environ['PATH'] = execdir + '\;' + os.environ.get('PATH','')
-	print clrmsg.INFO + 'PATH after: ', os.environ.get('PATH','')
+	if debug is True: print clrmsg.INFO + 'PATH after: ', os.environ.get('PATH','')
 __version__ = 'v2.0.0'
 
-debug = TDCT_debug.debug
 if debug is True: print clrmsg.DEBUG + "Execdir =", execdir
 ########## GUI layout file #######################################################
 ##################################################################################
@@ -436,6 +437,12 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 			os.path.join(self.listWidget_WorkingDir.itempath, str(self.listWidget_WorkingDir.selectedItems()[0].text())))
 
 	def runCorrelationModule(self):
+		if hasattr(self, 'correlationModul'):
+			if hasattr(self.correlationModul, 'window'):
+				QtGui.QMessageBox.warning(
+						self,"Warning",
+						"There is already a correlation instance running. Please close it or restart the application.")
+				return
 		if self.lineEdit_selectImage1.text() != "" and self.lineEdit_selectImage2.text() != "":
 			if self.lineEdit_selectImage1.fileIsTiff is True and self.lineEdit_selectImage2.fileIsTiff is True:
 				self.correlationModul = TDCT_correlation.Main(
@@ -632,11 +639,10 @@ class GenericThread(QtCore.QThread):
 
 if __name__ == "__main__":
 	if debug is True:
-		print clrmsg.DEBUG + 'Debug Test'
-		print clrmsg.OK + 'OK Test'
-		print clrmsg.ERROR + 'Error Test'
-		print clrmsg.INFO + 'Info Test'
-		print clrmsg.WARNING + 'Warning Test'
+		print clrmsg.DEBUG + 'Debug active'
+		print clrmsg.OK + 'Imports OK'
+		print clrmsg.INFO + 'This is 3D Correlation Toolbox', __version__
+		print clrmsg.WARNING + 'Debug mode can/will slow down parts of the Toolbox (e.g. marker clicking)'
 
 	app = QtGui.QApplication(sys.argv)
 	window = APP()

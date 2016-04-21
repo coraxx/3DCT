@@ -76,6 +76,9 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		self.stylesheet_green = "color:  rgb(  0, 200,   0);"
 		self.stylesheet_blue = "color:   rgb(  0, 190, 255);"
 		self.stylesheet_red = "color:    rgb(255,   0,   0);"
+		## Marker and POI color
+		self.markerColor = (0,255,0)
+		self.poiColor = (0,0,255)
 
 		## Tableview and models
 		self.modelLleft = QtCustom.QStandardItemModelCustom(self)
@@ -105,6 +108,8 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		## Initialize Images and connect image load buttons
 		self.toolButton_loadLeftImage.clicked.connect(self.openImageLeft)
 		self.toolButton_loadRightImage.clicked.connect(self.openImageRight)
+		self.toolButton_resetLeftImage.clicked.connect(self.resetImageLeft)
+		self.toolButton_resetRightImage.clicked.connect(self.resetImageRight)
 		if leftImage is None or rightImage is None:
 			return
 		self.initImageLeft()
@@ -141,6 +146,8 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		self.toolButton_importPoints.clicked.connect(self.importPoints)
 		self.toolButton_exportPoints.clicked.connect(self.exportPoints)
 		self.toolButton_selectWorkingDir.clicked.connect(self.selectWorkingDir)
+		self.toolButton_selectMarkerColor.clicked.connect(self.getMarkerColor)
+		self.toolButton_selectPoiColor.clicked.connect(self.getPoiColor)
 		self.commandLinkButton_correlate.clicked.connect(self.correlate)
 
 		## Sliders
@@ -324,7 +331,8 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 				self.modelRight.item(row, 1).setBackground(QtGui.QColor(*color_correlate))
 				self.modelRight.item(row, 2).setBackground(QtGui.QColor(*color_correlate))
 		if rowsLeft > rowsRight:
-			if '{0:b}'.format(self.sceneLeft.imagetype)[-1] == '0':
+			if '{0:b}'.format(self.sceneLeft.imagetype)[-1] == '0' or '{0:b}'.format(
+												self.sceneLeft.imagetype)[-1] == '{0:b}'.format(self.sceneRight.imagetype)[-1]:
 				color_overflow = (105,220,0,alpha)  # green if entries are used as POIs
 			else:
 				color_overflow = (220,25,105,alpha)  # red(ish) color to indicate unbalanced amount of markers for correlation
@@ -333,7 +341,8 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 				self.modelLleft.item(row, 1).setBackground(QtGui.QColor(*color_overflow))
 				self.modelLleft.item(row, 2).setBackground(QtGui.QColor(*color_overflow))
 		elif rowsLeft < rowsRight:
-			if '{0:b}'.format(self.sceneRight.imagetype)[-1] == '0':
+			if '{0:b}'.format(self.sceneRight.imagetype)[-1] == '0' or '{0:b}'.format(
+												self.sceneLeft.imagetype)[-1] == '{0:b}'.format(self.sceneRight.imagetype)[-1]:
 				color_overflow = (105,220,0,alpha)  # green if entries are used as POIs
 			else:
 				color_overflow = (220,25,105,alpha)  # red(ish) color to indicate unbalanced amount of markers for correlation
@@ -341,6 +350,18 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 				self.modelRight.item(row, 0).setBackground(QtGui.QColor(*color_overflow))
 				self.modelRight.item(row, 1).setBackground(QtGui.QColor(*color_overflow))
 				self.modelRight.item(row, 2).setBackground(QtGui.QColor(*color_overflow))
+
+	def getMarkerColor(self):
+		color = QtGui.QColorDialog.getColor()
+		if color.isValid():
+			self.markerColor = (color.blue(), color.green(), color.red())
+			self.label_markerColor.setStyleSheet("background-color: rgb{0};".format((color.red(), color.green(), color.blue())))
+
+	def getPoiColor(self):
+		color = QtGui.QColorDialog.getColor()
+		if color.isValid():
+			self.poiColor = (color.blue(), color.green(), color.red())
+			self.label_poiColor.setStyleSheet("background-color: rgb{0};".format((color.red(), color.green(), color.blue())))
 
 												###############################################
 												###### Image initialization and rotation ######
@@ -445,6 +466,28 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			for i in range(self.tableView_right._model.rowCount()):
 				self.sceneRight.addCircle(0.0,0.0,0.0)
 			self.tableView_right.updateItems()
+
+	def resetImageLeft(self):
+		## Remove image (item)
+		self.sceneLeft.removeItem(self.pixmap_item_left)
+		## Load original
+		self.img_left_displayed = np.copy(self.img_left)
+		## Display image
+		self.pixmap_left = self.cv2Qimage(self.img_left_displayed)
+		self.pixmap_item_left = QtGui.QGraphicsPixmapItem(self.pixmap_left, None, self.sceneLeft)
+		## Put exchanged image into background
+		QtGui.QGraphicsItem.stackBefore(self.pixmap_item_left, self.sceneLeft.items()[-1])
+
+	def resetImageRight(self):
+		## Remove image (item)
+		self.sceneRight.removeItem(self.pixmap_item_right)
+		## Load original
+		self.img_right_displayed = np.copy(self.img_right)
+		## Display image
+		self.pixmap_right = self.cv2Qimage(self.img_right_displayed)
+		self.pixmap_item_right = QtGui.QGraphicsPixmapItem(self.pixmap_right, None, self.sceneRight)
+		## Put exchanged image into background
+		QtGui.QGraphicsItem.stackBefore(self.pixmap_item_right, self.sceneRight.items()[-1])
 
 	def rotateImage(self):
 		if self.label_selimg.text() == 'left':
@@ -812,7 +855,20 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			model3D = self.modelRight
 			## Temporary img to draw results and save it
 			img = np.copy(self.img_left)
-			fibImageProps = [img.shape,self.sceneLeft.pixelSize]
+			imgSide = 'left'
+			## SEM/FIB imaging size is:	512x442, 1024x884, 2048x1768 or 4096x3536. Saved image file is
+			#  SEM/FIB image + footer:	512x470, 1024x941, 2048x1883 or 4096x3767
+			if img.shape[0] == 470:
+				imgShape = [442,img.shape[1]]
+			elif img.shape[0] == 941:
+				imgShape = [884,img.shape[1]]
+			elif img.shape[0] == 1883:
+				imgShape = [1768,img.shape[1]]
+			elif img.shape[0] == 3767:
+				imgShape = [3536,img.shape[1]]
+			else:
+				imgShape = img.shape
+			imageProps = [imgShape,self.sceneLeft.pixelSize]
 			if img.ndim == 2:
 				## Need RGB for colored markers
 				img = cv2.cvtColor(img,cv2.COLOR_GRAY2BGR)
@@ -821,16 +877,104 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			model3D = self.modelLleft
 			## Temporary img to draw results and save it
 			img = np.copy(self.img_right)
-			fibImageProps = [img.shape,self.sceneRight.pixelSize]
+			imgSide = 'right'
+			## SEM/FIB imaging size is:	512x442, 1024x884, 2048x1768 or 4096x3536. Saved image file is
+			#  SEM/FIB image + footer:	512x470, 1024x941, 2048x1883 or 4096x3767
+			if img.shape[0] == 470:
+				imgShape = [442,img.shape[1]]
+			elif img.shape[0] == 941:
+				imgShape = [884,img.shape[1]]
+			elif img.shape[0] == 1883:
+				imgShape = [1768,img.shape[1]]
+			elif img.shape[0] == 3767:
+				imgShape = [3536,img.shape[1]]
+			else:
+				imgShape = img.shape
+			imageProps = [imgShape,self.sceneRight.pixelSize]
 			if img.ndim == 2:
 				## Need RGB for colored markers
 				img = cv2.cvtColor(img,cv2.COLOR_GRAY2BGR)
 		else:
+			def corrMsgBox(self,msg):
+				print 'message box'
+				msgBox = QtGui.QMessageBox()
+				msgBox.setIcon(QtGui.QMessageBox.Question)
+				msgBox.setText(msg)
+				l2rButton = msgBox.addButton("Left to Right", QtGui.QMessageBox.ActionRole)
+				r2lButton = msgBox.addButton("Right to Left", QtGui.QMessageBox.ActionRole)
+				abortButton = msgBox.addButton(QtGui.QMessageBox.Cancel)
+				msgBox.exec_()
+				if msgBox.clickedButton() == l2rButton:
+					return "l2r"
+				elif msgBox.clickedButton() == r2lButton:
+					return "r2l"
+				elif msgBox.clickedButton() == abortButton:
+					return None
+
 			if '{0:b}'.format(self.sceneLeft.imagetype)[-1] == '0' and '{0:b}'.format(self.sceneRight.imagetype)[-1] == '0':
-				raise ValueError('Both datasets contain only 2D information. I need one 3D and one 2D dataset')
+				rowsLeft = self.modelLleft.rowCount()
+				rowsRight = self.modelRight.rowCount()
+				if rowsLeft > rowsRight:
+					corrMsgBoxRetVal = 'l2r'
+				elif rowsLeft < rowsRight:
+					corrMsgBoxRetVal = 'r2l'
+				else:
+					corrMsgBoxRetVal = corrMsgBox(
+						self,"It seems you want to do a 3D to 3D correlation. " +
+						"Since both data sets contain the same amount of markers, please specify which side you want to correlate to:")
+				if corrMsgBoxRetVal == 'l2r':
+					model2D = self.modelRight
+					model3D = self.modelLleft
+					## Temporary img to draw results and save it
+					img = np.copy(self.img_right)
+					imgSide = 'right'
+				elif corrMsgBoxRetVal == 'r2l':
+					model2D = self.modelLleft
+					model3D = self.modelRight
+					## Temporary img to draw results and save it
+					img = np.copy(self.img_left)
+					imgSide = 'left'
+				else:
+					return
+				if img.ndim == 2:
+					## Need RGB for colored markers
+					img = cv2.cvtColor(img,cv2.COLOR_GRAY2BGR)
+				imageProps = None
+				# QtGui.QMessageBox.critical(self, "Data Structure",'Both datasets contain only 3D information. I need one 3D and one 2D dataset')
+				# raise ValueError('Both datasets contain only 3D information. I need one 3D and one 2D dataset')
 			elif '{0:b}'.format(self.sceneLeft.imagetype)[-1] == '1' and '{0:b}'.format(self.sceneRight.imagetype)[-1] == '1':
-				raise ValueError('Both datasets contain only 3D information. I need one 3D and one 2D dataset')
+				rowsLeft = self.modelLleft.rowCount()
+				rowsRight = self.modelRight.rowCount()
+				if rowsLeft > rowsRight:
+					corrMsgBoxRetVal = 'l2r'
+				elif rowsLeft < rowsRight:
+					corrMsgBoxRetVal = 'r2l'
+				else:
+					corrMsgBoxRetVal = corrMsgBox(
+							self,"It seems you want to do a 2D to 2D correlation. " +
+							"Since both data sets contain the same amount of markers, please specify which side you want to correlate to:")
+				if corrMsgBoxRetVal == 'l2r':
+					model2D = self.modelRight
+					model3D = self.modelLleft
+					## Temporary img to draw results and save it
+					img = np.copy(self.img_right)
+					imgSide = 'right'
+				elif corrMsgBoxRetVal == 'r2l':
+					model2D = self.modelLleft
+					model3D = self.modelRight
+					## Temporary img to draw results and save it
+					img = np.copy(self.img_left)
+					imgSide = 'left'
+				else:
+					return
+				if img.ndim == 2:
+					## Need RGB for colored markers
+					img = cv2.cvtColor(img,cv2.COLOR_GRAY2BGR)
+				imageProps = None
+				# QtGui.QMessageBox.critical(self, "Data Structure",'Both datasets contain only 2D information. I need one 3D and one 2D dataset')
+				# raise ValueError('Both datasets contain only 2D information. I need one 3D and one 2D dataset')
 			else:
+				QtGui.QMessageBox.critical(self, "Data Structure",'Cannot determine if datasets are 2D or 3D')
 				raise ValueError('Cannot determine if datasets are 2D or 3D')
 		## variables for dataset validation. The amount of markers from the 2D and 3D model have to be in corresponding order.
 		## All extra rows in the 3D model are used as POIs.
@@ -854,7 +998,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 														results_file=''.join([
 															self.workingdir,'/',timestamp, '_correlation.txt'
 															] if self.checkBox_writeReport.isChecked() else ''),
-														fibImageProps=fibImageProps
+														imageProps=imageProps
 														)
 			else:
 				QtGui.QMessageBox.critical(self, "Data Structure", "The two datasets do not contain the same amount of markers!")
@@ -868,13 +1012,13 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		radius = self.spinBox_markerRadius.value()
 		img_orig = np.copy(img)
 		for i in range(transf_3d.shape[1]):
-			cv2.circle(img, (int(round(transf_3d[0,i])), int(round(transf_3d[1,i]))), radius, (0,255,0), -1)
+			cv2.circle(img, (int(round(transf_3d[0,i])), int(round(transf_3d[1,i]))), radius, self.markerColor, -1)
 		img = cv2.addWeighted(img, alpha, img_orig, 1-alpha, 0.0)
 		if self.correlation_results[2] is not None:
 			calc_spots_2d = self.correlation_results[2]
 			# draw POI cv2.circle(img, (center x, center y), radius, [b,g,r], thickness(-1 for filled))
 			for i in range(calc_spots_2d.shape[1]):
-				cv2.circle(img, (int(round(calc_spots_2d[0,i])), int(round(calc_spots_2d[1,i]))), 1, (0,0,255), -1)
+				cv2.circle(img, (int(round(calc_spots_2d[0,i])), int(round(calc_spots_2d[1,i]))), 1, self.poiColor, -1)
 		if self.checkBox_writeReport.isChecked():
 			cv2.imwrite(os.path.join(self.workingdir,timestamp+"_correlated.tif"), img)
 		try:
@@ -882,7 +1026,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		except:
 			pass
 		## Display image
-		if '{0:b}'.format(self.sceneLeft.imagetype)[-1] == '1':
+		if imgSide == 'left':
 			self.img_left_displayed = np.copy(img)
 			## Remove image (item)
 			self.sceneLeft.removeItem(self.pixmap_item_left)

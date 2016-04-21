@@ -44,6 +44,7 @@ except:
 repeat = 0
 debug = TDCT_debug.debug
 
+
 def getzPoly(x,y,img,n=None,optimize=False):
 	"""x and y are coordinates
 	img is the path to the z-stack tiff file or a numpy.ndarray from tifffile.py imread function
@@ -136,6 +137,7 @@ def getzGauss(x,y,img,parent=None,optimize=False,threshold=None,threshVal=0.6,cu
 
 
 def optimize_z(x,y,z,image,n=None):
+	"""Optimize z for poly fit"""
 	if type(image) == str:
 		img = tf.imread(image)
 	elif type(image) == np.ndarray:

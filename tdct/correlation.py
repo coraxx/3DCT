@@ -134,7 +134,7 @@ from pyto.rigid_3d import Rigid3D
 
 def write_results(
 		transf, res_file_name, spots_3d, spots_2d,
-		markers_3d, transformed_3d, markers_2d,rotation_center,modified_translation,fibImageProps=None):
+		markers_3d, transformed_3d, markers_2d,rotation_center,modified_translation,imageProps=None):
 	"""
 	"""
 
@@ -217,18 +217,21 @@ def write_results(
 			arrays=out_vars, format=out_format, indices=ids, prependIndex=False)
 		table.extend(res_tab_spots)
 
-	if spots_3d.shape[0] != 0 and fibImageProps:
+	if spots_3d.shape[0] != 0 and imageProps:
 		# POI distance from the FIB image's center in px and um, to mark calculated POI positions on the FIB
 		table.extend([
 			"#",
 			"#",
-			"# POI distance from the center of the FIB image in px and um",
-			"# The center of the dual beam microscope view is 0,0 and distances are measured in um",
+			"# POI distance from the center of the SEM/FIB image in px and um",
 			"#",
-			"#	Distance in px		Distance in um"])
+			"# Note: The center of the dual beam microscope view is regarded as 0,0 and distances from there",
+			"#       are measured in um. This center is at x/y = {0}/{1} in the correlated SEM/FIB tiff image".format(
+				imageProps[0][1]*0.5, imageProps[0][0]*0.5),
+			"#",
+			"#	Distance in px		Distance in um (pixel size: {0} um)".format(imageProps[1])])
 		out_vars = [
-					spots_2d[0,:]-fibImageProps[0][1]*0.5, fibImageProps[0][0]*0.5-spots_2d[1,:],
-					(spots_2d[0,:]-fibImageProps[0][1]*0.5)*fibImageProps[1], (fibImageProps[0][0]*0.5-spots_2d[1,:])*fibImageProps[1]
+					spots_2d[0,:]-imageProps[0][1]*0.5, imageProps[0][0]*0.5-spots_2d[1,:],
+					(spots_2d[0,:]-imageProps[0][1]*0.5)*imageProps[1], (imageProps[0][0]*0.5-spots_2d[1,:])*imageProps[1]
 					]
 		out_format = '	%7.2f	%7.2f		%7.2f	%7.2f'
 		ids = range(spots_2d.shape[1])
@@ -244,7 +247,7 @@ def write_results(
 ########## Main ##################################################################
 ##################################################################################
 
-def main(markers_3d,markers_2d,spots_3d,rotation_center,results_file,fibImageProps=None):
+def main(markers_3d,markers_2d,spots_3d,rotation_center,results_file,imageProps=None):
 
 	random_rotations = True
 	rotation_init = 'gl2'
@@ -296,7 +299,7 @@ def main(markers_3d,markers_2d,spots_3d,rotation_center,results_file,fibImagePro
 			transf=transf, res_file_name=results_file,
 			spots_3d=spots_3d, spots_2d=spots_2d,
 			markers_3d=mark_3d, transformed_3d=transf_3d, markers_2d=mark_2d,
-			rotation_center=rotation_center, modified_translation=modified_translation,fibImageProps=fibImageProps)
+			rotation_center=rotation_center, modified_translation=modified_translation,imageProps=imageProps)
 	cm_3D_markers = mark_3d.mean(axis=-1).tolist()
 
 	# delta calc,real
