@@ -8,14 +8,14 @@ Further information can be found on [http://www.biochem.mpg.de/en/rd/baumeister]
 
 The Toolbox is written in Python 2.7 and comes with a PyQt4 GUI. Further dependencies as of now are:
 
-* PyQt4[^1]
-+ numpy[^2]
-+ scipy[^2]
-+ matplotlib[^2]
-+ opencv[^1]
-+ cv2[^2]
-+ tifffile[^2]  (Christoph Gohlke)
-+ colorama[^2]  (optinal for colored stdout when debugging)
+* PyQt4 [^1]
++ numpy [^2]
++ scipy [^2]
++ matplotlib [^2]
++ opencv [^1]
++ cv2 [^2]
++ tifffile [^2]  (Christoph Gohlke)
++ colorama [^2]  (optional for colored stdout when debugging)
 
 [^1]: usually available via your favorite package manager
 [^2]: available via pip
@@ -52,6 +52,7 @@ There are [Pyinstaller](http://www.pyinstaller.org) binaries available for Mac O
 ### Citing ###
 
 We ask users to cite:
+
 * The general [paper](http://dx.doi.org/10.1016/j.bpj.2015.10.053) that forms the basis of the 3D Correlation Toolbox
 + When using independent modules/scripts from the source code, any [specific](http://3dct.semper.space/documentation.html#citable) publications of modules/scripts used in this software
 + Check the header of the module/script in question for more detailed information

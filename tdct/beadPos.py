@@ -17,7 +17,7 @@ to get an optimized bead position (optimization of x, y and z)
 # 					  2D Gaussian fit from http://scipy.github.io/old-wiki/pages/Cookbook/FittingData
 # @Maintainer		: Jan Arnold
 # @Date				: 2015/12
-# @Version			: 3DCT 2.0.0 module rev. 2
+# @Version			: 3DCT 2.0.2 module rev. 2
 # @Status			: stable
 # @Usage			: import beadPos.py and call z = beadPos.getz(x,y,img,n=None,optimize=False) to get z position
 # 					  at the given x and y pixel coordinate or call x,y,z = beadPos.getz(x,y,img,n=None,optimize=True)
@@ -43,6 +43,7 @@ except:
 
 repeat = 0
 debug = TDCT_debug.debug
+
 
 def getzPoly(x,y,img,n=None,optimize=False):
 	"""x and y are coordinates
@@ -136,6 +137,7 @@ def getzGauss(x,y,img,parent=None,optimize=False,threshold=None,threshVal=0.6,cu
 
 
 def optimize_z(x,y,z,image,n=None):
+	"""Optimize z for poly fit"""
 	if type(image) == str:
 		img = tf.imread(image)
 	elif type(image) == np.ndarray:

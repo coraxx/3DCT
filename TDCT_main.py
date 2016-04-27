@@ -38,8 +38,7 @@ The Toolbox comes with a PyQt4 GUI. Further dependencies as of now are:
 	- tifffile (Christoph Gohlke)
 	- colorama (optinal for colored stdout when debugging)
 
-A test dataset can be downloaded from the "testdata" folder:
-	https://bitbucket.org/splo0sh/3dctv2/src/ab8914cf71aea77949bc5037ba090df42cfa3abc/testdata/?at=master
+A test dataset can be downloaded here: http://3dct.semper.space/download/3D_correlation_test_dataset.zip
 
 # @Title			: TDCT_main
 # @Project			: 3DCTv2
@@ -54,8 +53,8 @@ A test dataset can be downloaded from the "testdata" folder:
 # 					  Max-Planck-Instute of Biochemistry
 # 					  Department of Molecular Structural Biology
 # @Date				: 2015/08
-# @Version			: 3DCT 2.0.0
-# @Status			: beta
+# @Version			: 3DCT 2.0.2
+# @Status			: stable
 # @Usage			: python -u TDCT_main.py
 # @Notes			:
 # @Python_version	: 2.7.11
@@ -68,7 +67,9 @@ import tempfile
 import time
 # For pyinstaller matlab
 import FileDialog
-# from functools import partial
+# for launching user's guide
+import webbrowser
+# GUI imports
 from subprocess import call
 from PyQt4 import QtCore, QtGui, uic
 from tdct import clrmsg, TDCT_debug, helpdoc, stackProcessing
@@ -81,13 +82,14 @@ else:
 	execdir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(execdir)
 
-if sys.platform == 'win32':
-	print clrmsg.INFO + 'PATH before:', os.environ.get('PATH','')
-	os.environ['PATH'] = execdir + '\;' + os.environ.get('PATH','')
-	print clrmsg.INFO + 'PATH after: ', os.environ.get('PATH','')
-__version__ = 'v2.0.0'
-
 debug = TDCT_debug.debug
+
+if sys.platform == 'win32':
+	if debug is True: print clrmsg.INFO + 'PATH before:', os.environ.get('PATH','')
+	os.environ['PATH'] = execdir + '\;' + os.environ.get('PATH','')
+	if debug is True: print clrmsg.INFO + 'PATH after: ', os.environ.get('PATH','')
+__version__ = 'v2.0.2'
+
 if debug is True: print clrmsg.DEBUG + "Execdir =", execdir
 ########## GUI layout file #######################################################
 ##################################################################################
@@ -109,6 +111,8 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 		self.actionQuit.triggered.connect(self.close)
 		self.actionQuit.setShortcuts(['Ctrl+Q','Esc'])
 		self.actionQuit.setStatusTip('Exit application')
+		self.actionHelp.triggered.connect(self.help)
+		self.actionHelp.setStatusTip("Open User's Guide: http://3dct.semper.space/userguide.html")
 		self.helpdoc = helpdoc.help(self)
 
 		self.actionAbout.triggered.connect(self.about)
@@ -259,6 +263,10 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 									"Max-Planck-Institute of Biochemistry\n\n" +
 									"Developed by:	Jan Arnold\nCorrelation algorithm:	Vladan Lucic"
 									)
+
+	def help(self):
+		url = 'http://3dct.semper.space/userguide.html'
+		webbrowser.open(url, new=2, autoraise=True)
 
 	def checkDirectoryPrivileges(self, path, question="Do you want to select another directory?"):
 		try:
@@ -437,6 +445,12 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 			os.path.join(self.listWidget_WorkingDir.itempath, str(self.listWidget_WorkingDir.selectedItems()[0].text())))
 
 	def runCorrelationModule(self):
+		if hasattr(self, 'correlationModul'):
+			if hasattr(self.correlationModul, 'window'):
+				QtGui.QMessageBox.warning(
+						self,"Warning",
+						"There is already a correlation instance running. Please close it or restart the application.")
+				return
 		if self.lineEdit_selectImage1.text() != "" and self.lineEdit_selectImage2.text() != "":
 			if self.lineEdit_selectImage1.fileIsTiff is True and self.lineEdit_selectImage2.fileIsTiff is True:
 				self.correlationModul = TDCT_correlation.Main(
@@ -633,11 +647,10 @@ class GenericThread(QtCore.QThread):
 
 if __name__ == "__main__":
 	if debug is True:
-		print clrmsg.DEBUG + 'Debug Test'
-		print clrmsg.OK + 'OK Test'
-		print clrmsg.ERROR + 'Error Test'
-		print clrmsg.INFO + 'Info Test'
-		print clrmsg.WARNING + 'Warning Test'
+		print clrmsg.DEBUG + 'Debug active'
+		print clrmsg.OK + 'Imports OK'
+		print clrmsg.INFO + 'This is 3D Correlation Toolbox', __version__
+		print clrmsg.WARNING + 'Debug mode can/will slow down parts of the Toolbox (e.g. marker clicking)'
 
 	app = QtGui.QApplication(sys.argv)
 	window = APP()

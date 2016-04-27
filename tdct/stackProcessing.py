@@ -39,8 +39,8 @@ kwargs:
 # @Credits			:
 # @Maintainer		: Jan Arnold
 # @Date				: 2016/01
-# @Version			: 3DCT 2.0.0 module rev. 3
-# @Status			: beta
+# @Version			: 3DCT 2.0.2 module rev. 5
+# @Status			: stable
 # @Usage			: Can be used as standalone application, i.e. run python -u stackProcessing.py
 # 					: or import stackProcessing.py and use main function like:
 # 					: stackProcessing.main(imgpath, original_steppsize, interpolated_stepsize, interpolationmethod)
