@@ -17,7 +17,7 @@ to get an optimized bead position (optimization of x, y and z)
 # 					  2D Gaussian fit from http://scipy.github.io/old-wiki/pages/Cookbook/FittingData
 # @Maintainer		: Jan Arnold
 # @Date				: 2015/12
-# @Version			: 3DCT 2.0.0 module rev. 2
+# @Version			: 3DCT 2.0.2 module rev. 2
 # @Status			: stable
 # @Usage			: import beadPos.py and call z = beadPos.getz(x,y,img,n=None,optimize=False) to get z position
 # 					  at the given x and y pixel coordinate or call x,y,z = beadPos.getz(x,y,img,n=None,optimize=True)

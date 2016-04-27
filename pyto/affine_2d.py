@@ -3,10 +3,10 @@ Contains class Affine2D for preforming affine transformation (general linear
 transformation followed by translation) on points (vectors) in 2D.
 
 # Author: Vladan Lucic (Max Planck Institute for Biochemistry)
-# $Id: affine_2d.py 1152 2015-05-26 08:53:37Z vladan $
+# $Id: affine_2d.py 1292 2016-04-27 10:35:30Z vladan $
 """
 
-__version__ = "$Revision: 1152 $"
+__version__ = "$Revision: 1292 $"
 
 
 import logging
@@ -525,16 +525,6 @@ class Affine2D(Affine):
         Note: To be replaced by SVD based method
         """
 
-        # do gl first
-        #base_inst = cls.__base__.find(x=x, y=y, x_ref=x_ref, y_ref=y_ref)
-
-        # cast to this class
-        #inst = cls(gl=base_inst.gl, d=base_inst.d, order=base_inst.order)
-        #inst._xPrime = base_inst._xPrime
-        #inst._yPrime = base_inst._yPrime
-        #inst.d = base_inst.d
-        #inst = cls.downcast(affine=base_inst)
-
         # bring x and y to n_points x n_dim shape 
         if xy_axes == 'point_dim':
             pass
@@ -649,6 +639,8 @@ class Affine2D(Affine):
           - gl: transformation matrix
           - d: translation vector
         """
+
+        raise NotImplementedError("Sorry, this is still work in progress.")
 
         # remove masked points
         [x, y], mask = cls.removeMasked([x,y], [x_mask,y_mask])

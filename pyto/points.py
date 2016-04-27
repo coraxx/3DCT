@@ -2,10 +2,10 @@
 Contains class Points for basic manipulation of points.
 
 # Author: Vladan Lucic (Max Planck Institute for Biochemistry)
-# $Id: points.py 65 2008-02-27 18:05:50Z vladan $
+# $Id: points.py 1292 2016-04-27 10:35:30Z vladan $
 """
 
-__version__ = "$Revision: 65 $"
+__version__ = "$Revision: 1292 $"
 
 
 import numpy
@@ -24,7 +24,7 @@ class Points(object):
 
     def distance(self, index=None):
         """
-        Finds distance between points.
+        Finds Eucledian distance between N-dimensional points.
 
         Note: perhaps should go to another class.
         """
@@ -41,6 +41,8 @@ class Points(object):
 
         Not finished
         """
+
+        raise NotImplementedError("Sorry, this is still work in progress.")
 
         # change to another reference 
         x_0 = self._shift(index)

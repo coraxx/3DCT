@@ -3,10 +3,10 @@ Contains class Rigid3D for preforming rigid body transformation and scalar
 scaling followed by translation on points (vectors).
 
 # Author: Vladan Lucic (Max Planck Institute for Biochemistry)
-# $Id: rigid_3d.py 1213 2015-07-01 13:59:08Z vladan $
+# $Id: rigid_3d.py 1292 2016-04-27 10:35:30Z vladan $
 """
 
-__version__ = "$Revision: 1213 $"
+__version__ = "$Revision: 1292 $"
 
 
 from functools import partial
@@ -334,29 +334,12 @@ class Rigid3D(Affine):
             y_cm - best.s_scalar * np.dot(best.q[0:2,:], x_cm))
         translation = np.vstack((translation_2, [0]))
 
-        # optimized parameters
-        #e_params = best.optimizeResult.x[:4]
-        #if scale is None:
-        #    s_scalar = best.optimizeResult.x[4]
-        #else:
-        #    s_scalar = scale
-
         # calculate full y in original (non-center of mass) frame
         y_3 = best.transform(x=x, d=translation.squeeze(1)) 
-        #y_3 = best.s_scalar * np.dot(best.q, x) + translation
 
         # save translation related attributes
-        #inst = cls()
-        #inst.gl = rigid_cm.gl
-        #inst.q = rigid_cm.q
-        #inst.s = rigid_cm.s
-        #inst.s_scalar = rigid_cm.s_scalar
         best.d = translation.reshape(3)
         best.y = y_3
-        #inst.optimizeResult = rigid_cm.optimizeResult
-        #inst.error = rigid_cm.error
-        #rigid_3d.error = y - np.dot(inst.gl[:2,:], x) - translation_2
-        #inst.rmsError = np.sqrt(np.square(inst.error).sum() / x.shape[1])
 
         # ToDo: see about modifying and returning all
 
@@ -1245,6 +1228,8 @@ class Rigid3D(Affine):
         Not correct
         """
  
+        raise NotImplementedError("Sorry, this is still work in progress.")
+
         # convert to CM coords
         x_cm = x - x.mean(axis=-1).reshape((3,1))
         y_cm = y - y.mean(axis=-1).reshape((2,1))
@@ -1281,6 +1266,7 @@ class Rigid3D(Affine):
         """
         Singular martix error
         """
+        raise NotImplementedError("Sorry, this is still work in progress.")
  
         # convert to CM coords
         if cm:
@@ -1358,6 +1344,7 @@ class Rigid3D(Affine):
         """
         Mode 'r' doesn't work (singular matrix in LSQ)
         """
+        raise NotImplementedError("Sorry, this is still work in progress.")
  
         # convert to CM coords
         if cm:
@@ -1466,6 +1453,7 @@ class Rigid3D(Affine):
         """
         Doesn't always work
         """
+        raise NotImplementedError("Sorry, this is still work in progress.")
  
         # convert to CM coords
         if cm:

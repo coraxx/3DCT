@@ -53,8 +53,8 @@ A test dataset can be downloaded here: http://3dct.semper.space/download/3D_corr
 # 					  Max-Planck-Instute of Biochemistry
 # 					  Department of Molecular Structural Biology
 # @Date				: 2015/08
-# @Version			: 3DCT 2.0.0
-# @Status			: beta
+# @Version			: 3DCT 2.0.2
+# @Status			: stable
 # @Usage			: python -u TDCT_main.py
 # @Notes			:
 # @Python_version	: 2.7.11
@@ -67,7 +67,9 @@ import tempfile
 import time
 # For pyinstaller matlab
 import FileDialog
-# from functools import partial
+# for launching user's guide
+import webbrowser
+# GUI imports
 from subprocess import call
 from PyQt4 import QtCore, QtGui, uic
 from tdct import clrmsg, TDCT_debug, helpdoc, stackProcessing
@@ -86,7 +88,7 @@ if sys.platform == 'win32':
 	if debug is True: print clrmsg.INFO + 'PATH before:', os.environ.get('PATH','')
 	os.environ['PATH'] = execdir + '\;' + os.environ.get('PATH','')
 	if debug is True: print clrmsg.INFO + 'PATH after: ', os.environ.get('PATH','')
-__version__ = 'v2.0.0'
+__version__ = 'v2.0.2'
 
 if debug is True: print clrmsg.DEBUG + "Execdir =", execdir
 ########## GUI layout file #######################################################
@@ -109,6 +111,8 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 		self.actionQuit.triggered.connect(self.close)
 		self.actionQuit.setShortcuts(['Ctrl+Q','Esc'])
 		self.actionQuit.setStatusTip('Exit application')
+		self.actionHelp.triggered.connect(self.help)
+		self.actionHelp.setStatusTip("Open User's Guide: http://3dct.semper.space/userguide.html")
 		self.helpdoc = helpdoc.help(self)
 
 		self.actionAbout.triggered.connect(self.about)
@@ -259,6 +263,10 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 									"Max-Planck-Institute of Biochemistry\n\n" +
 									"Developed by:	Jan Arnold\nCorrelation algorithm:	Vladan Lucic"
 									)
+
+	def help(self):
+		url = 'http://3dct.semper.space/userguide.html'
+		webbrowser.open(url, new=2, autoraise=True)
 
 	def checkDirectoryPrivileges(self, path, question="Do you want to select another directory?"):
 		try:

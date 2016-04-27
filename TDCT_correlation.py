@@ -16,8 +16,8 @@ to one single stack file, ...).
 # @Credits			:
 # @Maintainer		: Jan Arnold
 # @Date				: 2016/01
-# @Version			: 3DCT 2.0.0 module rev. 1
-# @Status			: beta
+# @Version			: 3DCT 2.0.2 module rev. 23
+# @Status			: stable
 # @Usage			: part of 3D Correlation Toolbox
 # @Notes			:
 # @Python_version	: 2.7.11
@@ -38,7 +38,7 @@ import tifffile as tf
 ## and correlation algorithm
 from tdct import clrmsg, TDCT_debug, QtCustom, csvHandler, correlation
 
-__version__ = 'v2.0.0'
+__version__ = 'v2.0.2'
 
 # add working directory temporarily to PYTHONPATH
 if getattr(sys, 'frozen', False):
@@ -477,6 +477,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		self.pixmap_item_left = QtGui.QGraphicsPixmapItem(self.pixmap_left, None, self.sceneLeft)
 		## Put exchanged image into background
 		QtGui.QGraphicsItem.stackBefore(self.pixmap_item_left, self.sceneLeft.items()[-1])
+		self.sceneLeft.deleteArrows()
 
 	def resetImageRight(self):
 		## Remove image (item)
@@ -488,6 +489,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		self.pixmap_item_right = QtGui.QGraphicsPixmapItem(self.pixmap_right, None, self.sceneRight)
 		## Put exchanged image into background
 		QtGui.QGraphicsItem.stackBefore(self.pixmap_item_right, self.sceneRight.items()[-1])
+		self.sceneRight.deleteArrows()
 
 	def rotateImage(self):
 		if self.label_selimg.text() == 'left':

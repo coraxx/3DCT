@@ -18,8 +18,8 @@ Custom Qt classes. Some widgets in QT Designer are promoted to these classes:
 # @Credits			:
 # @Maintainer		: Jan Arnold
 # @Date				: 2016/02/27
-# @Version			: 3DCT 2.0.0 module rev. 1
-# @Status			: beta
+# @Version			: 3DCT 2.0.2 module rev. 42
+# @Status			: stable
 # @Usage			: part of 3D Correlation Toolbox
 # @Notes			: Some widgets in QT Designer are promoted to these classes
 # @Python_version	: 2.7.11
@@ -148,25 +148,26 @@ class QTableViewCustom(QtGui.QTableView):
 		if indices:
 			cmDelete = QtGui.QAction('Delete', self)
 			cmDelete.triggered.connect(self.deleteItem)
-			cmGetZpoly = QtGui.QAction('get z poly', self)
-			cmGetZpoly.triggered.connect(self.getz)
-			cmGetZpolyOpt = QtGui.QAction('get z poly optimized', self)
-			cmGetZpolyOpt.triggered.connect(lambda: self.getz(optimize=True))
-			cmGetZgauss = QtGui.QAction('get z gauss', self)
+			cmGetZgauss = QtGui.QAction('Get z gauss', self)
 			cmGetZgauss.triggered.connect(lambda: self.getz(gauss=True))
-			cmGetZgaussOpt = QtGui.QAction('get z gauss optimized', self)
+			cmGetZgaussOpt = QtGui.QAction('Get x,y,z gauss', self)
 			cmGetZgaussOpt.triggered.connect(lambda: self.getz(gauss=True,optimize=True))
+			# broken and not used atm
+			# cmGetZpoly = QtGui.QAction('Get z poly (deprecated)', self)
+			# cmGetZpoly.triggered.connect(self.getz)
+			# cmGetZpolyOpt = QtGui.QAction('Get x,y,z poly (deprecated)', self)
+			# cmGetZpolyOpt.triggered.connect(lambda: self.getz(optimize=True))
 			if self.img is None:
-				cmGetZpoly.setEnabled(False)
-				cmGetZpolyOpt.setEnabled(False)
 				cmGetZgauss.setEnabled(False)
 				cmGetZgaussOpt.setEnabled(False)
+				# cmGetZpoly.setEnabled(False)  # broken atm
+				# cmGetZpolyOpt.setEnabled(False)  # broken atm
 			self.contextMenu = QtGui.QMenu(self)
 			self.contextMenu.addAction(cmDelete)
-			self.contextMenu.addAction(cmGetZpoly)
-			self.contextMenu.addAction(cmGetZpolyOpt)
 			self.contextMenu.addAction(cmGetZgauss)
 			self.contextMenu.addAction(cmGetZgaussOpt)
+			# self.contextMenu.addAction(cmGetZpoly)  # broken atm
+			# self.contextMenu.addAction(cmGetZpolyOpt)  # broken atm
 			self.contextMenu.popup(QtGui.QCursor.pos())
 
 	def getz(self,optimize=False,gauss=False):
