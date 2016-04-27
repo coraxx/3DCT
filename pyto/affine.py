@@ -3,10 +3,10 @@ Contains class Affine for preforming affine transformation (general linear
 transformation followed by translation) on points (vectors).
 
 # Author: Vladan Lucic (Max Planck Institute for Biochemistry)
-# $Id: affine.py 1213 2015-07-01 13:59:08Z vladan $
+# $Id: affine.py 1292 2016-04-27 10:35:30Z vladan $
 """
 
-__version__ = "$Revision: 1213 $"
+__version__ = "$Revision: 1292 $"
 
 
 import warnings
@@ -384,7 +384,7 @@ class Affine(object):
         elif isinstance(x_ref, (list, tuple, numpy.ndarray)):
             pass
         else:
-            raise ValueError(\
+            raise ValueError(
                 'Argument x_ref: ', x_ref, ' was not understood.',
                 " Allowed values are None, 'cm', or an array.") 
         x_prime = x - x_ref
@@ -395,7 +395,7 @@ class Affine(object):
         elif isinstance(y_ref, (list, tuple, numpy.ndarray)):
             pass
         else:
-            raise ValueError(\
+            raise ValueError(
                 'Argument y_ref: ', y_ref, ' was not understood.',
                 " Allowed values are None, 'cm', or an array.") 
         y_prime = y - y_ref
@@ -470,11 +470,11 @@ class Affine(object):
 
         # save individual errors
         transf.glError = transf_gl.error
-        transf.glRmsError = numpy.sqrt(numpy.square(transf.glError).sum() / 
-                                       float(transf.glError.shape[0]))
+        transf.glRmsError = numpy.sqrt(
+            numpy.square(transf.glError).sum() / float(transf.glError.shape[0]))
         transf.dError = transf_d.error
-        transf.dRmsError = numpy.sqrt(numpy.square(transf.dError).sum() / 
-                                       float(transf.dError.shape[0]))
+        transf.dRmsError = numpy.sqrt(
+            numpy.square(transf.dError).sum() / float(transf.dError.shape[0]))
 
         return transf
 
@@ -986,16 +986,6 @@ class Affine(object):
         gl = numpy.dot(t_1.gl, t_2.gl)
         d = t_1.transform(x=t_2.d)
         tr = cls(gl=gl, d=d)
-
-        # try to calculate the rms error
-        #try:
-        #    n_points_2 = t_2.error.shape[0]
-        #    converted_e2 = t_1.transform(t_2.error, d=0)
-        #    ms_e2 = (numpy.square(converted_e2).sum() 
-        #             / float(n_points_2))
-        #    tr._rmsError = numpy.sqrt(ms_e2 + numpy.square(t_1.rmsError)) 
-        #except AttributeError:
-        #    pass
 
         # get errors
         found_error = True

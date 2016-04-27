@@ -109,7 +109,7 @@
           <property name="maximumSize">
            <size>
             <width>256</width>
-            <height>16777215</height>
+            <height>300</height>
            </size>
           </property>
          </widget>
@@ -143,23 +143,75 @@
              <number>0</number>
             </property>
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_20">
+             <layout class="QVBoxLayout" name="verticalLayout_15">
               <property name="spacing">
-               <number>0</number>
+               <number>1</number>
               </property>
               <item>
-               <widget class="QToolButton" name="toolButton_loadLeftImage">
-                <property name="text">
-                 <string>Load left image...</string>
+               <layout class="QHBoxLayout" name="horizontalLayout_20">
+                <property name="spacing">
+                 <number>0</number>
                 </property>
-               </widget>
+                <item>
+                 <widget class="QToolButton" name="toolButton_loadLeftImage">
+                  <property name="minimumSize">
+                   <size>
+                    <width>107</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string>Load left image...</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QToolButton" name="toolButton_loadRightImage">
+                  <property name="minimumSize">
+                   <size>
+                    <width>107</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string>Load right image...</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
               </item>
               <item>
-               <widget class="QToolButton" name="toolButton_loadRightImage">
-                <property name="text">
-                 <string>Load right image...</string>
+               <layout class="QHBoxLayout" name="horizontalLayout_25">
+                <property name="spacing">
+                 <number>0</number>
                 </property>
-               </widget>
+                <item>
+                 <widget class="QToolButton" name="toolButton_resetLeftImage">
+                  <property name="minimumSize">
+                   <size>
+                    <width>107</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string>Reset left image</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QToolButton" name="toolButton_resetRightImage">
+                  <property name="minimumSize">
+                   <size>
+                    <width>107</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string>Reset right image</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
               </item>
              </layout>
             </item>
@@ -476,7 +528,7 @@
               <property name="sizeHint" stdset="0">
                <size>
                 <width>20</width>
-                <height>40</height>
+                <height>5</height>
                </size>
               </property>
              </spacer>
@@ -1114,7 +1166,7 @@ rotation center at:</string>
                     <double>0.100000000000000</double>
                    </property>
                    <property name="value">
-                    <double>0.800000000000000</double>
+                    <double>0.500000000000000</double>
                    </property>
                   </widget>
                  </item>
@@ -1136,6 +1188,54 @@ rotation center at:</string>
                    </property>
                    <property name="value">
                     <number>3</number>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+               <item>
+                <layout class="QHBoxLayout" name="horizontalLayout_23">
+                 <item>
+                  <widget class="QToolButton" name="toolButton_selectMarkerColor">
+                   <property name="text">
+                    <string>Select...</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="label_markerColor">
+                   <property name="styleSheet">
+                    <string notr="true">background-color: rgb(0,255,0);</string>
+                   </property>
+                   <property name="text">
+                    <string>Marker Color</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+               <item>
+                <layout class="QHBoxLayout" name="horizontalLayout_24">
+                 <item>
+                  <widget class="QToolButton" name="toolButton_selectPoiColor">
+                   <property name="text">
+                    <string>Select...</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="label_poiColor">
+                   <property name="styleSheet">
+                    <string notr="true">background-color: rgb(255,0,0);</string>
+                   </property>
+                   <property name="text">
+                    <string>POI Color</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
                    </property>
                   </widget>
                  </item>

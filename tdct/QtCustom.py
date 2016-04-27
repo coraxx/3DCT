@@ -18,8 +18,8 @@ Custom Qt classes. Some widgets in QT Designer are promoted to these classes:
 # @Credits			:
 # @Maintainer		: Jan Arnold
 # @Date				: 2016/02/27
-# @Version			: 3DCT 2.0.0 module rev. 1
-# @Status			: beta
+# @Version			: 3DCT 2.0.2 module rev. 42
+# @Status			: stable
 # @Usage			: part of 3D Correlation Toolbox
 # @Notes			: Some widgets in QT Designer are promoted to these classes
 # @Python_version	: 2.7.11
@@ -33,6 +33,7 @@ import numpy as np
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
+from matplotlib import style
 import matplotlib.patches as patches
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
@@ -42,6 +43,7 @@ import clrmsg
 import TDCT_debug
 
 debug = TDCT_debug.debug
+style.use('fivethirtyeight')
 ##############################
 # QTableViewCustom
 
@@ -102,8 +104,8 @@ class QTableViewCustom(QtGui.QTableView):
 					float(self._model.data(self._model.index(row, 0)).toString()),
 					float(self._model.data(self._model.index(row, 1)).toString()))
 				self._scene.zValuesDict[item] = [
-												self._model.data(self._model.index(row, 2)).toString(),
-												self._model.itemFromIndex(self._model.index(row, 2)).foreground().color().getRgb()]
+					self._model.data(self._model.index(row, 2)).toString(),
+					self._model.itemFromIndex(self._model.index(row, 2)).foreground().color().getRgb()]
 				row += 1
 		self.mainParent.colorModels()
 
@@ -146,25 +148,26 @@ class QTableViewCustom(QtGui.QTableView):
 		if indices:
 			cmDelete = QtGui.QAction('Delete', self)
 			cmDelete.triggered.connect(self.deleteItem)
-			cmGetZpoly = QtGui.QAction('get z poly', self)
-			cmGetZpoly.triggered.connect(self.getz)
-			cmGetZpolyOpt = QtGui.QAction('get z poly optimized', self)
-			cmGetZpolyOpt.triggered.connect(lambda: self.getz(optimize=True))
-			cmGetZgauss = QtGui.QAction('get z gauss', self)
+			cmGetZgauss = QtGui.QAction('Get z gauss', self)
 			cmGetZgauss.triggered.connect(lambda: self.getz(gauss=True))
-			cmGetZgaussOpt = QtGui.QAction('get z gauss optimized', self)
+			cmGetZgaussOpt = QtGui.QAction('Get x,y,z gauss', self)
 			cmGetZgaussOpt.triggered.connect(lambda: self.getz(gauss=True,optimize=True))
+			# broken and not used atm
+			# cmGetZpoly = QtGui.QAction('Get z poly (deprecated)', self)
+			# cmGetZpoly.triggered.connect(self.getz)
+			# cmGetZpolyOpt = QtGui.QAction('Get x,y,z poly (deprecated)', self)
+			# cmGetZpolyOpt.triggered.connect(lambda: self.getz(optimize=True))
 			if self.img is None:
-				cmGetZpoly.setEnabled(False)
-				cmGetZpolyOpt.setEnabled(False)
 				cmGetZgauss.setEnabled(False)
 				cmGetZgaussOpt.setEnabled(False)
+				# cmGetZpoly.setEnabled(False)  # broken atm
+				# cmGetZpolyOpt.setEnabled(False)  # broken atm
 			self.contextMenu = QtGui.QMenu(self)
 			self.contextMenu.addAction(cmDelete)
-			self.contextMenu.addAction(cmGetZpoly)
-			self.contextMenu.addAction(cmGetZpolyOpt)
 			self.contextMenu.addAction(cmGetZgauss)
 			self.contextMenu.addAction(cmGetZgaussOpt)
+			# self.contextMenu.addAction(cmGetZpoly)  # broken atm
+			# self.contextMenu.addAction(cmGetZpolyOpt)  # broken atm
 			self.contextMenu.popup(QtGui.QCursor.pos())
 
 	def getz(self,optimize=False,gauss=False):
@@ -204,8 +207,8 @@ class QTableViewCustom(QtGui.QTableView):
 							threshVal=self.mainParent.doubleSpinBox_treshVal.value(),cutout=self._scene.markerSize)
 						if debug is True: print clrmsg.DEBUG + str(self.img.shape), xopt,yopt,zopt
 						if (
-							abs(x-xopt) <= 2*self._scene.markerSize and
-							abs(y-yopt) <= 2*self._scene.markerSize and
+							abs(x - xopt) <= 2 * self._scene.markerSize and
+							abs(y - yopt) <= 2 * self._scene.markerSize and
 							0 <= zopt <= self.img.shape[-3]):
 							self._scene.zValuesDict[activeitems[row]][1] = (255,0,0)
 							self._model.itemFromIndex(self._model.index(row, 2)).setForeground(QtCore.Qt.black)
@@ -293,7 +296,7 @@ class QGraphicsSceneCustom(QtGui.QGraphicsScene):
 			scalingFactor = 1 / 1.15
 		self.parent().scale(scalingFactor, scalingFactor)
 		## Center on mouse pos only if mouse moved mor then 25px
-		if (event.screenPos()-self.lastScreenPos).manhattanLength() > 25:
+		if (event.screenPos() - self.lastScreenPos).manhattanLength() > 25:
 			self.parent().centerOn(event.scenePos().x(), event.scenePos().y())
 			self.lastScenePos = event.scenePos()
 		else:
@@ -346,11 +349,11 @@ class QGraphicsSceneCustom(QtGui.QGraphicsScene):
 		elif event.key() == QtCore.Qt.Key_Plus:
 			self.parent().scale(1.15, 1.15)
 		elif event.key() == QtCore.Qt.Key_Minus:
-			self.parent().scale(1/1.15, 1/1.15)
+			self.parent().scale(1 / 1.15, 1 / 1.15)
 
 	def addCircle(self,x,y,z=0.0):
 		## First add at 0,0 then move to get position from item.scenePos() or .x() and y.()
-		circle = self.addEllipse(-self.markerSize, -self.markerSize, self.markerSize*2, self.markerSize*2, self.pen)
+		circle = self.addEllipse(-self.markerSize, -self.markerSize, self.markerSize * 2, self.markerSize * 2, self.pen)
 		circle.setPos(x,y)
 		circle.setFlag(QtGui.QGraphicsItem.ItemIsMovable, True)
 		circle.setFlag(QtGui.QGraphicsItem.ItemIsSelectable, True)
@@ -380,9 +383,9 @@ class QGraphicsSceneCustom(QtGui.QGraphicsScene):
 		# 	loopcounter += 1
 
 	def addArrow(self,start,end,arrowangle=45,color=QtCore.Qt.red):
-		dx, dy = map(lambda a,b: a-b, end, start)
+		dx, dy = map(lambda a,b: a - b, end, start)
 		length = math.hypot(dx,dy)
-		angle = -(math.asin(dy/length))
+		angle = -(math.asin(dy / length))
 		if dx < 0:
 			angle = math.radians(180) - angle
 		if debug is True: print clrmsg.DEBUG + 'Radians:', angle, 'Degree', math.degrees(angle)
@@ -390,14 +393,14 @@ class QGraphicsSceneCustom(QtGui.QGraphicsScene):
 		path.moveTo(*start)
 		path.lineTo(*end)
 		path.arcMoveTo(
-			end[0]-0.25*length, end[1]-0.25*length,
-			0.5*length, 0.5*length,
-			180-arrowangle+math.degrees(angle))
+			end[0] - 0.25 * length, end[1] - 0.25 * length,
+			0.5 * length, 0.5 * length,
+			180 - arrowangle + math.degrees(angle))
 		path.lineTo(*end)
 		path.arcMoveTo(
-			end[0]-0.25*length, end[1]-0.25*length,
-			0.5*length, 0.5*length,
-			180+arrowangle+math.degrees(angle))
+			end[0] - 0.25 * length, end[1] - 0.25 * length,
+			0.5 * length, 0.5 * length,
+			180 + arrowangle + math.degrees(angle))
 		path.lineTo(*end)
 		self.addPath(path,QtGui.QPen(color))
 
@@ -415,25 +418,25 @@ class QGraphicsSceneCustom(QtGui.QGraphicsScene):
 		for item in self.items():
 			if isinstance(item, QtGui.QGraphicsEllipseItem):
 				## Update marker size
-				item.setRect(-self.markerSize, -self.markerSize, self.markerSize*2, self.markerSize*2)
+				item.setRect(-self.markerSize, -self.markerSize, self.markerSize * 2, self.markerSize * 2)
 				## Adding number
-				nr = self.addSimpleText(str(pointidx),QtGui.QFont("Helvetica", pointSize=1.5*self.markerSize))
+				nr = self.addSimpleText(str(pointidx),QtGui.QFont("Helvetica", pointSize=1.5 * self.markerSize))
 				nr.setParentItem(item)
 				## Counter rotate number so it stays level
 				nr.setRotation(-self.rotangle)
 				## Convert degree to rad plus a 30 offset to place the number in the lower right corner of the marker
-				radangle = math.radians(390-self.rotangle)
+				radangle = math.radians(390 - self.rotangle)
 				## Number's position has to be angle dependant -> sin cos
-				nr.setPos(math.cos(radangle)*self.markerSize,math.sin(radangle)*self.markerSize)
+				nr.setPos(math.cos(radangle) * self.markerSize,math.sin(radangle) * self.markerSize)
 				# nr.setPen(self.pen) # outline
 				nr.setBrush(QtCore.Qt.cyan)  # fill
 				## Adding crosshair
-				hline = self.addLine(-self.markerSize-2,0,self.markerSize+2,0)
+				hline = self.addLine(-self.markerSize - 2,0,self.markerSize + 2,0)
 				hline.setPen(QtGui.QPen(QtGui.QColor(255, 255, 255, 128)))  # r,g,b,alpha, white transparent
 				hline.setParentItem(item)
 				## Counter rotate crosshair (horizontal line) so it stays level
 				hline.setRotation(-self.rotangle)
-				vline = self.addLine(0,-self.markerSize-2,0,self.markerSize+2)
+				vline = self.addLine(0,-self.markerSize - 2,0,self.markerSize + 2)
 				vline.setPen(QtGui.QPen(QtGui.QColor(255, 255, 255, 128)))  # r,g,b,alpha, white transparent
 				vline.setParentItem(item)
 				## Counter rotate crosshair (vertical line) so it stays level
@@ -483,7 +486,7 @@ class MatplotlibWidgetCustom(QtGui.QWidget):
 			layout = QtGui.QVBoxLayout()
 			layout.addWidget(self.canvas)
 			if toolbar is True:
-				self.figure.set_figheight(height+0.5)
+				self.figure.set_figheight(height + 0.5)
 				self.toolbar = NavigationToolbar(self.canvas, self)
 				layout.addWidget(self.toolbar)
 			self.setLayout(layout)
@@ -521,7 +524,7 @@ class MatplotlibWidgetCustom(QtGui.QWidget):
 
 		if frame is True and framesize is not None:
 			self.subplotScatter.add_patch(patches.Rectangle(
-				(-framesize*0.5, -framesize*0.5), framesize, framesize, fill=False, edgecolor="red"))
+				(-framesize * 0.5, -framesize * 0.5), framesize, framesize, fill=False, edgecolor="red"))
 		elif frame is True and framesize is None:
 			print "Please specify frame size in px as e.g. framesize=1.86"
 
@@ -542,7 +545,7 @@ class MatplotlibWidgetCustom(QtGui.QWidget):
 		# now determine nice limits by hand:
 		binwidth = 0.25
 		xymax = np.max([np.max(np.fabs(x)), np.max(np.fabs(y))])
-		lim = (int(xymax/binwidth) + 1) * binwidth
+		lim = (int(xymax / binwidth) + 1) * binwidth
 
 		bins = np.arange(-lim, lim + binwidth, binwidth)
 		self.axHistx.hist(x, bins=bins)
@@ -583,18 +586,19 @@ class MatplotlibWidgetCustom(QtGui.QWidget):
 		n = len(self.figure.axes)
 		if n < 2:
 			for i in range(n):
-				self.figure.axes[i].change_geometry(n+1, 1, i+1)
+				self.figure.axes[i].change_geometry(n + 1, 1, i + 1)
 			# self.figure.subplots_adjust(hspace=0.5)
 			self.figure.tight_layout()
-			self.subplotMat = self.figure.add_subplot(n+1, 1, n+1)
+			self.subplotMat = self.figure.add_subplot(n + 1, 1, n + 1)
 		# self.subplotMat.plot(np.arange(100),np.random.random(100)*10)
 		# mat = tf.imread('/Users/jan/Desktop/dot2.tif')
 		self.subplotMat.clear()
 		self.subplotMat.matshow(mat)
-		self.subplotMat.contour(contour, cmap='Greys')
+		self.subplotMat.contour(contour, cmap='Greys', linewidths=(1,))
+		self.subplotMat.grid(False)
 		self.subplotMat.text(
-							0.95, 0.03, labelContour, fontsize=12, horizontalalignment='right',
-							verticalalignment='bottom', transform=self.figure.transFigure)
+			0.95, 0.03, labelContour, fontsize=12, horizontalalignment='right',
+			verticalalignment='bottom', transform=self.figure.transFigure)
 		self.subplotMat.set_anchor('W')
 		self.canvas.draw()
 
@@ -655,16 +659,16 @@ class QLineEditFilePath(QtGui.QLineEdit):
 			CF.kCFAllocatorDefault,
 			localFileQString.toUtf8(),
 			CF.kCFStringEncodingUTF8
-			)
+		)
 		relCFURL = CF.CFURLCreateWithFileSystemPath(
 			CF.kCFAllocatorDefault,
 			relCFStringRef,
 			CF.kCFURLPOSIXPathStyle,
 			False  # is directory
-			)
+		)
 		absCFURL = CF.CFURLCreateFilePathURL(
 			CF.kCFAllocatorDefault,
 			relCFURL,
 			objc.NULL
-			)
+		)
 		return QtCore.QUrl(str(absCFURL[0])).toLocalFile()
