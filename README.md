@@ -45,6 +45,8 @@ Copyright (C) 2016  Jan Arnold
 
 Version 2.0 is the first public release and received a revised GUI and image stack handling (reslicing) done in python (formerly outsourced to FIJI)
 
+Most recent stable release version is 2.0.2.
+
 ### Binaries ###
 
 There are [Pyinstaller](http://www.pyinstaller.org) binaries available for Mac OS X, Windows, and Linux (built under Ubuntu 15.04) at [http://3dct.semper.space/](http://3dct.semper.space/#download)
