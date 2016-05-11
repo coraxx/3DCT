@@ -2,7 +2,7 @@
 Contains class Affine for preforming affine transformation (general linear
 transformation followed by translation) on points (vectors).
 
-# Author: Vladan Lucic (Max Planck Institute for Biochemistry)
+# Author: Vladan Lucic (Max Planck Institute of Biochemistry)
 # $Id: affine.py 1292 2016-04-27 10:35:30Z vladan $
 """
 

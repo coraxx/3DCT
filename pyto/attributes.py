@@ -2,7 +2,7 @@
 
 Functions related to attribute get/set python built-ins. 
 
-# Author: Vladan Lucic, Max Planck Institute for Biochemistry
+# Author: Vladan Lucic, Max Planck Institute of Biochemistry
 # $Id: attributes.py 334 2008-12-23 11:32:15Z vladan $
 """
 

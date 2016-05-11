@@ -34,6 +34,7 @@ from PyQt4 import QtCore, QtGui, uic
 import numpy as np
 import cv2
 import tifffile as tf
+import qimage2ndarray
 ## Colored stdout, custom Qt functions (mostly to handle events), CSV handler
 ## and correlation algorithm
 from tdct import clrmsg, TDCT_debug, QtCustom, csvHandler, correlation
@@ -679,21 +680,30 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 											if debug is True: print clrmsg.DEBUG + "Pixel size parser:", e
 											pass
 
+	# ## Convert opencv image (numpy array in BGR) to RGB QImage and return pixmap. Only takes 2D images
+	# def cv2Qimage(self,img):
+	# 	if debug is True: print clrmsg.DEBUG + "===== cv2Qimage"
+	# 	## Format 2D gray-scale to RGB for QImage
+	# 	if img.ndim == 2:
+	# 		img = cv2.cvtColor(img,cv2.COLOR_GRAY2RGB)
+	# 	if img.shape[0] <= 4:
+	# 		if debug is True: print clrmsg.DEBUG + "Swapping image axes from c,y,x to y,x,c."
+	# 		img = img.swapaxes(0,2).swapaxes(0,1)
+	# 	if debug is True: print clrmsg.DEBUG + "Image shape:", img.shape
+	# 	if img.shape[-1] == 4:
+	# 		image = QtGui.QImage(img.tobytes(), img.shape[1], img.shape[0], QtGui.QImage.Format_ARGB32).rgbSwapped()
+	# 	else:
+	# 		image = QtGui.QImage(img.tobytes(), img.shape[1], img.shape[0], QtGui.QImage.Format_RGB888)  # .rgbSwapped()
+	# 	return QtGui.QPixmap.fromImage(image)
+
 	## Convert opencv image (numpy array in BGR) to RGB QImage and return pixmap. Only takes 2D images
 	def cv2Qimage(self,img):
 		if debug is True: print clrmsg.DEBUG + "===== cv2Qimage"
-		## Format 2D gray-scale to RGB for QImage
-		if img.ndim == 2:
-			img = cv2.cvtColor(img,cv2.COLOR_GRAY2RGB)
 		if img.shape[0] <= 4:
 			if debug is True: print clrmsg.DEBUG + "Swapping image axes from c,y,x to y,x,c."
 			img = img.swapaxes(0,2).swapaxes(0,1)
 		if debug is True: print clrmsg.DEBUG + "Image shape:", img.shape
-		if img.shape[-1] == 4:
-			image = QtGui.QImage(img.tobytes(), img.shape[1], img.shape[0], QtGui.QImage.Format_ARGB32).rgbSwapped()
-		else:
-			image = QtGui.QImage(img.tobytes(), img.shape[1], img.shape[0], QtGui.QImage.Format_RGB888)  # .rgbSwapped()
-		return QtGui.QPixmap.fromImage(image)
+		return QtGui.QPixmap.fromImage(qimage2ndarray.array2qimage(img))
 
 	## Adjust Brightness and Contrast by sliders
 	def adjustBrightCont(self):
@@ -870,7 +880,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 				imgShape = [3536,img.shape[1]]
 			else:
 				imgShape = img.shape
-			imageProps = [imgShape,self.sceneLeft.pixelSize]
+			imageProps = [imgShape,self.sceneLeft.pixelSize,self.imgstack_right.shape]
 			if img.ndim == 2:
 				## Need RGB for colored markers
 				img = cv2.cvtColor(img,cv2.COLOR_GRAY2BGR)
@@ -892,7 +902,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 				imgShape = [3536,img.shape[1]]
 			else:
 				imgShape = img.shape
-			imageProps = [imgShape,self.sceneRight.pixelSize]
+			imageProps = [imgShape,self.sceneRight.pixelSize,self.imgstack_left.shape]
 			if img.ndim == 2:
 				## Need RGB for colored markers
 				img = cv2.cvtColor(img,cv2.COLOR_GRAY2BGR)
