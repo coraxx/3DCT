@@ -73,7 +73,7 @@ def genMatlabScript():
 	format_args = [
 		filein,					# {0} = 'str'  file path to raw volume
 		dtype,					# {1} = 'str'  dtype, probably 'int16' or 'uint16'
-		endiantype,				# {2} = 'str'  endian type, probably be
+		endiantype,				# {2} = 'str'  endian type, probably le except when saving raw with FIJI (be by default)
 		dimensions_x,			# {3} = 'int'  vol in dimension x	e.g. 1344	[px]
 		dimensions_y,			# {4} = 'int'  vol in dimension y	e.g. 1024	[px]
 		dimensions_z,			# {5} = 'int'  vol in dimension z	e.g. 106	[px]
