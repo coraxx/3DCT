@@ -1,5 +1,23 @@
 # Changelog #
 
+## 2.0.3 ##
+2016-06-09[^1]
+
+##### Minor Changes: #####
+- added some in-code documentation
+- added missing matlab function in matlab roatation script generator
+- stack processing of CorrSight sequences now include tiles. They are added in sequence, i.e. stack after stack in one file
+
+##### Bugfixes:#####
+- fixed loading of RGB images. Some were imported incorrectly and showed tiling
+- coordinate offset calculation for rotation center other than 0,0,0
+- matlab roatation script generator variable typo fixed
+
+##### Known bugs:#####
+- file list order from working directory in 3DCT main window not sorted correctly under Linux (tested under Ubuntu 15.04)
+- when changing contrast/brightness and the focus is switched quickly during the process (like clicking on the other image) the order of added markers is not correct anymore. A workaround is to click on the affected image and change the contrast/brightness again, or reset it.
+
+
 ## 2.0.2 ##
 2016-04-27[^1]
 

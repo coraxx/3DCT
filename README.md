@@ -16,6 +16,7 @@ The Toolbox is written in Python 2.7 and comes with a PyQt4 GUI. Further depende
 + cv2 [^2]
 + tifffile [^2]  (Christoph Gohlke)
 + colorama [^2]  (optional for colored stdout when debugging)
++ qimage2ndarray [^2]
 
 [^1]: usually available via your favorite package manager
 [^2]: available via pip
@@ -45,7 +46,7 @@ Copyright (C) 2016  Jan Arnold
 
 Version 2.0 is the first public release and received a revised GUI and image stack handling (reslicing) done in python (formerly outsourced to FIJI)
 
-Most recent stable release version is 2.0.2.
+Most recent stable release version is 2.0.3.
 
 ### Binaries ###
 
