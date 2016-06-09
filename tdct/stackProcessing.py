@@ -39,7 +39,7 @@ kwargs:
 # @Credits			:
 # @Maintainer		: Jan Arnold
 # @Date				: 2016/01
-# @Version			: 3DCT 2.0.2 module rev. 5
+# @Version			: 3DCT 2.0.3 module rev. 6
 # @Status			: stable
 # @Usage			: Can be used as standalone application, i.e. run python -u stackProcessing.py
 # 					: or import stackProcessing.py and use main function like:
@@ -213,7 +213,7 @@ def main(img_path, ss_in, ss_out, qtprocessbar=None, interpolationmethod='linear
 			filelist = []
 			## Gather filenames from same channel
 			for filename in files:
-				if fnmatch.fnmatch(filename, 'Tile_001-001-*{0}-000.tif'.format(i)):
+				if fnmatch.fnmatch(filename, 'Tile_*{0}-000.tif'.format(i)):
 					filelist.append(os.path.join(img_path,filename))
 			## Default pattern is not compatible with OME header from FEI MAPS/Live Acquisition Software
 			img = tf.imread(filelist, pattern='')
