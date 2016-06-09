@@ -1,7 +1,7 @@
 """
 Contains class Points for basic manipulation of points.
 
-# Author: Vladan Lucic (Max Planck Institute for Biochemistry)
+# Author: Vladan Lucic (Max Planck Institute of Biochemistry)
 # $Id: points.py 1292 2016-04-27 10:35:30Z vladan $
 """
 

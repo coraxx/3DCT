@@ -103,19 +103,19 @@ The procedure is organized as follows:
 # @Title			: correlation
 # @Project			: 3DCTv2
 # @Description		: Establishes EM - LM correlation and correlates spots between EM and LM
-# @Author			: Vladan Lucic (Max Planck Institute for Biochemistry)
+# @Author			: Vladan Lucic (Max Planck Institute of Biochemistry)
 # @License			: GPLv3 (see LICENSE file)
 # @Email			:
 # @Credits			:
 # @Maintainer		: Vladan Lucic, Jan Arnold
 # @Date				: 2015/10
-# @Version			: 3DCT 2.0.2 module rev. 3
+# @Version			: 3DCT 2.0.3 module rev. 3
 # @Status			: stable
 # @Usage			: import correlation.py and call main(markers_3d,markers_2d,spots_3d,rotation_center,results_file)
 # 					: "markers_3d", "markers_2d" and "spots_3d" are numpy arrays. Those contain 3D coordinates
 # 					: (arbitrary 3rd dimension for the 2D array). Marker coordinates are for the correlation and spot
 # 					: coordinates are points on which the correlation is applied to.
-# @Notes			: Edited and adapted by Jan Arnold (Max Planck Institute for Biochemistry)
+# @Notes			: Edited and adapted by Jan Arnold (Max Planck Institute of Biochemistry)
 # @Python_version	: 2.7.11
 """
 # ======================================================================================================================
@@ -276,6 +276,24 @@ def main(markers_3d,markers_2d,spots_3d,rotation_center,results_file,imageProps=
 		randome=random_rotations, einit=einit, einit_dist=restrict_rotations,
 		randoms=random_scale, sinit=scale_init, ninit=ninit)
 
+	if imageProps:
+		# establish correlation for cubic rotation (offset added to coordinates)
+		offsetZ = (max(imageProps[2])-imageProps[2][0])*0.5
+		offsetY = (max(imageProps[2])-imageProps[2][1])*0.5
+		offsetX = (max(imageProps[2])-imageProps[2][2])*0.5
+		print offsetZ, offsetY, offsetX
+		mark_3d_cube = np.copy(mark_3d)
+		mark_3d_cube[0] += offsetX
+		mark_3d_cube[1] += offsetY
+		mark_3d_cube[2] += offsetZ
+
+		transf_cube = Rigid3D.find_32(
+			x=mark_3d_cube, y=mark_2d, scale=scale,
+			randome=random_rotations, einit=einit, einit_dist=restrict_rotations,
+			randoms=random_scale, sinit=scale_init, ninit=ninit)
+	else:
+		transf_cube = transf
+
 	# fluo spots
 	spots_3d = spots_3d[range(spots_3d.shape[0])].transpose()
 
@@ -289,7 +307,7 @@ def main(markers_3d,markers_2d,spots_3d,rotation_center,results_file,imageProps=
 	transf_3d = transf.transform(x=mark_3d)
 
 	# calculate translation if rotation center is not at (0,0,0)
-	modified_translation = transf.recalculate_translation(
+	modified_translation = transf_cube.recalculate_translation(
 		rotation_center=rotation_center)
 	# print 'modified_translation: ', modified_translation
 

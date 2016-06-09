@@ -36,7 +36,7 @@ The Toolbox comes with a PyQt4 GUI. Further dependencies as of now are:
 	- opencv
 	- cv2
 	- tifffile (Christoph Gohlke)
-	- colorama (optinal for colored stdout when debugging)
+	- colorama (optional for colored stdout when debugging)
 
 A test dataset can be downloaded here: http://3dct.semper.space/download/3D_correlation_test_dataset.zip
 
@@ -50,10 +50,10 @@ A test dataset can be downloaded here: http://3dct.semper.space/download/3D_corr
 # @Credits			: Vladan Lucic for the 3D to 2D correlation code
 # 					: and the stackoverflow community for all the bits and pieces
 # @Maintainer		: Jan Arnold
-# 					  Max-Planck-Instute of Biochemistry
+# 					  Max-Planck-Institute of Biochemistry
 # 					  Department of Molecular Structural Biology
 # @Date				: 2015/08
-# @Version			: 3DCT 2.0.2
+# @Version			: 3DCT 2.0.3
 # @Status			: stable
 # @Usage			: python -u TDCT_main.py
 # @Notes			:
@@ -76,7 +76,7 @@ from tdct import clrmsg, TDCT_debug, helpdoc, stackProcessing
 import TDCT_correlation
 # add working directory temporarily to PYTHONPATH
 if getattr(sys, 'frozen', False):
-	# programm runs in a bundle (pyinstaller)
+	# program runs in a bundle (pyinstaller)
 	execdir = sys._MEIPASS
 else:
 	execdir = os.path.dirname(os.path.realpath(__file__))
@@ -88,7 +88,7 @@ if sys.platform == 'win32':
 	if debug is True: print clrmsg.INFO + 'PATH before:', os.environ.get('PATH','')
 	os.environ['PATH'] = execdir + '\;' + os.environ.get('PATH','')
 	if debug is True: print clrmsg.INFO + 'PATH after: ', os.environ.get('PATH','')
-__version__ = 'v2.0.2'
+__version__ = 'v2.0.3'
 
 if debug is True: print clrmsg.DEBUG + "Execdir =", execdir
 ########## GUI layout file #######################################################
@@ -170,12 +170,15 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 		# Checkbox
 		# DEL self.checkBox_cubeVoxels.stateChanged.connect(lambda: self.cubeVoxelsState(self.checkBox_cubeVoxels.isChecked()))
 
-		# Init Working directory
+		# Initialize Working directory
 		self.workingdir = os.path.expanduser("~")
 		self.lineEdit_WorkingDirPath.setText(self.workingdir)
 		self.populate_filelist(self.workingdir)
 
 	def isValidFile(self, lineEdit):
+		"""
+		Checks if selected file is a valid tiff file and colors the appropriate QLine Edit.
+		"""
 		if lineEdit.text() == "":
 			lineEdit.setStyleSheet(
 				"QLineEdit{background-color: white;} QLineEdit:hover{border: 1px solid grey; background-color white;}")
@@ -202,6 +205,9 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 			lineEdit.fileIsTiff = False
 
 	def isValidPath(self, lineEdit):
+		"""
+		Checks if path is a valid path with writing permissions and colors the appropriate QLine Edit.
+		"""
 		if lineEdit.text() == "":
 			lineEdit.setStyleSheet(
 				"QLineEdit{background-color: white;} QLineEdit:hover{border: 1px solid grey; background-color white;}")
@@ -230,14 +236,21 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 				"QLineEdit{background-color: rgb(255,0,0,80);} QLineEdit:hover{border: 1px solid grey; background-color rgb(255,0,0,80);}")
 
 	def focusInEvent(self, event):
+		"""
+		Insert code to run when focus is returned to main window here.
+		"""
 		if debug is True: print clrmsg.DEBUG, 'Got focus'
 
 	## About
 	def about(self):
+		"""
+		About screen with splash screen (gif file) and simple fallback info window.
+		"""
 		gif = os.path.join(execdir,'icons','SplashScreen.gif')
 		if os.path.isfile(gif):
 			movie = QtGui.QMovie(gif)
 			print movie
+			## MovieSplashScreen class defined at end of file with info text settings etc.
 			splash = MovieSplashScreen(movie)
 			splash.show()
 			if debug is True: print clrmsg.DEBUG, 'splash screen running'
@@ -265,10 +278,14 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 									)
 
 	def help(self):
+		## Help action in menu
 		url = 'http://3dct.semper.space/userguide.html'
 		webbrowser.open(url, new=2, autoraise=True)
 
 	def checkDirectoryPrivileges(self, path, question="Do you want to select another directory?"):
+		"""
+		Check if directory is accessible (write privileges granted).
+		"""
 		try:
 			testfile = tempfile.TemporaryFile(dir=path)
 			testfile.close()
@@ -306,6 +323,9 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 
 	## Open directory
 	def openDirectoy(self, path):
+		"""
+		Open directory in file browser.
+		"""
 		if debug is True: print clrmsg.DEBUG, 'Passed path value:', path
 		directory, file = os.path.split(str(path))
 		if debug is True: print clrmsg.DEBUG, 'os split (directory, file):', directory, file
@@ -319,10 +339,13 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 
 	## Exit Warning
 	def closeEvent(self, event):
+		"""
+		Exit dialog. If accepted, close other windows first.
+		"""
 		quit_msg = "Are you sure you want to exit the\n3D Correlation Toolbox?\n\nUnsaved data will be lost!"
 		reply = QtGui.QMessageBox.question(self, 'Message', quit_msg, QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
 		if reply == QtGui.QMessageBox.Yes:
-			# if loaded, close pointselection tool widget and sub windows
+			## if loaded, close correlationModul
 			if hasattr(self, "correlationModul"):
 				if hasattr(self.correlationModul, "window"):
 					self.correlationModul.window.close()
@@ -338,6 +361,10 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 			event.ignore()
 
 	def selectPath(self, pathLine):
+		"""
+		Path selection. Path is displayed in corresponding QLineEdit GUI element.
+		If path is selected for working directory, the working dir file list gets populated.
+		"""
 		sender = self.sender()
 		path = str(QtGui.QFileDialog.getExistingDirectory(self, "Select Directory", self.workingdir))
 		if path:
@@ -351,12 +378,19 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 				pathLine.setText(path)
 
 	def selectFile(self, pathLine):
+		"""
+		File selection. File path is displayed in corresponding QLineEdit GUI element.
+		"""
 		path = str(QtGui.QFileDialog.getOpenFileName(
 			None,"Select tiff image file", self.workingdir,"Image Files (*.tif *.tiff);; All (*.*)"))
 		if path:
 			pathLine.setText(path)
 
 	def getPixelSize(self):
+		"""
+		Extract pixel size. Pixel size can be extracted from FEI CorrSight and Dual Beam Electron Microscope tiff images.
+		Keywords that are screened for are PhysicalSizeX, PhysicalSizeZ, PixelWidth, PixelSize and FocusStepSize.
+		"""
 		sender = self.sender()
 		if sender == self.toolButton_ImageStackGetPixelSize:
 			try:
@@ -396,8 +430,10 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 						self,"Warning",
 						"Unable to extract pixel size.\n\n{0}".format(e))
 
-	## Cube Voxels button state handling
 	def cubeVoxelsState(self, checkstate):
+		"""
+		Cube Voxels button state handling.
+		"""
 		if checkstate is True:
 			self.doubleSpinBox_focusStepsize.setEnabled(True)
 			self.radioButton_20x.setEnabled(True)
@@ -414,8 +450,10 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 			self.radioButton_customFocusStepsize.setEnabled(False)
 			self.doubleSpinBox_customFocusStepsize.setEnabled(False)
 
-	## Populate List widget for listing files needed for coordinate extraction
 	def populate_filelist(self, path):
+		"""
+		Populate List widget for listing files needed for coordinate extraction.
+		"""
 		self.listWidget_WorkingDir.clear()
 		self.listWidget_WorkingDir.itempath = path
 		for fname in os.listdir(path):
@@ -432,19 +470,31 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 				self.listWidget_WorkingDir.addItem(item)
 
 	def reloadFileList(self):
+		"""
+		Refresh the working direction file list in GUI.
+		"""
 		if hasattr(self, "workingdir"):
 			self.populate_filelist(self.workingdir)
 			if debug is True: print clrmsg.DEBUG, 'Working directory file list reloaded'
 
 	def selectImage1(self):
+		"""
+		Button function to select first image for correlation.
+		"""
 		self.lineEdit_selectImage1.setText(
 			os.path.join(self.listWidget_WorkingDir.itempath, str(self.listWidget_WorkingDir.selectedItems()[0].text())))
 
 	def selectImage2(self):
+		"""
+		Button function to select second image for correlation.
+		"""
 		self.lineEdit_selectImage2.setText(
 			os.path.join(self.listWidget_WorkingDir.itempath, str(self.listWidget_WorkingDir.selectedItems()[0].text())))
 
 	def runCorrelationModule(self):
+		"""
+		Star the correlation tool with the two selected image files.
+		"""
 		if hasattr(self, 'correlationModul'):
 			if hasattr(self.correlationModul, 'window'):
 				QtGui.QMessageBox.warning(
@@ -478,9 +528,18 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 					QLineEdit:hover{border: 1px solid grey; background-color rgb(255,0,0,80);}")
 
 	def imageStack(self):
+		"""
+		Image stack file reslicing. Takes the input and output focus step size set by the user and calls the stackProcessing
+		function for the selected image stack.
+		The pixel size information is extracted if possible and added to the image image stack meta data for future reference (see stackProcessing.py
+		for more details inc code).
+		By default the new resliced image stack is saved in the same direction as the original file. This directory is
+		checked for write permission. If it is a read only directory, the user is asked to select a different directory or
+		to aboard the process.
+		"""
 		self.progressBar_ImageStack.setVisible(True)
 		self.progressBar_ImageStack.setMaximum(0)
-		QtGui.QApplication.processEvents()
+		QtGui.QApplication.processEvents()  # Update GUI to display progressbar
 		img_path = str(self.lineEdit_ImageStackPath.text())
 		customSaveDir = self.checkDirectoryPrivileges(
 			os.path.split(img_path)[0],question="Do you want me to save the data to another directory?")
@@ -501,6 +560,16 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 			self.progressBar_ImageStack.setVisible(False)
 
 	def imageSequence(self):
+		"""
+		Image sequence merging with optional reslicing. Takes the input and output focus step size set by the user and calls the stackProcessing
+		function for the selected folder containing image sequence files from the FEI CorrSight microscope. If reslicing is not selected (checkbox),
+		then the image sequence is just merged to one single stack file.
+		The pixel size information is extracted if possible and added to the image image stack meta data for future reference (see stackProcessing.py
+		for more details inc code).
+		By default the new merged and/or resliced image stack is saved in the same direction as the original file. This directory is
+		checked for write permission. If it is a read only directory, the user is asked to select a different directory or
+		to aboard the process.
+		"""
 		self.progressBar_ImageSequence.setVisible(True)
 		self.progressBar_ImageSequence.setMaximum(0)
 		QtGui.QApplication.processEvents()
@@ -626,7 +695,7 @@ class MovieSplashScreen(QtGui.QSplashScreen):
 		return self.movie.scaledSize()
 
 
-## Class to outsource work to an independant thread. Not used anymore at the moment.
+## Class to outsource work to an independent thread. Not used anymore at the moment.
 class GenericThread(QtCore.QThread):
 	def __init__(self, function, *args, **kwargs):
 		QtCore.QThread.__init__(self)

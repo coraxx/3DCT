@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Rotate original light microscope volume with tom_rotate function in matlab.
+Rotate original light microscope volume with tom_rotate function in MATLAB.
 
-This generates the matlab script and runs in the matlab -nodisplay console.
+This generates the MATLAB script and runs in the matlab -nodisplay console.
 
 # @Title			: matlab3Drotation
 # @Project			: 3DCTv2
@@ -12,11 +12,11 @@ This generates the matlab script and runs in the matlab -nodisplay console.
 # @Email			: jan.arnold (at) coraxx.net
 # @Copyright		: Copyright (C) 2016  Jan Arnold
 # @License			: GPLv3 (see LICENSE file)
-# @Credits			: Florian Beck, Max-Planck-Institute for Biochemistry
+# @Credits			: Florian Beck, Max-Planck-Institute of Biochemistry
 # @Maintainer		: Jan Arnold
 # @Date				: 2016/01
-# @Version			: 3DCT 2.0.2 module rev. 1
-# @Status			: developement
+# @Version			: 3DCT 2.0.3 module rev. 1
+# @Status			: development
 # @Usage			: Meant to be imported, i.e. import matlab3Drotation.py and used with calling
 # 					: matlab_rotate(img_vol,)
 # @Notes			:
@@ -71,9 +71,9 @@ cutoutlamella	= 'true'
 def genMatlabScript():
 	## Generate Matlab script
 	format_args = [
-		filein,					# {0} = 'str'  filepath to raw volume
+		filein,					# {0} = 'str'  file path to raw volume
 		dtype,					# {1} = 'str'  dtype, probably 'int16' or 'uint16'
-		endiantype,				# {2} = 'str'  endian type, probably be
+		endiantype,				# {2} = 'str'  endian type, probably le except when saving raw with FIJI (be by default)
 		dimensions_x,			# {3} = 'int'  vol in dimension x	e.g. 1344	[px]
 		dimensions_y,			# {4} = 'int'  vol in dimension y	e.g. 1024	[px]
 		dimensions_z,			# {5} = 'int'  vol in dimension z	e.g. 106	[px]
@@ -81,13 +81,13 @@ def genMatlabScript():
 		eul1_phi,				# {7} = 'int'  correlated rotation angle e.g. FIB: phi
 		eul1_psi,				# {8} = 'int'  correlated rotation angle e.g. FIB: psi
 		eul1_theta,				# {9} = 'int'  correlated rotation angle e.g. FIB: theta
-		scale1,					# {10} = 'int'  scalingfactor e.g. FIB
+		scale1,					# {10} = 'int'  scaling factor e.g. FIB
 		shifty1,				# {11} = 'int'  shift in y e.g. FIB
 		shiftx1,				# {12} = 'int'  shift in x e.g. FIB
 		eul2_phi,				# {13} = 'int'  second correlated rotation angle e.g. SEM: phi
 		eul2_psi,				# {14} = 'int'  second correlated rotation angle e.g. SEM: psi
 		eul2_theta,				# {15} = 'int'  second correlated rotation angle e.g. SEM: theta
-		scale2,					# {16} = 'int'  second scalingfactor e.g. SEM
+		scale2,					# {16} = 'int'  second scaling factor e.g. SEM
 		shifty2,				# {17} = 'int'  second shift in y e.g. SEM
 		shiftx2,				# {18} = 'int'  second shift in x e.g. SEM
 		# +1 because matlab is not counting zero-based
@@ -123,8 +123,8 @@ shiftxy_col 	= [{17} {18}];										%% Second correlation shift in y,x for lame
 
 lam_start_x 	=  {19};											%% Lamella x axes start coordinate in original e.g. FIB image
 lam_end_x 		=  {20};											%% Lamella x axes end coordinate in original e.g. FIB image
-lam_start_x 	=  {21};											%% Lamella y axes start coordinate in original e.g. FIB image
-lam_end_x 		=  {22};											%% Lamella y axes end coordinate in original e.g. FIB images
+lam_start_y 	=  {21};											%% Lamella y axes start coordinate in original e.g. FIB image
+lam_end_y 		=  {22};											%% Lamella y axes end coordinate in original e.g. FIB images
 
 %% binning and show figure options
 binning 		=  {23};											%% Binning								true|false
@@ -172,10 +172,10 @@ if cutoutlamella == true
 	[euler_out shift_out rott]=tom_sum_rotation([-eulerangle(2) -eulerangle(1) -eulerangle(3); ...
 												eulerangle_col(1) eulerangle_col(2) eulerangle_col(3)],[0 0 0; 0 0 0]);
 
-	vol(1:(1/scale * (lam_start_x + -shiftxy(1))/(2^binfactor)),:,:)=0;	%% x axes from 0 to beginning of lamella
-	vol((1/scale * (lam_end_x + -shiftxy(1))/(2^binfactor)):end,:,:)=0;	%% x axes from end of lamella to end of end of volume
-	vol(:,1:(1/scale * (lam_start_y + -shiftxy(2))/(2^binfactor)),:)=0;	%% y axes from 0 to beginning of lamella
-	vol(:,(1/scale * (lam_end_y + -shiftxy(2))/(2^binfactor)):end,:)=0;	%% y axes from end of lamella to end of end of volume
+	vol(1:(1/scale * (lam_start_x + -shiftxy(2))/(2^binfactor)),:,:)=0;	%% x axes from 0 to beginning of lamella
+	vol((1/scale * (lam_end_x + -shiftxy(2))/(2^binfactor)):end,:,:)=0;	%% x axes from end of lamella to end of end of volume
+	vol(:,1:(1/scale * (lam_start_y + -shiftxy(1))/(2^binfactor)),:)=0;	%% y axes from 0 to beginning of lamella
+	vol(:,(1/scale * (lam_end_y + -shiftxy(1))/(2^binfactor)):end,:)=0;	%% y axes from end of lamella to end of end of volume
 
 
 	im = tom_norm(max(vol,[],3),1)';
@@ -200,7 +200,57 @@ if cutoutlamella == true
 end
 
 exitcode = 0
+end
 
+
+%% csbin
+function out = csbin(in,binfactor,dimension)
+% e.g. Volume:  volout = csbin(volin,2,3);
+% e.g. Image:   imgout = csbin(imgin,2,2);
+
+if dimension==2
+	bin = 2^binfactor;
+	imgsize = size(in);
+	out = tom_rescale(in,[imgsize(1)/bin imgsize(2)/bin]);
+end
+
+if dimension==3
+	bin = 2^binfactor;
+	volsize = size(in);
+	volsize1 = volsize(1);
+	volsize2 = volsize(2);
+	volsize3 = volsize(3);
+	for i = 1:3
+	    if not(rem(volsize(i)/bin,1) == 0)
+		volsize(i) = volsize(i)*8;
+		newvol = single(zeros(volsize));
+		in = tom_paste(newvol,single(in),[(volsize(1) - volsize1)/2 ...
+		                          (volsize(2) - volsize2)/2 ...
+		                          (volsize(3) - 2*volsize3)/2]);
+	    end
+	end
+
+	volsize = size(in);
+
+	out = tom_rescale(in,[volsize(1)/bin volsize(2)/bin volsize(3)/bin]);
+end
+end
+
+%% quadvol
+function volout = quadvol(volin,padding)
+% Paste volume in cube with dimentions of the volume's longest edge plus
+% percentage padding (padding * longest volin edge)
+% 
+% Example:      volout = quadvol(vol.Value,0.1);
+
+qvsize = max(size(volin))+padding*max(size(volin));
+qvsize = round(qvsize);
+qvol = zeros([qvsize qvsize qvsize]);
+
+volout = tom_paste(single(qvol),volin,[round((max(size(qvol))-size(volin,1))/2) ...
+                               round((max(size(qvol))-size(volin,2))/2) ...
+                               round((max(size(qvol))-size(volin,3))/2)]);
+end
 '''
 	return script_template.format(*format_args)
 

@@ -1,7 +1,7 @@
 """
 Useful io functions.
 
-# Author: Vladan Lucic (Max Planck Institute for Biochemistry)
+# Author: Vladan Lucic (Max Planck Institute of Biochemistry)
 # $Id: util.py 327 2008-12-15 14:50:25Z vladan $
 """
 

@@ -2,7 +2,7 @@
 Contains class Rigid3D for preforming rigid body transformation and scalar 
 scaling followed by translation on points (vectors).
 
-# Author: Vladan Lucic (Max Planck Institute for Biochemistry)
+# Author: Vladan Lucic (Max Planck Institute of Biochemistry)
 # $Id: rigid_3d.py 1292 2016-04-27 10:35:30Z vladan $
 """
 

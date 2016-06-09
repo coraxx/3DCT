@@ -1,8 +1,11 @@
 # User's Guide #
 ![3D Correlation Toolbox](http://3dct.semper.space/img/userguide/header.png "3D Correlation Toolbox")
 
+last edited: 27.04.2016
+
 ## Table of Contents ##
 [TOC]
+
 <!-- 1. [Introduction](#introduction)
 2. [Installation](#installation)
 	2.1. [Pyinstaller builds](#pyinstaller-builds)
@@ -126,6 +129,7 @@ To get the source code either use git
 or you can got to [https://bitbucket.org/splo0sh/3dct/downloads](https://bitbucket.org/splo0sh/3dct/downloads) and download the latest release.
 
 
+
 [_back to top_](#)
 
 ## Interface ##
@@ -194,6 +198,7 @@ This tab holds option for the threshold value used in the x/y bead position opti
 Runs the correlation and saves a report (text file and image) in the working directory if the "write report" box is checked. _See [Run correlation](#correlation) for more details._
 
 
+
 [_back to top_](#)
 
 ## Data processing tools ##
@@ -218,6 +223,8 @@ A maximum intensity projection (MIP) is a volume rendering method for 3D data th
 
 [^5]: https://en.wikipedia.org/wiki/Maximum_intensity_projection
 
+
+
 [_back to top_](#)
 
 ## Correlation module ##
@@ -232,27 +239,72 @@ To extract the z position of a bead, right click on it in the image to set a mar
 
 ### Graphs ###
 ![Correlation Module Screenshot - Graphs](http://3dct.semper.space/img/userguide/3DCT_graphs.png "Correlation Module Screenshot - Graphs")
-There are two kinds of graphs:
 <a name="correlation-scatter-plot"></a>**A. Correlation scatter plot**
-The scatter plots shows the errors in x and y when six markers are used for correlation. Almost 60% of the cross-validated markers are localized with an accuracy better than 150 nm (dashed box).
+The scatter plot shows the errors in x and y by plotting the delta between the 2D marker coordinates and their calculated counterparts from the 3D image stack.
+
+A frame can be plotted to help visualize the impact of the error for example if the error still falls into the thickness of a lamella (1.86 px frame size with pixel size of 161 nm can represent a 300 nm thick lamella). The frame size can be adjusted in the [Options](#options) tab.
 
 <a name="gaussian-fit"></a>**B. Gaussian fit**
+When extracting the z position of a bead the resulting Gaussian fit is shown here. When using the x,y,z extraction the 2D Gaussian fit is shown as well. See [Coordinates tables](#coordinates-tables) on how to determine the z position of a bead.
 
 ### Tabs ###
 ![Correlation Module Screenshot - Tabs](http://3dct.semper.space/img/userguide/3DCT_correlation_tabs.png "Correlation Module Screenshot - Tabs")
 
 <a name="image-controls"></a>**A. Image controls**
+New images can be loaded in via the "Load left/right image..." buttons. The correlation draws the correlated markers on to the destination image. These markers can be removed by hitting the reset button.
+
+To change the contrast/brightness of an image first click on it and then change the sliders to the desired values. "Selected image" indicates which image is selected at the moment. To reset the values back to the original values, hit the appropriate reset button.
+
+The images can be rotated for easier marker selection by clicking the small circle arrow buttons for 45° steps or by changing the rotation via the spin box next to the aforementioned buttons.
+
+If possible the pixel size is read from the image. Pixel size in um times marker size in px shows the marker size in um which can help positioning the markers on fiducials with a known size.
+The marker size is also the field of view for the x,y,z marker position extractor in a 3D image stack (see [Coordinates tables](#coordinates-tables)).
+
+Select a table (click on it) to import or export coordinates as csv or txt files (either comma or tab-stop separated). Imported coordinates are appended to the table.
+
+If the translation of the correlation is needed from a rotation point other than [0,0,0] you can enter a custom rotation center.
 
 <a name="correlation-results"></a>**B. Correlation results**
+The results tab shows the the determined correlation parameters and the markers' dx/dy (see [Scatter plot](#correlation-scatter-plot)) and can be sorted to determine the biggest residual in order to optimize the correlation. A double click on a marker's residual zooms in on the corresponding marker. The red arrow shows the residual shift from the clicked marker to the calculated marker. The shift can be applied by right clicking on it and selecting "Apply shift" to correct potential imprecise clicking in the first place. Accordingly the correlation now has a smaller error. This is intended to control/optimize the marker picking on the (in our case) FIB image.
 
 <a name="options"></a>**C. Options**
+When determining the z position of a bead with x,y optimization (see [Coordinates tables](#coordinates-tables)) a threshold is applied to handle low SNR. It cuts the pixel intensity values off at (max value - min value) * threshold with the threshold between 0.1 and 1. This threshold can be set here. When the x,y optimization is not good, play with this value (probably by lowering it).
+
+A frame can be plotted to help visualize the impact of the error (see [Correlation scatter plot](#correlation-scatter-plot)). It's size in pixels can be set here. To draw it in the scatter plot check the "Draw frame in scatter plot" box.
+
+You can customize the marker and POI color. This are the correlated points which are drawn into the designated correlation image.
+
+The working directory can be changed here as well. When starting the correlation module from the [Main toolbox window](#main-toolbox-window) the working directory is set to the one from the main window.
 
 ### Run correlation ###
+When at least three to each other corresponding markers in the same order are clicked and in a 3D case their z position is determined the correlation can be run by clicking the "Correlate" button.
+
+To write the correlation report and save the destination image (the one you correlate to, in the 2D to 3D correlation case it is the 2D image) with the position of the POIs check the "write report" box. This writes the report and the image to the working directory. It is recommended to uncheck this box while optimizing/testing the correlation to prevent your working directory being flooded by reports.
+
+
+
+[_back to top_](#)
+
+## General GUI hints ##
+The mouse wheel works on spin boxes and sliders as well.
+
+## Debug mode ##
+The Windows and Linux Pyinstaller packages (see ) come as "onedir" version, i.e. after unpacking you will find a folder full with files. The only files you will need are the "3D Correlation Toolbox.exe"(Windows)/"3D Correlation Toolbox"(Linux) and maybe "3D Correlation Toolbox debug.exe"(Windows)/"3D Correlation Toolbox debug"(Linux) if you encounter any problems. This can be helpful if specific images can be read or the application crashes. The debug mode can help to find the error.
+
+The Mac OS X Pyinstaller package comes as a clean "onefile" version and is called "3D Correlation Toolbox.app" after unpacking the downloaded zip version. You can move that wherever you want. This version has no debug mode. To debug it you can download a "onedir" version like the Windows and Linux version. The link is directly under the normal download link on [http://3dct.semper.space/#download](http://3dct.semper.space/#download).
+
+Side note: In case the toolbox is crashing unexpectedly and you want to run the debug mode, it is recommended to open up a terminal (cmd under Windows), drag the 3D Correlation Toolbox debug application on it and press enter. All information printed to the terminal will then stay when and will not close when the application crashes.
+
+Please keep in mind, that the application can be slower/more sluggish in debug mode.
+
 
 
 [_back to top_](#)
 
 ## Planned features ##
+- open multiple channels of an Light Microscope image and blend them together
+- scrolling through z-stack
+- optimizing marker handling (internal)
 
 
 
