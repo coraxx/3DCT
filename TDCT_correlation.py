@@ -53,6 +53,7 @@ qtCreatorFile_main = os.path.join(execdir, "TDCT_correlation.ui")
 Ui_WidgetWindow, QtBaseClass = uic.loadUiType(qtCreatorFile_main)
 
 debug = TDCT_debug.debug
+debug = True
 if debug is True: print clrmsg.DEBUG + "Execdir =", execdir
 
 
@@ -104,13 +105,17 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		## Initialize parameters
 		self.brightness_left = 0
 		self.contrast_left = 10
+		self.slice_left = 1
+		self.mipCHKbox_left = True
 		self.brightness_right = 0
 		self.contrast_right = 10
+		self.slice_right = 1
+		self.mipCHKbox_right = True
 		## Initialize Images and connect image load buttons
 		self.toolButton_loadLeftImage.clicked.connect(self.openImageLeft)
 		self.toolButton_loadRightImage.clicked.connect(self.openImageRight)
-		self.toolButton_resetLeftImage.clicked.connect(self.resetImageLeft)
-		self.toolButton_resetRightImage.clicked.connect(self.resetImageRight)
+		self.toolButton_resetLeftImage.clicked.connect(lambda: self.resetImageLeft(img=None))
+		self.toolButton_resetRightImage.clicked.connect(lambda: self.resetImageRight(img=None))
 		if leftImage is None or rightImage is None:
 			return
 		self.initImageLeft()
@@ -127,6 +132,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		# SpinBoxes
 		self.spinBox_rot.valueChanged.connect(self.rotateImage)
 		self.spinBox_markerSize.valueChanged.connect(self.changeMarkerSize)
+		self.spinBox_slice.valueChanged.connect(self.selectSlice)
 		self.doubleSpinBox_scatterPlotFrameSize.valueChanged.connect(lambda: self.displayResults(
 																frame=self.checkBox_scatterPlotFrame.isChecked(),
 																framesize=self.doubleSpinBox_scatterPlotFrameSize.value()))
@@ -138,6 +144,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		self.checkBox_resultsAbsolute.stateChanged.connect(lambda: self.displayResults(
 																frame=self.checkBox_scatterPlotFrame.isChecked(),
 																framesize=self.doubleSpinBox_scatterPlotFrameSize.value()))
+		self.checkBox_MIP.stateChanged.connect(self.selectSlice)
 
 		## Buttons
 		self.toolButton_rotcw.clicked.connect(lambda: self.rotateImage45(direction='cw'))
@@ -241,7 +248,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			self.formerFocusedWidget = former
 
 		## Label showing selected image
-		if self.currentFocusedWidgetName in ['spinBox_rot','spinBox_markerSize','horizontalSlider_brightness','horizontalSlider_contrast']:
+		if self.currentFocusedWidgetName in ['spinBox_rot','spinBox_markerSize','spinBox_slice','horizontalSlider_brightness','horizontalSlider_contrast']:
 			pass
 		else:
 			if self.currentFocusedWidgetName != 'graphicsView_left' and self.currentFocusedWidgetName != 'graphicsView_right':
@@ -257,20 +264,32 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 				self.label_selimg.setStyleSheet(self.stylesheet_green)
 				self.label_selimg.setText('left')
 				self.label_imagetype.setStyleSheet(self.stylesheet_green)
-				self.label_imagetype.setText('(2D)' if '{0:b}'.format(self.sceneLeft.imagetype)[-1] == '1' else '(3D)')
+				# self.label_imagetype.setText('(2D)' if '{0:b}'.format(self.sceneLeft.imagetype)[-1] == '1' else '(3D)')
+				if '{0:b}'.format(self.sceneLeft.imagetype)[-1] == '1':
+					self.label_imagetype.setText('(2D)')
+					self.widget_sliceSelector.setVisible(False)
+				else:
+					self.label_imagetype.setText('(3D)')
+					self.widget_sliceSelector.setVisible(True)
 				self.ctrlEnDisAble(True)
 			elif self.currentFocusedWidgetName == 'graphicsView_right':
 				self.label_selimg.setStyleSheet(self.stylesheet_blue)
 				self.label_selimg.setText('right')
 				self.label_imagetype.setStyleSheet(self.stylesheet_blue)
-				self.label_imagetype.setText('(2D)' if '{0:b}'.format(self.sceneRight.imagetype)[-1] == '1' else '(3D)')
+				# self.label_imagetype.setText('(2D)' if '{0:b}'.format(self.sceneRight.imagetype)[-1] == '1' else '(3D)')
+				if '{0:b}'.format(self.sceneRight.imagetype)[-1] == '1':
+					self.label_imagetype.setText('(2D)')
+					self.widget_sliceSelector.setVisible(False)
+				else:
+					self.label_imagetype.setText('(3D)')
+					self.widget_sliceSelector.setVisible(True)
 				self.ctrlEnDisAble(True)
 
 		# ## Label showing selected table
 		if self.currentFocusedWidgetName != 'tableView_left' and self.currentFocusedWidgetName != 'tableView_right':
 			self.label_selectedTable.setStyleSheet(self.stylesheet_orange)
 			self.label_selectedTable.setText('none')
-			self.ctrlEnDisAble(True)
+			# self.ctrlEnDisAble(False)
 		elif self.currentFocusedWidgetName == 'tableView_left':
 			self.label_selectedTable.setStyleSheet(self.stylesheet_green)
 			self.label_selectedTable.setText('left')
@@ -284,9 +303,13 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		# Block emitting signals for correct setting of BOTH sliders. Otherwise the second one gets overwritten with the old value
 		self.horizontalSlider_brightness.blockSignals(True)
 		self.horizontalSlider_contrast.blockSignals(True)
+		self.spinBox_slice.blockSignals(True)
+		self.checkBox_MIP.blockSignals(True)
 		if self.currentFocusedWidgetName == 'graphicsView_left':
 			self.spinBox_rot.setValue(self.sceneLeft.rotangle)
 			self.spinBox_markerSize.setValue(self.sceneLeft.markerSize)
+			self.spinBox_slice.setValue(self.slice_left)
+			self.checkBox_MIP.setChecked(self.mipCHKbox_left)
 			self.horizontalSlider_brightness.setValue(self.brightness_left)
 			self.horizontalSlider_contrast.setValue(self.contrast_left)
 			self.label_imgpxsize.setText(str(self.sceneLeft.pixelSize))  # + ' um') # breaks marker size adjustments check
@@ -294,6 +317,8 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		elif self.currentFocusedWidgetName == 'graphicsView_right':
 			self.spinBox_rot.setValue(self.sceneRight.rotangle)
 			self.spinBox_markerSize.setValue(self.sceneRight.markerSize)
+			self.spinBox_slice.setValue(self.slice_right)
+			self.checkBox_MIP.setChecked(self.mipCHKbox_right)
 			self.horizontalSlider_brightness.setValue(self.brightness_right)
 			self.horizontalSlider_contrast.setValue(self.contrast_right)
 			self.label_imgpxsize.setText(str(self.sceneRight.pixelSize))  # + ' um') # breaks marker size adjustments check
@@ -301,6 +326,8 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		# Unblock emitting signals.
 		self.horizontalSlider_brightness.blockSignals(False)
 		self.horizontalSlider_contrast.blockSignals(False)
+		self.spinBox_slice.blockSignals(False)
+		self.checkBox_MIP.blockSignals(False)
 		# update marker size in nm
 		self.changeMarkerSize()
 
@@ -308,6 +335,8 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 	def ctrlEnDisAble(self,status):
 		self.spinBox_rot.setEnabled(status)
 		self.spinBox_markerSize.setEnabled(status)
+		if not self.checkBox_MIP.isChecked():
+			self.spinBox_slice.setEnabled(status)
 		self.horizontalSlider_brightness.setEnabled(status)
 		self.horizontalSlider_contrast.setEnabled(status)
 		self.toolButton_brightness_reset.setEnabled(status)
@@ -386,6 +415,11 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			## Load image, assign it to scene and store image type information
 			self.img_left,self.sceneLeft.imagetype,self.imgstack_left = self.imread(self.leftImage)
 			self.img_left_displayed = np.copy(self.img_left)
+			## Set slice spinbox maximum
+			if self.imgstack_left is not None:
+				self.spinBox_slice.setValue(1)
+				self.slice_left = 1
+				self.spinBox_slice.setMaximum(self.imgstack_left.shape[0])
 			## link image to QTableview for determining z
 			self.tableView_left.img = self.imgstack_left
 			## check if coloring z values in table is needed (correlation needs z=0 in 2D image, so no checking for valid z
@@ -424,6 +458,11 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			## Load image, assign it to scene and store image type information
 			self.img_right,self.sceneRight.imagetype,self.imgstack_right = self.imread(self.rightImage)
 			self.img_right_displayed = np.copy(self.img_right)
+			## Set slice spinbox maximum
+			if self.imgstack_right is not None:
+				self.spinBox_slice.setValue(1)
+				self.slice_left = 1
+				self.spinBox_slice.setMaximum(self.imgstack_right.shape[0])
 			## link image to QTableview for determining z
 			self.tableView_right.img = self.imgstack_right
 			## check if coloring z values in table is needed (correlation needs z=0 in 2D image, so no checking for valid z
@@ -468,11 +507,14 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 				self.sceneRight.addCircle(0.0,0.0,0.0)
 			self.tableView_right.updateItems()
 
-	def resetImageLeft(self):
+	def resetImageLeft(self,img=True):
+		if img is None:
+			img = self.img_left
+		# print img.shape
 		## Remove image (item)
 		self.sceneLeft.removeItem(self.pixmap_item_left)
 		## Load original
-		self.img_left_displayed = np.copy(self.img_left)
+		self.img_left_displayed = np.copy(img)
 		## Display image
 		self.pixmap_left = self.cv2Qimage(self.img_left_displayed)
 		self.pixmap_item_left = QtGui.QGraphicsPixmapItem(self.pixmap_left, None, self.sceneLeft)
@@ -480,11 +522,14 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		QtGui.QGraphicsItem.stackBefore(self.pixmap_item_left, self.sceneLeft.items()[-1])
 		self.sceneLeft.deleteArrows()
 
-	def resetImageRight(self):
+	def resetImageRight(self,img=None):
+		if img is None:
+			img = self.img_right
+		# print img.shape
 		## Remove image (item)
 		self.sceneRight.removeItem(self.pixmap_item_right)
 		## Load original
-		self.img_right_displayed = np.copy(self.img_right)
+		self.img_right_displayed = np.copy(img)
 		## Display image
 		self.pixmap_right = self.cv2Qimage(self.img_right_displayed)
 		self.pixmap_item_right = QtGui.QGraphicsPixmapItem(self.pixmap_right, None, self.sceneRight)
@@ -604,6 +649,9 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 	## Read image
 	def imread(self,path,normalize=True):
 		"""
+		Returns a 2D numpy array (maximum intensity projection for stack image files), the kind of image as 5 bit
+		encoded image property and the original stack file as a numpy array or 'None' if file is 2D image.
+
 		return 5 bit encoded image property:
 			1 = 2D
 			2 = 3D (always normalized, +16)
@@ -790,6 +838,31 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 				for i in range(int(img.shape[2])):
 					img[:,:,i] *= typesize/img[:,:,i].max()
 		return img
+
+	def selectSlice(self):
+		if self.label_selimg.text() == 'left':
+			self.mipCHKbox_left = self.checkBox_MIP.isChecked()
+		elif self.label_selimg.text() == 'right':
+			self.mipCHKbox_right = self.checkBox_MIP.isChecked()
+
+		if self.checkBox_MIP.isChecked():
+			if self.label_selimg.text() == 'left' and '{0:b}'.format(self.sceneLeft.imagetype)[-1] == '0':
+				self.resetImageLeft(img=None)
+			if self.label_selimg.text() == 'right' and '{0:b}'.format(self.sceneRight.imagetype)[-1] == '0':
+				self.resetImageRight(img=None)
+		else:
+			if self.label_selimg.text() == 'left' and '{0:b}'.format(self.sceneLeft.imagetype)[-1] == '0':
+				self.slice_left = int(self.spinBox_slice.value())
+				img = self.imgstack_left[self.slice_left-1,:]
+				self.resetImageLeft(img=img)
+				if self.brightness_left != 0 and self.contrast_left != 10:
+					self.adjustBrightCont()
+			if self.label_selimg.text() == 'right' and '{0:b}'.format(self.sceneRight.imagetype)[-1] == '0':
+				self.slice_right = int(self.spinBox_slice.value())
+				img = self.imgstack_right[self.slice_right-1,:]
+				self.resetImageRight(img=img)
+				if self.brightness_right != 0 or self.contrast_right != 10:
+					self.adjustBrightCont()
 
 												##################### END #####################
 												######    Image processing functions    #######

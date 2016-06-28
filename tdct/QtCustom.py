@@ -316,7 +316,10 @@ class QGraphicsSceneCustom(QtGui.QGraphicsScene):
 			## Model does not have to be refreshed every time while selecting
 			return
 		elif event.button() == QtCore.Qt.RightButton:
-			self.addCircle(event.scenePos().x(), event.scenePos().y())
+			if self.mainWidget.checkBox_MIP.isChecked():
+				self.addCircle(event.scenePos().x(), event.scenePos().y())
+			else:
+				self.addCircle(event.scenePos().x(), event.scenePos().y(),z=self.mainWidget.spinBox_slice.value()-1)
 		elif event.button() == QtCore.Qt.MiddleButton:
 			item = self.itemAt(event.scenePos())
 			if isinstance(item, QtGui.QGraphicsEllipseItem):
@@ -351,7 +354,7 @@ class QGraphicsSceneCustom(QtGui.QGraphicsScene):
 		elif event.key() == QtCore.Qt.Key_Minus:
 			self.parent().scale(1 / 1.15, 1 / 1.15)
 
-	def addCircle(self,x,y,z=0.0):
+	def addCircle(self,x,y,z=None):
 		## First add at 0,0 then move to get position from item.scenePos() or .x() and y.()
 		circle = self.addEllipse(-self.markerSize, -self.markerSize, self.markerSize * 2, self.markerSize * 2, self.pen)
 		circle.setPos(x,y)
@@ -359,10 +362,12 @@ class QGraphicsSceneCustom(QtGui.QGraphicsScene):
 		circle.setFlag(QtGui.QGraphicsItem.ItemIsSelectable, True)
 		## store placeholder z value in dictionary (QGraphicsitems cannot store additional (meta)data)
 		## and flag for color (rgba)
-		if self._z and z == 0:
-			self.zValuesDict[circle] = [z,(255, 190, 0)]  # orange
+		if self._z and z is None:
+			self.zValuesDict[circle] = [0.0,(255, 190, 0)]  # orange
+		elif self._z and z is not None:
+			self.zValuesDict[circle] = [float(z),(0, 0, 0)]  # orange
 		else:
-			self.zValuesDict[circle] = [z,(0, 0, 0)]  # black
+			self.zValuesDict[circle] = [0.0,(0, 0, 0)]  # black
 		## Reorder to have them in ascending order in the tableview
 		QtGui.QGraphicsItem.stackBefore(circle, self.items()[-2])
 		self.enumeratePoints()
