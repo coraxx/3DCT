@@ -11,7 +11,7 @@ Modules for the 3D Correlation Toolbox
 # @Credits			:
 # @Maintainer		: Jan Arnold
 # @Date				: 2016/03/21
-# @Version			: 2.0.3
+# @Version			: 2.0.4
 # @Status			: stable
 # @Usage			:
 # @Notes			:

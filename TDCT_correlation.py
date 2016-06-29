@@ -16,7 +16,7 @@ to one single stack file, ...).
 # @Credits			:
 # @Maintainer		: Jan Arnold
 # @Date				: 2016/01
-# @Version			: 3DCT 2.0.3 module rev. 24
+# @Version			: 3DCT 2.0.4 module rev. 26
 # @Status			: stable
 # @Usage			: part of 3D Correlation Toolbox
 # @Notes			:
@@ -39,7 +39,7 @@ import qimage2ndarray
 ## and correlation algorithm
 from tdct import clrmsg, TDCT_debug, QtCustom, csvHandler, correlation
 
-__version__ = 'v2.0.3'
+__version__ = 'v2.0.4'
 
 # add working directory temporarily to PYTHONPATH
 if getattr(sys, 'frozen', False):
@@ -53,7 +53,6 @@ qtCreatorFile_main = os.path.join(execdir, "TDCT_correlation.ui")
 Ui_WidgetWindow, QtBaseClass = uic.loadUiType(qtCreatorFile_main)
 
 debug = TDCT_debug.debug
-debug = True
 if debug is True: print clrmsg.DEBUG + "Execdir =", execdir
 
 
@@ -248,7 +247,9 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			self.formerFocusedWidget = former
 
 		## Label showing selected image
-		if self.currentFocusedWidgetName in ['spinBox_rot','spinBox_markerSize','spinBox_slice','horizontalSlider_brightness','horizontalSlider_contrast']:
+		if self.currentFocusedWidgetName in [
+											'spinBox_rot','spinBox_markerSize','spinBox_slice','horizontalSlider_brightness','horizontalSlider_contrast',
+											'doubleSpinBox_custom_rot_center_x','doubleSpinBox_custom_rot_center_y','doubleSpinBox_custom_rot_center_z']:
 			pass
 		else:
 			if self.currentFocusedWidgetName != 'graphicsView_left' and self.currentFocusedWidgetName != 'graphicsView_right':
@@ -272,6 +273,8 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 					self.label_imagetype.setText('(3D)')
 					self.widget_sliceSelector.setVisible(True)
 				self.ctrlEnDisAble(True)
+				if self.mipCHKbox_left is False:
+					self.spinBox_slice.setEnabled(True)
 			elif self.currentFocusedWidgetName == 'graphicsView_right':
 				self.label_selimg.setStyleSheet(self.stylesheet_blue)
 				self.label_selimg.setText('right')
@@ -284,6 +287,8 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 					self.label_imagetype.setText('(3D)')
 					self.widget_sliceSelector.setVisible(True)
 				self.ctrlEnDisAble(True)
+				if self.mipCHKbox_right is False:
+					self.spinBox_slice.setEnabled(True)
 
 		# ## Label showing selected table
 		if self.currentFocusedWidgetName != 'tableView_left' and self.currentFocusedWidgetName != 'tableView_right':
@@ -335,8 +340,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 	def ctrlEnDisAble(self,status):
 		self.spinBox_rot.setEnabled(status)
 		self.spinBox_markerSize.setEnabled(status)
-		if not self.checkBox_MIP.isChecked():
-			self.spinBox_slice.setEnabled(status)
+		self.spinBox_slice.setEnabled(False)
 		self.horizontalSlider_brightness.setEnabled(status)
 		self.horizontalSlider_contrast.setEnabled(status)
 		self.toolButton_brightness_reset.setEnabled(status)
@@ -415,6 +419,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			## Load image, assign it to scene and store image type information
 			self.img_left,self.sceneLeft.imagetype,self.imgstack_left = self.imread(self.leftImage)
 			self.img_left_displayed = np.copy(self.img_left)
+			self.img_adj_left = np.copy(self.img_left)
 			## Set slice spinbox maximum
 			if self.imgstack_left is not None:
 				self.spinBox_slice.setValue(1)
@@ -458,6 +463,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			## Load image, assign it to scene and store image type information
 			self.img_right,self.sceneRight.imagetype,self.imgstack_right = self.imread(self.rightImage)
 			self.img_right_displayed = np.copy(self.img_right)
+			self.img_adj_right = np.copy(self.img_right)
 			## Set slice spinbox maximum
 			if self.imgstack_right is not None:
 				self.spinBox_slice.setValue(1)
@@ -508,13 +514,26 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			self.tableView_right.updateItems()
 
 	def resetImageLeft(self,img=True):
-		if img is None:
+		if img is None and self.mipCHKbox_left is False:
+			img = self.imgstack_left[self.slice_left-1,:]
+			## reset brightness contrast
+			self.brightness_left = 0
+			self.contrast_left = 10
+			self.horizontalSlider_brightness.setValue(0)
+			self.horizontalSlider_contrast.setValue(10)
+		elif img is None:
 			img = self.img_left
+			## reset brightness contrast
+			self.brightness_left = 0
+			self.contrast_left = 10
+			self.horizontalSlider_brightness.setValue(0)
+			self.horizontalSlider_contrast.setValue(10)
 		# print img.shape
 		## Remove image (item)
 		self.sceneLeft.removeItem(self.pixmap_item_left)
 		## Load original
 		self.img_left_displayed = np.copy(img)
+		self.img_adj_left = np.copy(img)
 		## Display image
 		self.pixmap_left = self.cv2Qimage(self.img_left_displayed)
 		self.pixmap_item_left = QtGui.QGraphicsPixmapItem(self.pixmap_left, None, self.sceneLeft)
@@ -523,13 +542,26 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		self.sceneLeft.deleteArrows()
 
 	def resetImageRight(self,img=None):
-		if img is None:
+		if img is None and self.mipCHKbox_right is False:
+			img = self.imgstack_right[self.slice_right-1,:]
+			## reset brightness contrast
+			self.brightness_right = 0
+			self.contrast_right = 10
+			self.horizontalSlider_brightness.setValue(0)
+			self.horizontalSlider_contrast.setValue(10)
+		elif img is None:
 			img = self.img_right
+			## reset brightness contrast
+			self.brightness_right = 0
+			self.contrast_right = 10
+			self.horizontalSlider_brightness.setValue(0)
+			self.horizontalSlider_contrast.setValue(10)
 		# print img.shape
 		## Remove image (item)
 		self.sceneRight.removeItem(self.pixmap_item_right)
 		## Load original
 		self.img_right_displayed = np.copy(img)
+		self.img_adj_right = np.copy(img)
 		## Display image
 		self.pixmap_right = self.cv2Qimage(self.img_right_displayed)
 		self.pixmap_item_right = QtGui.QGraphicsPixmapItem(self.pixmap_right, None, self.sceneRight)
@@ -763,22 +795,22 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			## Remove image (item)
 			self.sceneLeft.removeItem(self.pixmap_item_left)
 			## Load replacement
-			img_adj = np.copy(self.img_left_displayed)
+			self.img_adj_left = np.copy(self.img_left_displayed)
 			## Load contrast value (Slider value between 0 and 100)
 			contr = self.contrast_left*0.1
 			## Adjusting contrast
-			img_adj = np.where(img_adj*contr >= 255,255,img_adj*contr)
+			self.img_adj_left = np.where(self.img_adj_left*contr >= 255,255,self.img_adj_left*contr)
 			## Convert float64 back to uint8
-			img_adj = img_adj.astype(dtype='uint8')
+			self.img_adj_left = self.img_adj_left.astype(dtype='uint8')
 			## Adjust brightness
 			if self.brightness_left > 0:
-				img_adj = np.where(255-img_adj <= self.brightness_left,255,img_adj+self.brightness_left)
+				self.img_adj_left = np.where(255-self.img_adj_left <= self.brightness_left,255,self.img_adj_left+self.brightness_left)
 			else:
-				img_adj = np.where(img_adj <= -self.brightness_left,0,img_adj+self.brightness_left)
+				self.img_adj_left = np.where(self.img_adj_left <= -self.brightness_left,0,self.img_adj_left+self.brightness_left)
 				## Convert from int16 back to uint8
-				img_adj = img_adj.astype(dtype='uint8')
+				self.img_adj_left = self.img_adj_left.astype(dtype='uint8')
 			## Display image
-			self.pixmap_left = self.cv2Qimage(img_adj)
+			self.pixmap_left = self.cv2Qimage(self.img_adj_left)
 			self.pixmap_item_left = QtGui.QGraphicsPixmapItem(self.pixmap_left, None, self.sceneLeft)
 			## Put exchanged image into background
 			QtGui.QGraphicsItem.stackBefore(self.pixmap_item_left, self.sceneLeft.items()[-1])
@@ -789,22 +821,22 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			## Remove image (item)
 			self.sceneRight.removeItem(self.pixmap_item_right)
 			## Load replacement
-			img_adj = np.copy(self.img_right_displayed)
+			self.img_adj_right = np.copy(self.img_right_displayed)
 			## Load contrast value (Slider value between 0 and 100)
 			contr = self.contrast_right*0.1
 			## Adjusting contrast
-			img_adj = np.where(img_adj*contr >= 255,255,img_adj*contr)
+			self.img_adj_right = np.where(self.img_adj_right*contr >= 255,255,self.img_adj_right*contr)
 			## Convert float64 back to uint8
-			img_adj = img_adj.astype(dtype='uint8')
+			self.img_adj_right = self.img_adj_right.astype(dtype='uint8')
 			## Adjust brightness
 			if self.brightness_right > 0:
-				img_adj = np.where(255-img_adj <= self.brightness_right,255,img_adj+self.brightness_right)
+				self.img_adj_right = np.where(255-self.img_adj_right <= self.brightness_right,255,self.img_adj_right+self.brightness_right)
 			else:
-				img_adj = np.where(img_adj <= -self.brightness_right,0,img_adj+self.brightness_right)
+				self.img_adj_right = np.where(self.img_adj_right <= -self.brightness_right,0,self.img_adj_right+self.brightness_right)
 				## Convert from int16 back to uint8
-				img_adj = img_adj.astype(dtype='uint8')
+				self.img_adj_right = self.img_adj_right.astype(dtype='uint8')
 			## Display image
-			self.pixmap_right = self.cv2Qimage(img_adj)
+			self.pixmap_right = self.cv2Qimage(self.img_adj_right)
 			self.pixmap_item_right = QtGui.QGraphicsPixmapItem(self.pixmap_right, None, self.sceneRight)
 			## Put exchanged image into background
 			QtGui.QGraphicsItem.stackBefore(self.pixmap_item_right, self.sceneRight.items()[-1])
@@ -939,7 +971,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			model2D = self.modelLleft
 			model3D = self.modelRight
 			## Temporary img to draw results and save it
-			img = np.copy(self.img_left)
+			img = np.copy(self.img_adj_left)
 			imgSide = 'left'
 			## SEM/FIB imaging size is:	512x442, 1024x884, 2048x1768 or 4096x3536. Saved image file is
 			#  SEM/FIB image + footer:	512x470, 1024x941, 2048x1883 or 4096x3767
@@ -961,7 +993,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			model2D = self.modelRight
 			model3D = self.modelLleft
 			## Temporary img to draw results and save it
-			img = np.copy(self.img_right)
+			img = np.copy(self.img_adj_right)
 			imgSide = 'right'
 			## SEM/FIB imaging size is:	512x442, 1024x884, 2048x1768 or 4096x3536. Saved image file is
 			#  SEM/FIB image + footer:	512x470, 1024x941, 2048x1883 or 4096x3767
@@ -1011,13 +1043,13 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 					model2D = self.modelRight
 					model3D = self.modelLleft
 					## Temporary img to draw results and save it
-					img = np.copy(self.img_right)
+					img = np.copy(self.img_adj_right)
 					imgSide = 'right'
 				elif corrMsgBoxRetVal == 'r2l':
 					model2D = self.modelLleft
 					model3D = self.modelRight
 					## Temporary img to draw results and save it
-					img = np.copy(self.img_left)
+					img = np.copy(self.img_adj_left)
 					imgSide = 'left'
 				else:
 					return
@@ -1042,13 +1074,13 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 					model2D = self.modelRight
 					model3D = self.modelLleft
 					## Temporary img to draw results and save it
-					img = np.copy(self.img_right)
+					img = np.copy(self.img_adj_right)
 					imgSide = 'right'
 				elif corrMsgBoxRetVal == 'r2l':
 					model2D = self.modelLleft
 					model3D = self.modelRight
 					## Temporary img to draw results and save it
-					img = np.copy(self.img_left)
+					img = np.copy(self.img_adj_left)
 					imgSide = 'left'
 				else:
 					return
@@ -1112,6 +1144,12 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			pass
 		## Display image
 		if imgSide == 'left':
+			## reset brightness contrast
+			self.brightness_left = 0
+			self.contrast_left = 10
+			self.horizontalSlider_brightness.setValue(0)
+			self.horizontalSlider_contrast.setValue(10)
+
 			self.img_left_displayed = np.copy(img)
 			## Remove image (item)
 			self.sceneLeft.removeItem(self.pixmap_item_left)
@@ -1120,6 +1158,12 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			## Put exchanged image into background
 			QtGui.QGraphicsItem.stackBefore(self.pixmap_item_left, self.sceneLeft.items()[-1])
 		else:
+			## reset brightness contrast
+			self.brightness_right = 0
+			self.contrast_right = 10
+			self.horizontalSlider_brightness.setValue(0)
+			self.horizontalSlider_contrast.setValue(10)
+
 			self.img_right_displayed = np.copy(img)
 			## Remove image (item)
 			self.sceneRight.removeItem(self.pixmap_item_right)

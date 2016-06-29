@@ -53,7 +53,7 @@ A test dataset can be downloaded here: http://3dct.semper.space/download/3D_corr
 # 					  Max-Planck-Institute of Biochemistry
 # 					  Department of Molecular Structural Biology
 # @Date				: 2015/08
-# @Version			: 3DCT 2.0.3
+# @Version			: 3DCT 2.0.4
 # @Status			: stable
 # @Usage			: python -u TDCT_main.py
 # @Notes			:
@@ -88,7 +88,7 @@ if sys.platform == 'win32':
 	if debug is True: print clrmsg.INFO + 'PATH before:', os.environ.get('PATH','')
 	os.environ['PATH'] = execdir + '\;' + os.environ.get('PATH','')
 	if debug is True: print clrmsg.INFO + 'PATH after: ', os.environ.get('PATH','')
-__version__ = 'v2.0.3'
+__version__ = 'v2.0.4'
 
 if debug is True: print clrmsg.DEBUG + "Execdir =", execdir
 ########## GUI layout file #######################################################
