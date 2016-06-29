@@ -11,7 +11,7 @@ Quadratic Interpolation of Spectral Peaks
 # @Credits			: https://gist.github.com/endolith/255291
 # @Maintainer		:
 # @Date				: 2015/12
-# @Version			: 3DCT 2.0.4 module rev. 1
+# @Version			: 3DCT 2.1.0 module rev. 1
 # @Status			: stable
 # @Usage			:
 # @Notes			:

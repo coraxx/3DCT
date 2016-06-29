@@ -13,7 +13,7 @@
 # @Credits			:
 # @Maintainer		: Jan Arnold
 # @Date				: 2016/03/25
-# @Version			: 3DCT 2.0.4 module rev. 2
+# @Version			: 3DCT 2.1.0 module rev. 2
 # @Status			: stable
 # @Usage			: import helpdoc.py and call functions
 # @Notes			:

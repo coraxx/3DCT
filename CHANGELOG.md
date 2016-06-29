@@ -1,17 +1,36 @@
 # Changelog #
 
+## 2.1.0 ##
+2016-06-30[^1]
+
+##### Major Changes: #####
+- added slice from stack view. Instead of a maximum intensity projection, single slices of 3D image stack volumes can be displayed
+
+##### Minor Changes: #####
+- fine tuned brightness/contrast settings to be consistent when loading different slices and/or saving correlated images with the correct brightness/contrast
+- the adjusted brightness/contrast is applied to the correlated image which is also displayed in the application. Any further brightness/contrasts adjustments are based on the new image. Hit the "reset image button" if you want to load the original image again.
+
+##### Bugfixes:#####
+- fixed some control enable/disable bugs when switching between widgets
+- fixed some hick-ups with correct brightness/contrast application
+
+##### Known bugs:#####
+- file list order from working directory in 3DCT main window not sorted correctly under Linux (tested under Ubuntu 15.04)
+- when changing contrast/brightness and the focus is switched quickly during the process (like clicking on the other image) the order of added markers is not correct anymore. A workaround is to click on the affected image and change the contrast/brightness again, or reset it.
+
+
 ## 2.0.3 ##
 2016-06-09[^1]
 
 ##### Minor Changes: #####
 - added some in-code documentation
-- added missing matlab function in matlab roatation script generator
+- added missing matlab function in matlab rotation script generator
 - stack processing of CorrSight sequences now include tiles. They are added in sequence, i.e. stack after stack in one file
 
 ##### Bugfixes:#####
 - fixed loading of RGB images. Some were imported incorrectly and showed tiling
 - coordinate offset calculation for rotation center other than 0,0,0
-- matlab roatation script generator variable typo fixed
+- matlab rotation script generator variable typo fixed
 
 ##### Known bugs:#####
 - file list order from working directory in 3DCT main window not sorted correctly under Linux (tested under Ubuntu 15.04)
