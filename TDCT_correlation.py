@@ -104,11 +104,11 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		## Initialize parameters
 		self.brightness_left = 0
 		self.contrast_left = 10
-		self.slice_left = 1
+		self.slice_left = 0
 		self.mipCHKbox_left = True
 		self.brightness_right = 0
 		self.contrast_right = 10
-		self.slice_right = 1
+		self.slice_right = 0
 		self.mipCHKbox_right = True
 		## Initialize Images and connect image load buttons
 		self.toolButton_loadLeftImage.clicked.connect(self.openImageLeft)
@@ -144,6 +144,9 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 																frame=self.checkBox_scatterPlotFrame.isChecked(),
 																framesize=self.doubleSpinBox_scatterPlotFrameSize.value()))
 		self.checkBox_MIP.stateChanged.connect(self.selectSlice)
+
+		## Comboboxes
+		self.comboBox_channelColor.currentIndexChanged.connect(self.changeColorChannel)
 
 		## Buttons
 		self.toolButton_rotcw.clicked.connect(lambda: self.rotateImage45(direction='cw'))
@@ -250,7 +253,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		if self.currentFocusedWidgetName in [
 											'spinBox_rot','spinBox_markerSize','spinBox_slice','horizontalSlider_brightness','horizontalSlider_contrast',
 											'doubleSpinBox_custom_rot_center_x','doubleSpinBox_custom_rot_center_y','doubleSpinBox_custom_rot_center_z',
-											'checkBox_MIP']:
+											'checkBox_MIP','comboBox_channelColor']:
 			pass
 		else:
 			if self.currentFocusedWidgetName != 'graphicsView_left' and self.currentFocusedWidgetName != 'graphicsView_right':
@@ -423,9 +426,9 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			self.img_adj_left = np.copy(self.img_left)
 			## Set slice spinbox maximum
 			if self.imgstack_left is not None:
-				self.spinBox_slice.setValue(1)
-				self.slice_left = 1
-				self.spinBox_slice.setMaximum(self.imgstack_left.shape[0])
+				self.spinBox_slice.setValue(0)
+				self.slice_left = 0
+				self.spinBox_slice.setMaximum(self.imgstack_left.shape[0]-1)
 			## link image to QTableview for determining z
 			self.tableView_left.img = self.imgstack_left
 			## check if coloring z values in table is needed (correlation needs z=0 in 2D image, so no checking for valid z
@@ -467,9 +470,9 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			self.img_adj_right = np.copy(self.img_right)
 			## Set slice spinbox maximum
 			if self.imgstack_right is not None:
-				self.spinBox_slice.setValue(1)
-				self.slice_left = 1
-				self.spinBox_slice.setMaximum(self.imgstack_right.shape[0])
+				self.spinBox_slice.setValue(0)
+				self.slice_left = 0
+				self.spinBox_slice.setMaximum(self.imgstack_right.shape[0]-1)
 			## link image to QTableview for determining z
 			self.tableView_right.img = self.imgstack_right
 			## check if coloring z values in table is needed (correlation needs z=0 in 2D image, so no checking for valid z
@@ -516,7 +519,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 
 	def resetImageLeft(self,img=True):
 		if img is None and self.mipCHKbox_left is False:
-			img = self.imgstack_left[self.slice_left-1,:]
+			img = self.imgstack_left[self.slice_left,:]
 			## reset brightness contrast
 			self.brightness_left = 0
 			self.contrast_left = 10
@@ -544,7 +547,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 
 	def resetImageRight(self,img=None):
 		if img is None and self.mipCHKbox_right is False:
-			img = self.imgstack_right[self.slice_right-1,:]
+			img = self.imgstack_right[self.slice_right,:]
 			## reset brightness contrast
 			self.brightness_right = 0
 			self.contrast_right = 10
@@ -784,7 +787,32 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			if debug is True: print clrmsg.DEBUG + "Swapping image axes from c,y,x to y,x,c."
 			img = img.swapaxes(0,2).swapaxes(0,1)
 		if debug is True: print clrmsg.DEBUG + "Image shape:", img.shape
-		return QtGui.QPixmap.fromImage(qimage2ndarray.array2qimage(img))
+
+		## Colorize channels
+		if img.ndim == 2:
+			self.customChannelColor = [120,40,60]
+
+			if self.comboBox_channelColor.currentText() == 'none':
+				return QtGui.QPixmap.fromImage(qimage2ndarray.array2qimage(img))
+			elif self.comboBox_channelColor.currentText() == 'red':
+				imgC = np.zeros([img.shape[0],img.shape[1],3])
+				imgC[:,:,0] = img
+				return QtGui.QPixmap.fromImage(qimage2ndarray.array2qimage(imgC))
+			elif self.comboBox_channelColor.currentText() == 'green':
+				imgC = np.zeros([img.shape[0],img.shape[1],3])
+				imgC[:,:,1] = img
+				return QtGui.QPixmap.fromImage(qimage2ndarray.array2qimage(imgC))
+			elif self.comboBox_channelColor.currentText() == 'blue':
+				imgC = np.zeros([img.shape[0],img.shape[1],3])
+				imgC[:,:,2] = img
+				return QtGui.QPixmap.fromImage(qimage2ndarray.array2qimage(imgC))
+			elif self.comboBox_channelColor.currentText() == 'custom':
+				imgC = np.zeros([img.shape[0],img.shape[1],3])
+				imgC[:,:,0] = img
+				imgC[:,:,1] = img
+				imgC[:,:,2] = img
+		else:
+			return QtGui.QPixmap.fromImage(qimage2ndarray.array2qimage(img))
 
 	## Adjust Brightness and Contrast by sliders
 	def adjustBrightCont(self):
@@ -886,16 +914,25 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		else:
 			if self.label_selimg.text() == 'left' and '{0:b}'.format(self.sceneLeft.imagetype)[-1] == '0':
 				self.slice_left = int(self.spinBox_slice.value())
-				img = self.imgstack_left[self.slice_left-1,:]
+				img = self.imgstack_left[self.slice_left,:]
 				self.resetImageLeft(img=img)
 				if self.brightness_left != 0 and self.contrast_left != 10:
 					self.adjustBrightCont()
 			if self.label_selimg.text() == 'right' and '{0:b}'.format(self.sceneRight.imagetype)[-1] == '0':
 				self.slice_right = int(self.spinBox_slice.value())
-				img = self.imgstack_right[self.slice_right-1,:]
+				img = self.imgstack_right[self.slice_right,:]
 				self.resetImageRight(img=img)
 				if self.brightness_right != 0 or self.contrast_right != 10:
 					self.adjustBrightCont()
+
+	def changeColorChannel(self):
+		if self.label_selimg.text() == 'left':
+			self.adjustBrightCont()
+		elif self.label_selimg.text() == 'right':
+			self.adjustBrightCont()
+
+	def blendImages(self,img1,img2):
+		return np.minimum(img1,img2)
 
 												##################### END #####################
 												######    Image processing functions    #######
