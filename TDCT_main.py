@@ -35,6 +35,7 @@ The Toolbox comes with a PyQt4 GUI. Further dependencies as of now are:
 	- matplotlib
 	- opencv
 	- cv2
+	- qimage2ndarray
 	- tifffile (Christoph Gohlke)
 	- colorama (optional for colored stdout when debugging)
 
