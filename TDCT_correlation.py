@@ -53,6 +53,7 @@ qtCreatorFile_main = os.path.join(execdir, "TDCT_correlation.ui")
 Ui_WidgetWindow, QtBaseClass = uic.loadUiType(qtCreatorFile_main)
 
 debug = TDCT_debug.debug
+debug = True
 if debug is True: print clrmsg.DEBUG + "Execdir =", execdir
 
 
@@ -102,14 +103,34 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		self.rightImage = rightImage
 
 		## Initialize parameters
+		## left
 		self.brightness_left = 0
 		self.contrast_left = 10
 		self.slice_left = 0
 		self.mipCHKbox_left = True
+		self.layer1CHKbox_left = True
+		self.layer2CHKbox_left = False
+		self.layer3CHKbox_left = False
+		self.layer1Color_left = 0
+		self.layer2Color_left = 0
+		self.layer3Color_left = 0
+		self.layer1CustomColor_left = [255,0,255]
+		self.layer2CustomColor_left = [255,0,255]
+		self.layer3CustomColor_left = [255,0,255]
+		## right
 		self.brightness_right = 0
 		self.contrast_right = 10
 		self.slice_right = 0
 		self.mipCHKbox_right = True
+		self.layer1CHKbox_right = True
+		self.layer2CHKbox_right = False
+		self.layer3CHKbox_right = False
+		self.layer1Color_right = 0
+		self.layer2Color_right = 0
+		self.layer3Color_right = 0
+		self.layer1CustomColor_right = [255,0,255]
+		self.layer2CustomColor_right = [255,0,255]
+		self.layer3CustomColor_right = [255,0,255]
 		## Initialize Images and connect image load buttons
 		self.toolButton_loadLeftImage.clicked.connect(self.openImageLeft)
 		self.toolButton_loadRightImage.clicked.connect(self.openImageRight)
@@ -144,9 +165,14 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 																frame=self.checkBox_scatterPlotFrame.isChecked(),
 																framesize=self.doubleSpinBox_scatterPlotFrameSize.value()))
 		self.checkBox_MIP.stateChanged.connect(self.selectSlice)
+		self.checkBox_layer1.stateChanged.connect(lambda: self.layerCtrl('layer1'))
+		self.checkBox_layer2.stateChanged.connect(lambda: self.layerCtrl('layer2'))
+		self.checkBox_layer3.stateChanged.connect(lambda: self.layerCtrl('layer3'))
 
 		## Comboboxes
-		self.comboBox_channelColor.currentIndexChanged.connect(self.changeColorChannel)
+		self.comboBox_channelColorLayer1.currentIndexChanged.connect(self.changeColorChannel)
+		self.comboBox_channelColorLayer2.currentIndexChanged.connect(self.changeColorChannel)
+		self.comboBox_channelColorLayer3.currentIndexChanged.connect(self.changeColorChannel)
 
 		## Buttons
 		self.toolButton_rotcw.clicked.connect(lambda: self.rotateImage45(direction='cw'))
@@ -250,10 +276,12 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			self.formerFocusedWidget = former
 
 		## Label showing selected image
+		## WORKAROUND: check against empty string, because the popup from the comboboxes emit an emptz focus object name string.
 		if self.currentFocusedWidgetName in [
 											'spinBox_rot','spinBox_markerSize','spinBox_slice','horizontalSlider_brightness','horizontalSlider_contrast',
 											'doubleSpinBox_custom_rot_center_x','doubleSpinBox_custom_rot_center_y','doubleSpinBox_custom_rot_center_z',
-											'checkBox_MIP','comboBox_channelColor']:
+											'checkBox_MIP','checkBox_layer1','checkBox_layer2','checkBox_layer3',
+											'comboBox_channelColorLayer1','comboBox_channelColorLayer2','comboBox_channelColorLayer3','']:
 			pass
 		else:
 			if self.currentFocusedWidgetName != 'graphicsView_left' and self.currentFocusedWidgetName != 'graphicsView_right':
@@ -314,11 +342,27 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		self.horizontalSlider_contrast.blockSignals(True)
 		self.spinBox_slice.blockSignals(True)
 		self.checkBox_MIP.blockSignals(True)
+		self.checkBox_layer1.blockSignals(True)
+		self.checkBox_layer2.blockSignals(True)
+		self.checkBox_layer3.blockSignals(True)
+		self.comboBox_channelColorLayer1.blockSignals(True)
+		self.comboBox_channelColorLayer2.blockSignals(True)
+		self.comboBox_channelColorLayer3.blockSignals(True)
+
 		if self.currentFocusedWidgetName == 'graphicsView_left':
 			self.spinBox_rot.setValue(self.sceneLeft.rotangle)
 			self.spinBox_markerSize.setValue(self.sceneLeft.markerSize)
 			self.spinBox_slice.setValue(self.slice_left)
 			self.checkBox_MIP.setChecked(self.mipCHKbox_left)
+			self.checkBox_layer1.setChecked(self.layer1CHKbox_left)
+			self.comboBox_channelColorLayer1.setEnabled(self.layer1CHKbox_left)
+			self.comboBox_channelColorLayer1.setCurrentIndex(self.layer1Color_left)
+			self.checkBox_layer2.setChecked(self.layer2CHKbox_left)
+			self.comboBox_channelColorLayer2.setEnabled(self.layer2CHKbox_left)
+			self.comboBox_channelColorLayer2.setCurrentIndex(self.layer2Color_left)
+			self.checkBox_layer3.setChecked(self.layer3CHKbox_left)
+			self.comboBox_channelColorLayer3.setEnabled(self.layer3CHKbox_left)
+			self.comboBox_channelColorLayer3.setCurrentIndex(self.layer3Color_left)
 			self.horizontalSlider_brightness.setValue(self.brightness_left)
 			self.horizontalSlider_contrast.setValue(self.contrast_left)
 			self.label_imgpxsize.setText(str(self.sceneLeft.pixelSize))  # + ' um') # breaks marker size adjustments check
@@ -328,6 +372,15 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			self.spinBox_markerSize.setValue(self.sceneRight.markerSize)
 			self.spinBox_slice.setValue(self.slice_right)
 			self.checkBox_MIP.setChecked(self.mipCHKbox_right)
+			self.checkBox_layer1.setChecked(self.layer1CHKbox_right)
+			self.comboBox_channelColorLayer1.setEnabled(self.layer1CHKbox_right)
+			self.comboBox_channelColorLayer1.setCurrentIndex(self.layer1Color_right)
+			self.checkBox_layer2.setChecked(self.layer2CHKbox_right)
+			self.comboBox_channelColorLayer2.setEnabled(self.layer2CHKbox_right)
+			self.comboBox_channelColorLayer2.setCurrentIndex(self.layer2Color_right)
+			self.checkBox_layer3.setChecked(self.layer3CHKbox_right)
+			self.comboBox_channelColorLayer3.setEnabled(self.layer3CHKbox_right)
+			self.comboBox_channelColorLayer3.setCurrentIndex(self.layer3Color_right)
 			self.horizontalSlider_brightness.setValue(self.brightness_right)
 			self.horizontalSlider_contrast.setValue(self.contrast_right)
 			self.label_imgpxsize.setText(str(self.sceneRight.pixelSize))  # + ' um') # breaks marker size adjustments check
@@ -337,6 +390,12 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		self.horizontalSlider_contrast.blockSignals(False)
 		self.spinBox_slice.blockSignals(False)
 		self.checkBox_MIP.blockSignals(False)
+		self.checkBox_layer1.blockSignals(False)
+		self.checkBox_layer2.blockSignals(False)
+		self.checkBox_layer3.blockSignals(False)
+		self.comboBox_channelColorLayer1.blockSignals(False)
+		self.comboBox_channelColorLayer2.blockSignals(False)
+		self.comboBox_channelColorLayer3.blockSignals(False)
 		# update marker size in nm
 		self.changeMarkerSize()
 
@@ -345,6 +404,12 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		self.spinBox_rot.setEnabled(status)
 		self.spinBox_markerSize.setEnabled(status)
 		self.spinBox_slice.setEnabled(False)
+		self.checkBox_layer1.setEnabled(status)
+		self.checkBox_layer2.setEnabled(status)
+		self.checkBox_layer3.setEnabled(status)
+		self.comboBox_channelColorLayer1.setEnabled(False)
+		self.comboBox_channelColorLayer2.setEnabled(False)
+		self.comboBox_channelColorLayer3.setEnabled(False)
 		self.horizontalSlider_brightness.setEnabled(status)
 		self.horizontalSlider_contrast.setEnabled(status)
 		self.toolButton_brightness_reset.setEnabled(status)
@@ -353,6 +418,9 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		self.toolButton_rotccw.setEnabled(status)
 		self.toolButton_importPoints.setEnabled(not status)
 		self.toolButton_exportPoints.setEnabled(not status)
+		self.toolButton_loadLayer1.setEnabled(status)
+		self.toolButton_loadLayer2.setEnabled(status)
+		self.toolButton_loadLayer3.setEnabled(status)
 
 	def colorModels(self):
 		rowsLeft = self.modelLleft.rowCount()
@@ -400,6 +468,11 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		if color.isValid():
 			self.poiColor = (color.blue(), color.green(), color.red())
 			self.label_poiColor.setStyleSheet("background-color: rgb{0};".format((color.red(), color.green(), color.blue())))
+
+	def getCustomChannelColor(self):
+		color = QtGui.QColorDialog.getColor()
+		if color.isValid():
+			return [color.red(), color.green(), color.blue()]
 
 												###############################################
 												###### Image initialization and rotation ######
@@ -790,27 +863,31 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 
 		## Colorize channels
 		if img.ndim == 2:
-			self.customChannelColor = [120,40,60]
+			self.customChannelColor = self.layer1CustomColor_left if self.label_selimg.text() == 'left' else self.layer1CustomColor_right
 
-			if self.comboBox_channelColor.currentText() == 'none':
+			if self.comboBox_channelColorLayer1.currentText() == 'none':
 				return QtGui.QPixmap.fromImage(qimage2ndarray.array2qimage(img))
-			elif self.comboBox_channelColor.currentText() == 'red':
+			elif self.comboBox_channelColorLayer1.currentText() == 'red':
 				imgC = np.zeros([img.shape[0],img.shape[1],3])
 				imgC[:,:,0] = img
 				return QtGui.QPixmap.fromImage(qimage2ndarray.array2qimage(imgC))
-			elif self.comboBox_channelColor.currentText() == 'green':
+			elif self.comboBox_channelColorLayer1.currentText() == 'green':
 				imgC = np.zeros([img.shape[0],img.shape[1],3])
 				imgC[:,:,1] = img
 				return QtGui.QPixmap.fromImage(qimage2ndarray.array2qimage(imgC))
-			elif self.comboBox_channelColor.currentText() == 'blue':
+			elif self.comboBox_channelColorLayer1.currentText() == 'blue':
 				imgC = np.zeros([img.shape[0],img.shape[1],3])
 				imgC[:,:,2] = img
 				return QtGui.QPixmap.fromImage(qimage2ndarray.array2qimage(imgC))
-			elif self.comboBox_channelColor.currentText() == 'custom':
+			elif self.comboBox_channelColorLayer1.currentText() == 'custom':
 				imgC = np.zeros([img.shape[0],img.shape[1],3])
-				imgC[:,:,0] = img
-				imgC[:,:,1] = img
-				imgC[:,:,2] = img
+				color = img*(self.customChannelColor[0]/255.0)
+				imgC[:,:,0] = color.astype(dtype='uint8')
+				color = img*(self.customChannelColor[1]/255.0)
+				imgC[:,:,1] = color.astype(dtype='uint8')
+				color = img*(self.customChannelColor[2]/255.0)
+				imgC[:,:,2] = color.astype(dtype='uint8')
+				return QtGui.QPixmap.fromImage(qimage2ndarray.array2qimage(imgC))
 		else:
 			return QtGui.QPixmap.fromImage(qimage2ndarray.array2qimage(img))
 
@@ -927,12 +1004,56 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 
 	def changeColorChannel(self):
 		if self.label_selimg.text() == 'left':
+			if self.layer1Color_left != self.comboBox_channelColorLayer1.currentIndex():
+				self.layer1Color_left = self.comboBox_channelColorLayer1.currentIndex()
+				if self.layer1Color_left == 4:
+					self.layer1CustomColor_left = self.getCustomChannelColor()
+			if self.layer2Color_left != self.comboBox_channelColorLayer2.currentIndex():
+				self.layer2Color_left = self.comboBox_channelColorLayer2.currentIndex()
+				if self.layer2Color_left == 4:
+					self.layer2CustomColor_left = self.getCustomChannelColor()
+			if self.layer3Color_left != self.comboBox_channelColorLayer3.currentIndex():
+				self.layer3Color_left = self.comboBox_channelColorLayer3.currentIndex()
+				if self.layer3Color_left == 4:
+					self.layer3CustomColor_left = self.getCustomChannelColor()
 			self.adjustBrightCont()
 		elif self.label_selimg.text() == 'right':
+			if self.layer1Color_right != self.comboBox_channelColorLayer1.currentIndex():
+				self.layer1Color_right = self.comboBox_channelColorLayer1.currentIndex()
+				if self.layer1Color_right == 4:
+					self.layer1CustomColor_right = self.getCustomChannelColor()
+			if self.layer2Color_right != self.comboBox_channelColorLayer2.currentIndex():
+				self.layer2Color_right = self.comboBox_channelColorLayer2.currentIndex()
+				if self.layer2Color_right == 4:
+					self.layer2CustomColor_right = self.getCustomChannelColor()
+			if self.layer3Color_right != self.comboBox_channelColorLayer3.currentIndex():
+				self.layer3Color_right = self.comboBox_channelColorLayer3.currentIndex()
+				if self.layer3Color_right == 4:
+					self.layer3CustomColor_right = self.getCustomChannelColor()
 			self.adjustBrightCont()
 
 	def blendImages(self,img1,img2):
 		return np.minimum(img1,img2)
+
+	def layerCtrl(self,layer):
+		if layer == 'layer1':
+			if self.label_selimg.text() == 'left':
+				self.layer1CHKbox_left = self.checkBox_layer1.isChecked()
+			else:
+				self.layer1CHKbox_right = self.checkBox_layer1.isChecked()
+			print 'LAYER 1', self.checkBox_layer1.isChecked(), self.layer1CHKbox_left if self.label_selimg.text() == 'left' else self.layer1CHKbox_right
+		elif layer == 'layer2':
+			if self.label_selimg.text() == 'left':
+				self.layer2CHKbox_left = self.checkBox_layer2.isChecked()
+			else:
+				self.layer2CHKbox_right = self.checkBox_layer2.isChecked()
+			print 'LAYER 2', self.checkBox_layer2.isChecked(), self.layer2CHKbox_left if self.label_selimg.text() == 'left' else self.layer2CHKbox_right
+		elif layer == 'layer3':
+			if self.label_selimg.text() == 'left':
+				self.layer3CHKbox_left = self.checkBox_layer3.isChecked()
+			else:
+				self.layer3CHKbox_right = self.checkBox_layer3.isChecked()
+			print 'LAYER 3', self.checkBox_layer3.isChecked(), self.layer3CHKbox_left if self.label_selimg.text() == 'left' else self.layer3CHKbox_right
 
 												##################### END #####################
 												######    Image processing functions    #######
@@ -1515,12 +1636,14 @@ if __name__ == "__main__":
 
 	## File dialogs for standalone mode
 	## *.png *.jpg *.bmp not yet supported
-	left = str(QtGui.QFileDialog.getOpenFileName(
-		None,"Select first image file for correlation", execdir,"Image Files (*.tif *.tiff);; All (*.*)"))
-	if left == '': sys.exit()
-	right = str(QtGui.QFileDialog.getOpenFileName(
-		None,"Select second image file for correlation", execdir,"Image Files (*.tif *.tiff);; All (*.*)"))
-	if right == '': sys.exit()
+	# left = str(QtGui.QFileDialog.getOpenFileName(
+	# 	None,"Select first image file for correlation", execdir,"Image Files (*.tif *.tiff);; All (*.*)"))
+	# if left == '': sys.exit()
+	# right = str(QtGui.QFileDialog.getOpenFileName(
+	# 	None,"Select second image file for correlation", execdir,"Image Files (*.tif *.tiff);; All (*.*)"))
+	# if right == '': sys.exit()
+	left = '/Users/jan/Desktop/correlation_test_dataset/IB_030.tif'
+	right = '/Users/jan/Desktop/correlation_test_dataset/LM_green_image_stack_reslized.tif'
 
 	main = Main(leftImage=left,rightImage=right)
 
