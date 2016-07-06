@@ -1723,5 +1723,69 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>checkBox_MIP</sender>
+   <signal>pressed()</signal>
+   <receiver>checkBox_MIP</receiver>
+   <slot>setFocus()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>1195</x>
+     <y>612</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>1195</x>
+     <y>612</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>checkBox_layer1</sender>
+   <signal>pressed()</signal>
+   <receiver>checkBox_layer1</receiver>
+   <slot>setFocus()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>1197</x>
+     <y>521</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>1197</x>
+     <y>521</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>checkBox_layer2</sender>
+   <signal>pressed()</signal>
+   <receiver>checkBox_layer2</receiver>
+   <slot>setFocus()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>1197</x>
+     <y>549</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>1197</x>
+     <y>549</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>checkBox_layer3</sender>
+   <signal>pressed()</signal>
+   <receiver>checkBox_layer3</receiver>
+   <slot>setFocus()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>1197</x>
+     <y>577</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>1197</x>
+     <y>577</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
 </ui>
