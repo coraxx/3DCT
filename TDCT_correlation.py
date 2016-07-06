@@ -854,32 +854,37 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 	# 	return QtGui.QPixmap.fromImage(image)
 
 	## Convert opencv image (numpy array in BGR) to RGB QImage and return pixmap. Only takes 2D images
-	def cv2Qimage(self,img):
+	def cv2Qimage(self,img,combobox=None):
 		if debug is True: print clrmsg.DEBUG + "===== cv2Qimage"
 		if img.shape[0] <= 4:
 			if debug is True: print clrmsg.DEBUG + "Swapping image axes from c,y,x to y,x,c."
 			img = img.swapaxes(0,2).swapaxes(0,1)
 		if debug is True: print clrmsg.DEBUG + "Image shape:", img.shape
 
+		if combobox is None:
+			combobox = self.comboBox_channelColorLayer1
+		## rgb to gray scale if colored
+		if combobox.currentText() != 'none' and img.ndim == 3:
+			img = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
 		## Colorize channels
 		if img.ndim == 2:
 			self.customChannelColor = self.layer1CustomColor_left if self.label_selimg.text() == 'left' else self.layer1CustomColor_right
 
-			if self.comboBox_channelColorLayer1.currentText() == 'none':
+			if combobox.currentText() == 'none':
 				return QtGui.QPixmap.fromImage(qimage2ndarray.array2qimage(img))
-			elif self.comboBox_channelColorLayer1.currentText() == 'red':
+			elif combobox.currentText() == 'red':
 				imgC = np.zeros([img.shape[0],img.shape[1],3])
 				imgC[:,:,0] = img
 				return QtGui.QPixmap.fromImage(qimage2ndarray.array2qimage(imgC))
-			elif self.comboBox_channelColorLayer1.currentText() == 'green':
+			elif combobox.currentText() == 'green':
 				imgC = np.zeros([img.shape[0],img.shape[1],3])
 				imgC[:,:,1] = img
 				return QtGui.QPixmap.fromImage(qimage2ndarray.array2qimage(imgC))
-			elif self.comboBox_channelColorLayer1.currentText() == 'blue':
+			elif combobox.currentText() == 'blue':
 				imgC = np.zeros([img.shape[0],img.shape[1],3])
 				imgC[:,:,2] = img
 				return QtGui.QPixmap.fromImage(qimage2ndarray.array2qimage(imgC))
-			elif self.comboBox_channelColorLayer1.currentText() == 'custom':
+			elif combobox.currentText() == 'custom':
 				imgC = np.zeros([img.shape[0],img.shape[1],3])
 				color = img*(self.customChannelColor[0]/255.0)
 				imgC[:,:,0] = color.astype(dtype='uint8')
