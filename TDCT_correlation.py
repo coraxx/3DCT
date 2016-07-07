@@ -404,6 +404,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		self.spinBox_rot.setEnabled(status)
 		self.spinBox_markerSize.setEnabled(status)
 		self.spinBox_slice.setEnabled(False)
+		self.checkBox_MIP.setEnabled(status)
 		self.checkBox_layer1.setEnabled(status)
 		self.checkBox_layer2.setEnabled(status)
 		self.checkBox_layer3.setEnabled(status)
@@ -590,7 +591,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 				self.sceneRight.addCircle(0.0,0.0,0.0)
 			self.tableView_right.updateItems()
 
-	def resetImageLeft(self,img=True):
+	def resetImageLeft(self,img=None):
 		if img is None and self.mipCHKbox_left is False:
 			img = self.imgstack_left[self.slice_left,:]
 			## reset brightness contrast
@@ -616,7 +617,10 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		self.pixmap_item_left = QtGui.QGraphicsPixmapItem(self.pixmap_left, None, self.sceneLeft)
 		## Put exchanged image into background
 		QtGui.QGraphicsItem.stackBefore(self.pixmap_item_left, self.sceneLeft.items()[-1])
+		## fix bug where markers vanished behind image by setting z value low enough
+		self.pixmap_item_left.setZValue(-10)
 		self.sceneLeft.deleteArrows()
+		# self.changeMarkerSize()
 
 	def resetImageRight(self,img=None):
 		if img is None and self.mipCHKbox_right is False:
@@ -644,7 +648,10 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		self.pixmap_item_right = QtGui.QGraphicsPixmapItem(self.pixmap_right, None, self.sceneRight)
 		## Put exchanged image into background
 		QtGui.QGraphicsItem.stackBefore(self.pixmap_item_right, self.sceneRight.items()[-1])
+		## fix bug where markers vanished behind image by setting z value low enough
+		self.pixmap_item_right.setZValue(-10)
 		self.sceneRight.deleteArrows()
+		# self.changeMarkerSize()
 
 	def rotateImage(self):
 		if self.label_selimg.text() == 'left':
@@ -925,6 +932,8 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			self.pixmap_item_left = QtGui.QGraphicsPixmapItem(self.pixmap_left, None, self.sceneLeft)
 			## Put exchanged image into background
 			QtGui.QGraphicsItem.stackBefore(self.pixmap_item_left, self.sceneLeft.items()[-1])
+			## fix bug where markers vanished behind image by setting z value low enough
+			self.pixmap_item_left.setZValue(-10)
 		elif self.label_selimg.text() == 'right':
 			self.brightness_right = self.horizontalSlider_brightness.value()
 			self.contrast_right = self.horizontalSlider_contrast.value()
@@ -951,6 +960,9 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			self.pixmap_item_right = QtGui.QGraphicsPixmapItem(self.pixmap_right, None, self.sceneRight)
 			## Put exchanged image into background
 			QtGui.QGraphicsItem.stackBefore(self.pixmap_item_right, self.sceneRight.items()[-1])
+			## fix bug where markers vanished behind image by setting z value low enough
+			self.pixmap_item_right.setZValue(-10)
+		# self.changeMarkerSize()
 
 	## Normalize Image
 	def norm_img(self,img,copy=False):
@@ -991,7 +1003,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		if self.checkBox_MIP.isChecked():
 			if self.label_selimg.text() == 'left' and '{0:b}'.format(self.sceneLeft.imagetype)[-1] == '0':
 				self.resetImageLeft(img=None)
-			if self.label_selimg.text() == 'right' and '{0:b}'.format(self.sceneRight.imagetype)[-1] == '0':
+			elif self.label_selimg.text() == 'right' and '{0:b}'.format(self.sceneRight.imagetype)[-1] == '0':
 				self.resetImageRight(img=None)
 		else:
 			if self.label_selimg.text() == 'left' and '{0:b}'.format(self.sceneLeft.imagetype)[-1] == '0':
@@ -1000,12 +1012,13 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 				self.resetImageLeft(img=img)
 				if self.brightness_left != 0 and self.contrast_left != 10:
 					self.adjustBrightCont()
-			if self.label_selimg.text() == 'right' and '{0:b}'.format(self.sceneRight.imagetype)[-1] == '0':
+			elif self.label_selimg.text() == 'right' and '{0:b}'.format(self.sceneRight.imagetype)[-1] == '0':
 				self.slice_right = int(self.spinBox_slice.value())
 				img = self.imgstack_right[self.slice_right,:]
 				self.resetImageRight(img=img)
 				if self.brightness_right != 0 or self.contrast_right != 10:
 					self.adjustBrightCont()
+		# self.changeMarkerSize()
 
 	def changeColorChannel(self):
 		if self.label_selimg.text() == 'left':
@@ -1321,6 +1334,8 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			self.pixmap_item_left = QtGui.QGraphicsPixmapItem(self.pixmap_left, None, self.sceneLeft)
 			## Put exchanged image into background
 			QtGui.QGraphicsItem.stackBefore(self.pixmap_item_left, self.sceneLeft.items()[-1])
+			## fix bug where markers vanished behind image by setting z value low enough
+			self.pixmap_item_left.setZValue(-10)
 		else:
 			## reset brightness contrast
 			self.brightness_right = 0
@@ -1335,6 +1350,8 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			self.pixmap_item_right = QtGui.QGraphicsPixmapItem(self.pixmap_right, None, self.sceneRight)
 			## Put exchanged image into background
 			QtGui.QGraphicsItem.stackBefore(self.pixmap_item_right, self.sceneRight.items()[-1])
+			## fix bug where markers vanished behind image by setting z value low enough
+			self.pixmap_item_right.setZValue(-10)
 
 		# self.displayResults(frame=False,framesize=None)
 		self.displayResults(frame=self.checkBox_scatterPlotFrame.isChecked(),framesize=self.doubleSpinBox_scatterPlotFrameSize.value())

@@ -319,7 +319,7 @@ class QGraphicsSceneCustom(QtGui.QGraphicsScene):
 			if self.mainWidget.checkBox_MIP.isChecked():
 				self.addCircle(event.scenePos().x(), event.scenePos().y())
 			else:
-				self.addCircle(event.scenePos().x(), event.scenePos().y(),z=self.mainWidget.spinBox_slice.value()-1)
+				self.addCircle(event.scenePos().x(), event.scenePos().y(),z=self.mainWidget.spinBox_slice.value())
 		elif event.button() == QtCore.Qt.MiddleButton:
 			item = self.itemAt(event.scenePos())
 			if isinstance(item, QtGui.QGraphicsEllipseItem):

@@ -326,6 +326,9 @@
                 <property name="enabled">
                  <bool>false</bool>
                 </property>
+                <property name="contextMenuPolicy">
+                 <enum>Qt::PreventContextMenu</enum>
+                </property>
                 <property name="accelerated">
                  <bool>true</bool>
                 </property>
@@ -414,6 +417,9 @@
                   </property>
                   <property name="focusPolicy">
                    <enum>Qt::WheelFocus</enum>
+                  </property>
+                  <property name="contextMenuPolicy">
+                   <enum>Qt::PreventContextMenu</enum>
                   </property>
                   <property name="accelerated">
                    <bool>false</bool>
@@ -725,6 +731,9 @@
                      <horstretch>0</horstretch>
                      <verstretch>0</verstretch>
                     </sizepolicy>
+                   </property>
+                   <property name="contextMenuPolicy">
+                    <enum>Qt::PreventContextMenu</enum>
                    </property>
                    <property name="minimum">
                     <number>0</number>
