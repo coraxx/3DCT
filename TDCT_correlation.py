@@ -617,7 +617,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		self.pixmap_item_left = QtGui.QGraphicsPixmapItem(self.pixmap_left, None, self.sceneLeft)
 		## Put exchanged image into background
 		QtGui.QGraphicsItem.stackBefore(self.pixmap_item_left, self.sceneLeft.items()[-1])
-		## fix bug where markers vanished behind image by setting z value low enough
+		## fix bug, where markers vanished behind image, by setting z value low enough
 		self.pixmap_item_left.setZValue(-10)
 		self.sceneLeft.deleteArrows()
 		# self.changeMarkerSize()
@@ -648,7 +648,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		self.pixmap_item_right = QtGui.QGraphicsPixmapItem(self.pixmap_right, None, self.sceneRight)
 		## Put exchanged image into background
 		QtGui.QGraphicsItem.stackBefore(self.pixmap_item_right, self.sceneRight.items()[-1])
-		## fix bug where markers vanished behind image by setting z value low enough
+		## fix bug, where markers vanished behind image, by setting z value low enough
 		self.pixmap_item_right.setZValue(-10)
 		self.sceneRight.deleteArrows()
 		# self.changeMarkerSize()
@@ -932,7 +932,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			self.pixmap_item_left = QtGui.QGraphicsPixmapItem(self.pixmap_left, None, self.sceneLeft)
 			## Put exchanged image into background
 			QtGui.QGraphicsItem.stackBefore(self.pixmap_item_left, self.sceneLeft.items()[-1])
-			## fix bug where markers vanished behind image by setting z value low enough
+			## fix bug, where markers vanished behind image, by setting z value low enough
 			self.pixmap_item_left.setZValue(-10)
 		elif self.label_selimg.text() == 'right':
 			self.brightness_right = self.horizontalSlider_brightness.value()
@@ -960,7 +960,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			self.pixmap_item_right = QtGui.QGraphicsPixmapItem(self.pixmap_right, None, self.sceneRight)
 			## Put exchanged image into background
 			QtGui.QGraphicsItem.stackBefore(self.pixmap_item_right, self.sceneRight.items()[-1])
-			## fix bug where markers vanished behind image by setting z value low enough
+			## fix bug, where markers vanished behind image, by setting z value low enough
 			self.pixmap_item_right.setZValue(-10)
 		# self.changeMarkerSize()
 
@@ -1054,6 +1054,9 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		return np.minimum(img1,img2)
 
 	def layerCtrl(self,layer):
+		"""
+		Keeping tabs on which layers are active or not
+		"""
 		if layer == 'layer1':
 			if self.label_selimg.text() == 'left':
 				self.layer1CHKbox_left = self.checkBox_layer1.isChecked()
@@ -1334,7 +1337,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			self.pixmap_item_left = QtGui.QGraphicsPixmapItem(self.pixmap_left, None, self.sceneLeft)
 			## Put exchanged image into background
 			QtGui.QGraphicsItem.stackBefore(self.pixmap_item_left, self.sceneLeft.items()[-1])
-			## fix bug where markers vanished behind image by setting z value low enough
+			## fix bug, where markers vanished behind image, by setting z value low enough
 			self.pixmap_item_left.setZValue(-10)
 		else:
 			## reset brightness contrast
@@ -1350,7 +1353,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			self.pixmap_item_right = QtGui.QGraphicsPixmapItem(self.pixmap_right, None, self.sceneRight)
 			## Put exchanged image into background
 			QtGui.QGraphicsItem.stackBefore(self.pixmap_item_right, self.sceneRight.items()[-1])
-			## fix bug where markers vanished behind image by setting z value low enough
+			## fix bug, where markers vanished behind image, by setting z value low enough
 			self.pixmap_item_right.setZValue(-10)
 
 		# self.displayResults(frame=False,framesize=None)
