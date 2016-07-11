@@ -117,6 +117,9 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		self.layer1CustomColor_left = [255,0,255]
 		self.layer2CustomColor_left = [255,0,255]
 		self.layer3CustomColor_left = [255,0,255]
+		# self.img_left_layer1 = None
+		self.img_left_layer2 = None
+		self.img_left_layer3 = None
 		## right
 		self.brightness_right = 0
 		self.contrast_right = 10
@@ -131,6 +134,9 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		self.layer1CustomColor_right = [255,0,255]
 		self.layer2CustomColor_right = [255,0,255]
 		self.layer3CustomColor_right = [255,0,255]
+		# self.img_right_layer1 = None
+		self.img_right_layer2 = None
+		self.img_right_layer3 = None
 		## Initialize Images and connect image load buttons
 		self.toolButton_loadLeftImage.clicked.connect(self.openImageLeft)
 		self.toolButton_loadRightImage.clicked.connect(self.openImageRight)
@@ -203,6 +209,8 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 
 		self.lineEdit_workingDir.textChanged.connect(self.updateWorkingDir)
 
+		self.activateWindow()
+
 	def keyPressEvent(self,event):
 		"""Filter key press event
 		Selected table rows can be deleted by pressing the "Del" key
@@ -237,6 +245,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 
 	def selectWorkingDir(self):
 		path = str(QtGui.QFileDialog.getExistingDirectory(self, "Select working directory", self.workingdir))
+		self.activateWindow()
 		if path:
 			workingdir = self.checkWorkingDirPrivileges(path)
 			if workingdir:
@@ -460,18 +469,21 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 
 	def getMarkerColor(self):
 		color = QtGui.QColorDialog.getColor()
+		self.activateWindow()
 		if color.isValid():
 			self.markerColor = (color.blue(), color.green(), color.red())
 			self.label_markerColor.setStyleSheet("background-color: rgb{0};".format((color.red(), color.green(), color.blue())))
 
 	def getPoiColor(self):
 		color = QtGui.QColorDialog.getColor()
+		self.activateWindow()
 		if color.isValid():
 			self.poiColor = (color.blue(), color.green(), color.red())
 			self.label_poiColor.setStyleSheet("background-color: rgb{0};".format((color.red(), color.green(), color.blue())))
 
 	def getCustomChannelColor(self):
 		color = QtGui.QColorDialog.getColor()
+		self.activateWindow()
 		if color.isValid():
 			return [color.red(), color.green(), color.blue()]
 
@@ -571,6 +583,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		## *.png *.jpg *.bmp not yet supported
 		path = str(QtGui.QFileDialog.getOpenFileName(
 			None,"Select image file for correlation", self.workingdir,"Image Files (*.tif *.tiff);; All (*.*)"))
+		self.activateWindow()
 		if path != '':
 			self.leftImage = path
 			self.initImageLeft()
@@ -583,6 +596,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		## *.png *.jpg *.bmp not yet supported
 		path = str(QtGui.QFileDialog.getOpenFileName(
 			None,"Select image file for correlation", self.workingdir,"Image Files (*.tif *.tiff);; All (*.*)"))
+		self.activateWindow()
 		if path != '':
 			self.rightImage = path
 			self.initImageRight()
@@ -607,18 +621,19 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			self.horizontalSlider_brightness.setValue(0)
 			self.horizontalSlider_contrast.setValue(10)
 		# print img.shape
-		## Remove image (item)
-		self.sceneLeft.removeItem(self.pixmap_item_left)
 		## Load original
 		self.img_left_displayed = np.copy(img)
 		self.img_adj_left = np.copy(img)
 		## Display image
-		self.pixmap_left = self.cv2Qimage(self.img_left_displayed)
-		self.pixmap_item_left = QtGui.QGraphicsPixmapItem(self.pixmap_left, None, self.sceneLeft)
-		## Put exchanged image into background
-		QtGui.QGraphicsItem.stackBefore(self.pixmap_item_left, self.sceneLeft.items()[-1])
-		## fix bug, where markers vanished behind image, by setting z value low enough
-		self.pixmap_item_left.setZValue(-10)
+		self.displayImage()
+		## Remove image (item)
+		# self.sceneLeft.removeItem(self.pixmap_item_left)
+		# self.pixmap_left = self.cv2Qimage(self.img_left_displayed)
+		# self.pixmap_item_left = QtGui.QGraphicsPixmapItem(self.pixmap_left, None, self.sceneLeft)
+		# ## Put exchanged image into background
+		# QtGui.QGraphicsItem.stackBefore(self.pixmap_item_left, self.sceneLeft.items()[-1])
+		# ## fix bug, where markers vanished behind image, by setting z value low enough
+		# self.pixmap_item_left.setZValue(-10)
 		self.sceneLeft.deleteArrows()
 		# self.changeMarkerSize()
 
@@ -638,18 +653,19 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			self.horizontalSlider_brightness.setValue(0)
 			self.horizontalSlider_contrast.setValue(10)
 		# print img.shape
-		## Remove image (item)
-		self.sceneRight.removeItem(self.pixmap_item_right)
 		## Load original
 		self.img_right_displayed = np.copy(img)
 		self.img_adj_right = np.copy(img)
 		## Display image
-		self.pixmap_right = self.cv2Qimage(self.img_right_displayed)
-		self.pixmap_item_right = QtGui.QGraphicsPixmapItem(self.pixmap_right, None, self.sceneRight)
-		## Put exchanged image into background
-		QtGui.QGraphicsItem.stackBefore(self.pixmap_item_right, self.sceneRight.items()[-1])
-		## fix bug, where markers vanished behind image, by setting z value low enough
-		self.pixmap_item_right.setZValue(-10)
+		self.displayImage()
+		## Remove image (item)
+		# self.sceneRight.removeItem(self.pixmap_item_right)
+		# self.pixmap_right = self.cv2Qimage(self.img_right_displayed)
+		# self.pixmap_item_right = QtGui.QGraphicsPixmapItem(self.pixmap_right, None, self.sceneRight)
+		# ## Put exchanged image into background
+		# QtGui.QGraphicsItem.stackBefore(self.pixmap_item_right, self.sceneRight.items()[-1])
+		# ## fix bug, where markers vanished behind image, by setting z value low enough
+		# self.pixmap_item_right.setZValue(-10)
 		self.sceneRight.deleteArrows()
 		# self.changeMarkerSize()
 
@@ -878,7 +894,11 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			self.customChannelColor = self.layer1CustomColor_left if self.label_selimg.text() == 'left' else self.layer1CustomColor_right
 
 			if combobox.currentText() == 'none':
-				return QtGui.QPixmap.fromImage(qimage2ndarray.array2qimage(img))
+				if self.img_right_layer2 is not None and self.checkBox_layer2.isChecked():
+					blend = self.blendImages([img,self.img_right_layer2])
+					return QtGui.QPixmap.fromImage(qimage2ndarray.array2qimage(blend))
+				else:
+					return QtGui.QPixmap.fromImage(qimage2ndarray.array2qimage(img))
 			elif combobox.currentText() == 'red':
 				imgC = np.zeros([img.shape[0],img.shape[1],3])
 				imgC[:,:,0] = img
@@ -910,8 +930,6 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			self.brightness_left = self.horizontalSlider_brightness.value()
 			self.contrast_left = self.horizontalSlider_contrast.value()
 			# print self.brightness_left,self.contrast_left
-			## Remove image (item)
-			self.sceneLeft.removeItem(self.pixmap_item_left)
 			## Load replacement
 			self.img_adj_left = np.copy(self.img_left_displayed)
 			## Load contrast value (Slider value between 0 and 100)
@@ -928,18 +946,19 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 				## Convert from int16 back to uint8
 				self.img_adj_left = self.img_adj_left.astype(dtype='uint8')
 			## Display image
-			self.pixmap_left = self.cv2Qimage(self.img_adj_left)
-			self.pixmap_item_left = QtGui.QGraphicsPixmapItem(self.pixmap_left, None, self.sceneLeft)
-			## Put exchanged image into background
-			QtGui.QGraphicsItem.stackBefore(self.pixmap_item_left, self.sceneLeft.items()[-1])
-			## fix bug, where markers vanished behind image, by setting z value low enough
-			self.pixmap_item_left.setZValue(-10)
+			self.displayImage()
+			## Remove image (item)
+			# self.sceneLeft.removeItem(self.pixmap_item_left)
+			# self.pixmap_left = self.cv2Qimage(self.img_adj_left)
+			# self.pixmap_item_left = QtGui.QGraphicsPixmapItem(self.pixmap_left, None, self.sceneLeft)
+			# ## Put exchanged image into background
+			# QtGui.QGraphicsItem.stackBefore(self.pixmap_item_left, self.sceneLeft.items()[-1])
+			# ## fix bug, where markers vanished behind image, by setting z value low enough
+			# self.pixmap_item_left.setZValue(-10)
 		elif self.label_selimg.text() == 'right':
 			self.brightness_right = self.horizontalSlider_brightness.value()
 			self.contrast_right = self.horizontalSlider_contrast.value()
 			# print self.brightness_right,self.contrast_right
-			## Remove image (item)
-			self.sceneRight.removeItem(self.pixmap_item_right)
 			## Load replacement
 			self.img_adj_right = np.copy(self.img_right_displayed)
 			## Load contrast value (Slider value between 0 and 100)
@@ -956,12 +975,15 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 				## Convert from int16 back to uint8
 				self.img_adj_right = self.img_adj_right.astype(dtype='uint8')
 			## Display image
-			self.pixmap_right = self.cv2Qimage(self.img_adj_right)
-			self.pixmap_item_right = QtGui.QGraphicsPixmapItem(self.pixmap_right, None, self.sceneRight)
-			## Put exchanged image into background
-			QtGui.QGraphicsItem.stackBefore(self.pixmap_item_right, self.sceneRight.items()[-1])
-			## fix bug, where markers vanished behind image, by setting z value low enough
-			self.pixmap_item_right.setZValue(-10)
+			self.displayImage()
+			## Remove image (item)
+			# self.sceneRight.removeItem(self.pixmap_item_right)
+			# self.pixmap_right = self.cv2Qimage(self.img_adj_right)
+			# self.pixmap_item_right = QtGui.QGraphicsPixmapItem(self.pixmap_right, None, self.sceneRight)
+			# ## Put exchanged image into background
+			# QtGui.QGraphicsItem.stackBefore(self.pixmap_item_right, self.sceneRight.items()[-1])
+			# ## fix bug, where markers vanished behind image, by setting z value low enough
+			# self.pixmap_item_right.setZValue(-10)
 		# self.changeMarkerSize()
 
 	## Normalize Image
@@ -1050,8 +1072,70 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 					self.layer3CustomColor_right = self.getCustomChannelColor()
 			self.adjustBrightCont()
 
-	def blendImages(self,img1,img2):
-		return np.minimum(img1,img2)
+	def displayImage(self,side=None):
+		"""
+		Display all active images. Set side to 'left' or 'right' for specific refresh, otherwise the active focus image side is used.
+		"""
+		if side is None:
+			side = self.label_selimg.text()
+		if side == 'left':
+			if self.layer1CHKbox_left is True:
+				image_list = [self.img_adj_left]
+			else:
+				image_list = []
+			if self.img_left_layer2 is not None and self.layer2CHKbox_left is True:
+				image_list.append(self.img_adj_left_layer2)
+			if self.img_left_layer3 is not None and self.layer3CHKbox_left is True:
+				image_list.append(self.img_adj_left_layer3)
+			img_blend = self.blendImages(image_list)
+			## Display image
+			## Remove image (item)
+			self.sceneLeft.removeItem(self.pixmap_item_left)
+			self.pixmap_left = self.cv2Qimage(img_blend)
+			self.pixmap_item_left = QtGui.QGraphicsPixmapItem(self.pixmap_left, None, self.sceneLeft)
+			## Put exchanged image into background
+			QtGui.QGraphicsItem.stackBefore(self.pixmap_item_left, self.sceneLeft.items()[-1])
+			## fix bug, where markers vanished behind image, by setting z value low enough
+			self.pixmap_item_left.setZValue(-10)
+		elif side == 'right':
+			if self.layer1CHKbox_right is True:
+				image_list = [self.img_adj_right]
+			else:
+				image_list = []
+			if self.img_right_layer2 is not None and self.layer2CHKbox_right is True:
+				image_list.append(self.img_adj_right_layer2)
+			if self.img_right_layer3 is not None and self.layer3CHKbox_right is True:
+				image_list.append(self.img_adj_right_layer3)
+			img_blend = self.blendImages(image_list)
+			## Display image
+			## Remove image (item)
+			self.sceneRight.removeItem(self.pixmap_item_right)
+			self.pixmap_right = self.cv2Qimage(img_blend)
+			self.pixmap_item_right = QtGui.QGraphicsPixmapItem(self.pixmap_right, None, self.sceneRight)
+			## Put exchanged image into background
+			QtGui.QGraphicsItem.stackBefore(self.pixmap_item_right, self.sceneRight.items()[-1])
+			## fix bug, where markers vanished behind image, by setting z value low enough
+			self.pixmap_item_right.setZValue(-10)
+
+	def blendImages(self,images,blendmode='screen'):
+		"""
+		Blends multiple images (same numpy size and type) and returns a single image (numpy array). Images are passed in as a list argument.
+		"""
+		if len(images) == 0:
+			return np.zeros([10,10],dtype='uint8')-1
+		if len(images) == 1:
+			return images[0]
+		else:
+			blend = []
+			for i in range(len(images)):
+				if i == 0:
+					blend = images[i]
+				else:
+					if blendmode == 'screen':
+						blend = blend + images[i] - (blend * images[i].astype(dtype='float')/255.0)
+					elif blendmode == 'minimum':
+						blend = np.minimum(blend,images[i])
+			return blend.astype(dtype='uint8')
 
 	def layerCtrl(self,layer):
 		"""
@@ -1066,15 +1150,64 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		elif layer == 'layer2':
 			if self.label_selimg.text() == 'left':
 				self.layer2CHKbox_left = self.checkBox_layer2.isChecked()
+				if self.img_left_layer2 is None and self.checkBox_layer2.isChecked():
+					path = str(QtGui.QFileDialog.getOpenFileName(
+						None,"Select image file", execdir,"Image Files (*.tif *.tiff);; All (*.*)"))
+					self.activateWindow()
+					if path == '':
+						self.layer2CHKbox_left = False
+						self.checkBox_layer2.setChecked(False)
+						return
+					path = '/Users/jan/Desktop/correlation_test_dataset/single_tif_files/single_tif_files_1.tif'
+					self.img_left_layer2,self.sceneLeft.imagetype_layer2,self.imgstack_left_layer2 = self.imread(path)
+					self.img_left_displayed_layer2 = np.copy(self.img_left_layer2)
+					self.img_adj_left_layer2 = np.copy(self.img_left_layer2)
 			else:
 				self.layer2CHKbox_right = self.checkBox_layer2.isChecked()
+				if self.img_right_layer2 is None and self.checkBox_layer2.isChecked():
+					path = str(QtGui.QFileDialog.getOpenFileName(
+						None,"Select image file", execdir,"Image Files (*.tif *.tiff);; All (*.*)"))
+					self.activateWindow()
+					if path == '':
+						self.layer2CHKbox_right = False
+						self.checkBox_layer2.setChecked(False)
+						return
+					path = '/Users/jan/Desktop/correlation_test_dataset/single_tif_files/single_tif_files_1.tif'
+					self.img_right_layer2,self.sceneRight.imagetype_layer2,self.imgstack_right_layer2 = self.imread(path)
+					self.img_right_displayed_layer2 = np.copy(self.img_right_layer2)
+					self.img_adj_right_layer2 = np.copy(self.img_right_layer2)
 			print 'LAYER 2', self.checkBox_layer2.isChecked(), self.layer2CHKbox_left if self.label_selimg.text() == 'left' else self.layer2CHKbox_right
 		elif layer == 'layer3':
 			if self.label_selimg.text() == 'left':
 				self.layer3CHKbox_left = self.checkBox_layer3.isChecked()
+				if self.img_left_layer3 is None and self.checkBox_layer3.isChecked():
+					path = str(QtGui.QFileDialog.getOpenFileName(
+						None,"Select image file", execdir,"Image Files (*.tif *.tiff);; All (*.*)"))
+					self.activateWindow()
+					if path == '':
+						self.layer3CHKbox_left = False
+						self.checkBox_layer3.setChecked(False)
+						return
+					path = '/Users/jan/Desktop/correlation_test_dataset/single_tif_files/single_tif_files_1.tif'
+					self.img_left_layer3,self.sceneLeft.imagetype_layer3,self.imgstack_left_layer3 = self.imread(path)
+					self.img_left_displayed_layer3 = np.copy(self.img_left_layer3)
+					self.img_adj_left_layer3 = np.copy(self.img_left_layer3)
 			else:
 				self.layer3CHKbox_right = self.checkBox_layer3.isChecked()
+				if self.img_right_layer3 is None and self.checkBox_layer3.isChecked():
+					path = str(QtGui.QFileDialog.getOpenFileName(
+						None,"Select image file", execdir,"Image Files (*.tif *.tiff);; All (*.*)"))
+					self.activateWindow()
+					if path == '':
+						self.layer3CHKbox_right = False
+						self.checkBox_layer3.setChecked(False)
+						return
+					path = '/Users/jan/Desktop/correlation_test_dataset/single_tif_files/single_tif_files_1.tif'
+					self.img_right_layer3,self.sceneRight.imagetype_layer3,self.imgstack_right_layer3 = self.imread(path)
+					self.img_right_displayed_layer3 = np.copy(self.img_right_layer3)
+					self.img_adj_right_layer3 = np.copy(self.img_right_layer3)
 			print 'LAYER 3', self.checkBox_layer3.isChecked(), self.layer3CHKbox_left if self.label_selimg.text() == 'left' else self.layer3CHKbox_right
+		self.adjustBrightCont()
 
 												##################### END #####################
 												######    Image processing functions    #######
@@ -1100,6 +1233,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			self, 'Export file as',
 			os.path.dirname(self.leftImage) if self.label_selectedTable.text() == 'left' else os.path.dirname(self.rightImage),
 			"Tabstop separated (*.csv *.txt);;Comma separated (*.csv *.txt)")
+		self.activateWindow()
 		if str(filterdialog).startswith('Comma') is True:
 			csvHandler.model2csv(model,csv_file_out,delimiter=",")
 		elif str(filterdialog).startswith('Tabstop') is True:
@@ -1110,6 +1244,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			self, 'Import file as',
 			os.path.dirname(self.leftImage) if self.label_selectedTable.text() == 'left' else os.path.dirname(self.rightImage),
 			"Tabstop separated (*.csv *.txt);;Comma separated (*.csv *.txt)")
+		self.activateWindow()
 		if str(filterdialog).startswith('Comma') is True:
 			itemlist = csvHandler.csv2list(csv_file_in,delimiter=",",parent=self,sniff=True)
 		elif str(filterdialog).startswith('Tabstop') is True:
@@ -1331,14 +1466,16 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			self.horizontalSlider_contrast.setValue(10)
 
 			self.img_left_displayed = np.copy(img)
-			## Remove image (item)
-			self.sceneLeft.removeItem(self.pixmap_item_left)
-			self.pixmap_left = self.cv2Qimage(img)
-			self.pixmap_item_left = QtGui.QGraphicsPixmapItem(self.pixmap_left, None, self.sceneLeft)
-			## Put exchanged image into background
-			QtGui.QGraphicsItem.stackBefore(self.pixmap_item_left, self.sceneLeft.items()[-1])
-			## fix bug, where markers vanished behind image, by setting z value low enough
-			self.pixmap_item_left.setZValue(-10)
+			self.img_adj_left = np.copy(img)
+			self.displayImage(side='left')
+			# ## Remove image (item)
+			# self.sceneLeft.removeItem(self.pixmap_item_left)
+			# self.pixmap_left = self.cv2Qimage(img)
+			# self.pixmap_item_left = QtGui.QGraphicsPixmapItem(self.pixmap_left, None, self.sceneLeft)
+			# ## Put exchanged image into background
+			# QtGui.QGraphicsItem.stackBefore(self.pixmap_item_left, self.sceneLeft.items()[-1])
+			# ## fix bug, where markers vanished behind image, by setting z value low enough
+			# self.pixmap_item_left.setZValue(-10)
 		else:
 			## reset brightness contrast
 			self.brightness_right = 0
@@ -1347,14 +1484,16 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			self.horizontalSlider_contrast.setValue(10)
 
 			self.img_right_displayed = np.copy(img)
-			## Remove image (item)
-			self.sceneRight.removeItem(self.pixmap_item_right)
-			self.pixmap_right = self.cv2Qimage(img)
-			self.pixmap_item_right = QtGui.QGraphicsPixmapItem(self.pixmap_right, None, self.sceneRight)
-			## Put exchanged image into background
-			QtGui.QGraphicsItem.stackBefore(self.pixmap_item_right, self.sceneRight.items()[-1])
-			## fix bug, where markers vanished behind image, by setting z value low enough
-			self.pixmap_item_right.setZValue(-10)
+			self.img_adj_right = np.copy(img)
+			self.displayImage(side='right')
+			# ## Remove image (item)
+			# self.sceneRight.removeItem(self.pixmap_item_right)
+			# self.pixmap_right = self.cv2Qimage(img)
+			# self.pixmap_item_right = QtGui.QGraphicsPixmapItem(self.pixmap_right, None, self.sceneRight)
+			# ## Put exchanged image into background
+			# QtGui.QGraphicsItem.stackBefore(self.pixmap_item_right, self.sceneRight.items()[-1])
+			# ## fix bug, where markers vanished behind image, by setting z value low enough
+			# self.pixmap_item_right.setZValue(-10)
 
 		# self.displayResults(frame=False,framesize=None)
 		self.displayResults(frame=self.checkBox_scatterPlotFrame.isChecked(),framesize=self.doubleSpinBox_scatterPlotFrameSize.value())
@@ -1669,6 +1808,7 @@ if __name__ == "__main__":
 	# if right == '': sys.exit()
 	left = '/Users/jan/Desktop/correlation_test_dataset/IB_030.tif'
 	right = '/Users/jan/Desktop/correlation_test_dataset/LM_green_image_stack_reslized.tif'
+	right = '/Users/jan/Desktop/correlation_test_dataset/single_tif_files/single_tif_files_0.tif'
 
 	main = Main(leftImage=left,rightImage=right)
 

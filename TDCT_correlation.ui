@@ -253,6 +253,43 @@
              </layout>
             </item>
             <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_30">
+              <property name="spacing">
+               <number>1</number>
+              </property>
+              <item>
+               <widget class="QRadioButton" name="radioButton_layer1">
+                <property name="text">
+                 <string>Layer 1</string>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QRadioButton" name="radioButton_layer2">
+                <property name="enabled">
+                 <bool>false</bool>
+                </property>
+                <property name="text">
+                 <string>Layer 2</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QRadioButton" name="radioButton_layer3">
+                <property name="enabled">
+                 <bool>false</bool>
+                </property>
+                <property name="text">
+                 <string>Layer 3</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
              <layout class="QGridLayout" name="gridLayout_2_bc">
               <item row="0" column="0">
                <widget class="QLabel" name="label_3">
@@ -1659,12 +1696,12 @@
    <slot>setDisabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1222</x>
-     <y>517</y>
+     <x>1235</x>
+     <y>644</y>
     </hint>
     <hint type="destinationlabel">
-     <x>1270</x>
-     <y>516</y>
+     <x>1304</x>
+     <y>647</y>
     </hint>
    </hints>
   </connection>
@@ -1676,11 +1713,11 @@
    <hints>
     <hint type="sourcelabel">
      <x>1235</x>
-     <y>530</y>
+     <y>644</y>
     </hint>
     <hint type="destinationlabel">
-     <x>1332</x>
-     <y>511</y>
+     <x>1381</x>
+     <y>647</y>
     </hint>
    </hints>
   </connection>
@@ -1691,12 +1728,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1219</x>
-     <y>560</y>
+     <x>1237</x>
+     <y>553</y>
     </hint>
     <hint type="destinationlabel">
-     <x>1307</x>
-     <y>559</y>
+     <x>1381</x>
+     <y>557</y>
     </hint>
    </hints>
   </connection>
@@ -1707,12 +1744,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1204</x>
-     <y>583</y>
+     <x>1237</x>
+     <y>581</y>
     </hint>
     <hint type="destinationlabel">
-     <x>1327</x>
-     <y>587</y>
+     <x>1381</x>
+     <y>585</y>
     </hint>
    </hints>
   </connection>
@@ -1723,12 +1760,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1218</x>
-     <y>611</y>
+     <x>1237</x>
+     <y>609</y>
     </hint>
     <hint type="destinationlabel">
-     <x>1296</x>
-     <y>614</y>
+     <x>1381</x>
+     <y>613</y>
     </hint>
    </hints>
   </connection>
@@ -1739,12 +1776,12 @@
    <slot>setFocus()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1195</x>
-     <y>612</y>
+     <x>1235</x>
+     <y>644</y>
     </hint>
     <hint type="destinationlabel">
-     <x>1195</x>
-     <y>612</y>
+     <x>1235</x>
+     <y>644</y>
     </hint>
    </hints>
   </connection>
@@ -1755,12 +1792,12 @@
    <slot>setFocus()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1197</x>
-     <y>521</y>
+     <x>1237</x>
+     <y>553</y>
     </hint>
     <hint type="destinationlabel">
-     <x>1197</x>
-     <y>521</y>
+     <x>1237</x>
+     <y>553</y>
     </hint>
    </hints>
   </connection>
@@ -1771,12 +1808,12 @@
    <slot>setFocus()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1197</x>
-     <y>549</y>
+     <x>1237</x>
+     <y>581</y>
     </hint>
     <hint type="destinationlabel">
-     <x>1197</x>
-     <y>549</y>
+     <x>1237</x>
+     <y>581</y>
     </hint>
    </hints>
   </connection>
@@ -1787,12 +1824,60 @@
    <slot>setFocus()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1197</x>
-     <y>577</y>
+     <x>1237</x>
+     <y>609</y>
     </hint>
     <hint type="destinationlabel">
-     <x>1197</x>
-     <y>577</y>
+     <x>1237</x>
+     <y>609</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>checkBox_layer1</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>radioButton_layer1</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>1215</x>
+     <y>542</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>1203</x>
+     <y>360</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>checkBox_layer2</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>radioButton_layer2</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>1220</x>
+     <y>568</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>1262</x>
+     <y>358</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>checkBox_layer3</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>radioButton_layer3</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>1217</x>
+     <y>594</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>1345</x>
+     <y>356</y>
     </hint>
    </hints>
   </connection>
