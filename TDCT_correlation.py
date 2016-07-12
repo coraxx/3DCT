@@ -104,6 +104,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 
 		## Initialize parameters
 		## left
+		self.selectedLayer_left = 1
 		self.brightness_left_layer1 = 0
 		self.brightness_left_layer2 = 0
 		self.brightness_left_layer3 = 0
@@ -125,6 +126,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		self.img_left_layer2 = None
 		self.img_left_layer3 = None
 		## right
+		self.selectedLayer_right = 1
 		self.brightness_right_layer1 = 0
 		self.brightness_right_layer2 = 0
 		self.brightness_right_layer3 = 0
@@ -203,6 +205,8 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		self.toolButton_selectWorkingDir.clicked.connect(self.selectWorkingDir)
 		self.toolButton_selectMarkerColor.clicked.connect(self.getMarkerColor)
 		self.toolButton_selectPoiColor.clicked.connect(self.getPoiColor)
+		self.toolButton_saveImage_left.clicked.connect(lambda: self.displayImage(side='left',save=True))
+		self.toolButton_saveImage_right.clicked.connect(lambda: self.displayImage(side='right',save=True))
 		self.commandLinkButton_correlate.clicked.connect(self.correlate)
 
 		## Sliders
@@ -386,6 +390,12 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			self.checkBox_layer3.setChecked(self.layer3CHKbox_left)
 			self.comboBox_channelColorLayer3.setEnabled(self.layer3CHKbox_left)
 			self.comboBox_channelColorLayer3.setCurrentIndex(self.layer3Color_left)
+			if self.selectedLayer_left == 1:
+				self.radioButton_layer1.setChecked(True)
+			elif self.selectedLayer_left == 2:
+				self.radioButton_layer2.setChecked(True)
+			elif self.selectedLayer_left == 3:
+				self.radioButton_layer3.setChecked(True)
 			self.radioButton_layer1.setEnabled(self.layer1CHKbox_left)
 			self.radioButton_layer2.setEnabled(self.layer2CHKbox_left)
 			self.radioButton_layer3.setEnabled(self.layer3CHKbox_left)
@@ -414,6 +424,12 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			self.checkBox_layer3.setChecked(self.layer3CHKbox_right)
 			self.comboBox_channelColorLayer3.setEnabled(self.layer3CHKbox_right)
 			self.comboBox_channelColorLayer3.setCurrentIndex(self.layer3Color_right)
+			if self.selectedLayer_right == 1:
+				self.radioButton_layer1.setChecked(True)
+			elif self.selectedLayer_right == 2:
+				self.radioButton_layer2.setChecked(True)
+			elif self.selectedLayer_right == 3:
+				self.radioButton_layer3.setChecked(True)
 			self.radioButton_layer1.setEnabled(self.layer1CHKbox_right)
 			self.radioButton_layer2.setEnabled(self.layer2CHKbox_right)
 			self.radioButton_layer3.setEnabled(self.layer3CHKbox_right)
@@ -476,22 +492,28 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			if self.radioButton_layer1.isChecked():
 				self.horizontalSlider_brightness.setValue(self.brightness_left_layer1)
 				self.horizontalSlider_contrast.setValue(self.contrast_left_layer1)
+				self.selectedLayer_left = 1
 			elif self.radioButton_layer2.isChecked():
 				self.horizontalSlider_brightness.setValue(self.brightness_left_layer2)
 				self.horizontalSlider_contrast.setValue(self.contrast_left_layer2)
+				self.selectedLayer_left = 2
 			elif self.radioButton_layer3.isChecked():
 				self.horizontalSlider_brightness.setValue(self.brightness_left_layer3)
 				self.horizontalSlider_contrast.setValue(self.contrast_left_layer3)
+				self.selectedLayer_left = 3
 		if self.label_selimg.text() == 'right':
 			if self.radioButton_layer1.isChecked():
 				self.horizontalSlider_brightness.setValue(self.brightness_right_layer1)
 				self.horizontalSlider_contrast.setValue(self.contrast_right_layer1)
+				self.selectedLayer_right = 1
 			if self.radioButton_layer2.isChecked():
 				self.horizontalSlider_brightness.setValue(self.brightness_right_layer2)
 				self.horizontalSlider_contrast.setValue(self.contrast_right_layer2)
+				self.selectedLayer_right = 2
 			if self.radioButton_layer3.isChecked():
 				self.horizontalSlider_brightness.setValue(self.brightness_right_layer3)
 				self.horizontalSlider_contrast.setValue(self.contrast_right_layer3)
+				self.selectedLayer_right = 3
 		self.horizontalSlider_brightness.blockSignals(False)
 		self.horizontalSlider_contrast.blockSignals(False)
 
@@ -689,14 +711,6 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		self.img_adj_left_layer1 = np.copy(img)
 		## Display image
 		self.displayImage(side='left')
-		## Remove image (item)
-		# self.sceneLeft.removeItem(self.pixmap_item_left)
-		# self.pixmap_left = self.cv2Qimage(self.img_left_displayed_layer1)
-		# self.pixmap_item_left = QtGui.QGraphicsPixmapItem(self.pixmap_left, None, self.sceneLeft)
-		# ## Put exchanged image into background
-		# QtGui.QGraphicsItem.stackBefore(self.pixmap_item_left, self.sceneLeft.items()[-1])
-		# ## fix bug, where markers vanished behind image, by setting z value low enough
-		# self.pixmap_item_left.setZValue(-10)
 		self.sceneLeft.deleteArrows()
 		# self.changeMarkerSize()
 
@@ -721,14 +735,6 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		self.img_adj_right_layer1 = np.copy(img)
 		## Display image
 		self.displayImage(side='right')
-		## Remove image (item)
-		# self.sceneRight.removeItem(self.pixmap_item_right)
-		# self.pixmap_right = self.cv2Qimage(self.img_right_displayed_layer1)
-		# self.pixmap_item_right = QtGui.QGraphicsPixmapItem(self.pixmap_right, None, self.sceneRight)
-		# ## Put exchanged image into background
-		# QtGui.QGraphicsItem.stackBefore(self.pixmap_item_right, self.sceneRight.items()[-1])
-		# ## fix bug, where markers vanished behind image, by setting z value low enough
-		# self.pixmap_item_right.setZValue(-10)
 		self.sceneRight.deleteArrows()
 		# self.changeMarkerSize()
 
@@ -923,22 +929,6 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 											if debug is True: print clrmsg.DEBUG + "Pixel size parser:", e
 											pass
 
-	# ## Convert opencv image (numpy array in BGR) to RGB QImage and return pixmap. Only takes 2D images
-	# def cv2Qimage(self,img):
-	# 	if debug is True: print clrmsg.DEBUG + "===== cv2Qimage"
-	# 	## Format 2D gray-scale to RGB for QImage
-	# 	if img.ndim == 2:
-	# 		img = cv2.cvtColor(img,cv2.COLOR_GRAY2RGB)
-	# 	if img.shape[0] <= 4:
-	# 		if debug is True: print clrmsg.DEBUG + "Swapping image axes from c,y,x to y,x,c."
-	# 		img = img.swapaxes(0,2).swapaxes(0,1)
-	# 	if debug is True: print clrmsg.DEBUG + "Image shape:", img.shape
-	# 	if img.shape[-1] == 4:
-	# 		image = QtGui.QImage(img.tobytes(), img.shape[1], img.shape[0], QtGui.QImage.Format_ARGB32).rgbSwapped()
-	# 	else:
-	# 		image = QtGui.QImage(img.tobytes(), img.shape[1], img.shape[0], QtGui.QImage.Format_RGB888)  # .rgbSwapped()
-	# 	return QtGui.QPixmap.fromImage(image)
-
 	## Convert opencv image (numpy array in BGR) to RGB QImage and return pixmap. Only takes 2D images
 	def cv2Qimage(self,img,combobox=None):
 		if debug is True: print clrmsg.DEBUG + "===== cv2Qimage"
@@ -948,45 +938,6 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		if debug is True: print clrmsg.DEBUG + "Image shape:", img.shape
 
 		return QtGui.QPixmap.fromImage(qimage2ndarray.array2qimage(img))
-
-		# if combobox is None:
-		# 	combobox = self.comboBox_channelColorLayer1
-		# ## rgb to gray scale if colored
-		# if combobox.currentText() != 'none' and img.ndim == 3:
-		# 	img = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
-		# ## Colorize channels
-		# if img.ndim == 2:
-		# 	self.customChannelColor = self.layer1CustomColor_left if self.label_selimg.text() == 'left' else self.layer1CustomColor_right
-
-		# 	if combobox.currentText() == 'none':
-		# 		if self.img_right_layer2 is not None and self.checkBox_layer2.isChecked():
-		# 			blend = self.blendImages([img,self.img_right_layer2])
-		# 			return QtGui.QPixmap.fromImage(qimage2ndarray.array2qimage(blend))
-		# 		else:
-		# 			return QtGui.QPixmap.fromImage(qimage2ndarray.array2qimage(img))
-		# 	elif combobox.currentText() == 'red':
-		# 		imgC = np.zeros([img.shape[0],img.shape[1],3])
-		# 		imgC[:,:,0] = img
-		# 		return QtGui.QPixmap.fromImage(qimage2ndarray.array2qimage(imgC))
-		# 	elif combobox.currentText() == 'green':
-		# 		imgC = np.zeros([img.shape[0],img.shape[1],3])
-		# 		imgC[:,:,1] = img
-		# 		return QtGui.QPixmap.fromImage(qimage2ndarray.array2qimage(imgC))
-		# 	elif combobox.currentText() == 'blue':
-		# 		imgC = np.zeros([img.shape[0],img.shape[1],3])
-		# 		imgC[:,:,2] = img
-		# 		return QtGui.QPixmap.fromImage(qimage2ndarray.array2qimage(imgC))
-		# 	elif combobox.currentText() == 'custom':
-		# 		imgC = np.zeros([img.shape[0],img.shape[1],3])
-		# 		color = img*(self.customChannelColor[0]/255.0)
-		# 		imgC[:,:,0] = color.astype(dtype='uint8')
-		# 		color = img*(self.customChannelColor[1]/255.0)
-		# 		imgC[:,:,1] = color.astype(dtype='uint8')
-		# 		color = img*(self.customChannelColor[2]/255.0)
-		# 		imgC[:,:,2] = color.astype(dtype='uint8')
-		# 		return QtGui.QPixmap.fromImage(qimage2ndarray.array2qimage(imgC))
-		# else:
-		# 	return QtGui.QPixmap.fromImage(qimage2ndarray.array2qimage(img))
 
 	def setBrightCont(self):
 		if self.label_selimg.text() == 'left':
@@ -1067,32 +1018,6 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 				for i in range(int(img.shape[2])):
 					img[:,:,i] *= typesize/img[:,:,i].max()
 		return img
-
-	# def selectSlice(self):
-	# 	if self.label_selimg.text() == 'left':
-	# 		self.mipCHKbox_left = self.checkBox_MIP.isChecked()
-	# 	elif self.label_selimg.text() == 'right':
-	# 		self.mipCHKbox_right = self.checkBox_MIP.isChecked()
-
-	# 	if self.checkBox_MIP.isChecked():
-	# 		if self.label_selimg.text() == 'left' and '{0:b}'.format(self.sceneLeft.imagetype)[-1] == '0':
-	# 			self.resetImageLeft(img=None)
-	# 		elif self.label_selimg.text() == 'right' and '{0:b}'.format(self.sceneRight.imagetype)[-1] == '0':
-	# 			self.resetImageRight(img=None)
-	# 	else:
-	# 		if self.label_selimg.text() == 'left' and '{0:b}'.format(self.sceneLeft.imagetype)[-1] == '0':
-	# 			self.slice_left = int(self.spinBox_slice.value())
-	# 			img = self.imgstack_left_layer1[self.slice_left,:]
-	# 			self.resetImageLeft(img=img)
-	# 			if self.brightness_left_layer1 != 0 and self.contrast_left_layer1 != 10:
-	# 				self.adjustBrightCont()
-	# 		elif self.label_selimg.text() == 'right' and '{0:b}'.format(self.sceneRight.imagetype)[-1] == '0':
-	# 			self.slice_right = int(self.spinBox_slice.value())
-	# 			img = self.imgstack_right_layer1[self.slice_right,:]
-	# 			self.resetImageRight(img=img)
-	# 			if self.brightness_right_layer1 != 0 or self.contrast_right_layer1 != 10:
-	# 				self.adjustBrightCont()
-	# 	# self.changeMarkerSize()
 
 	def selectSlice(self):
 		if self.label_selimg.text() == 'left':
@@ -1197,34 +1122,6 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		## rgb to gray scale if colored
 		if img.ndim == 3:
 			img = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
-		## Colorize channels
-		# if img.ndim == 2 and all(comboboxColor == 'none' for comboboxColor in [
-		# 														self.comboBox_channelColorLayer1.currentText(),
-		# 														self.comboBox_channelColorLayer2.currentText(),
-		# 														self.comboBox_channelColorLayer3.currentText()]):
-		# 	return img
-		# elif img.ndim == 2:
-		# 	self.customChannelColor = self.layer1CustomColor_left if self.label_selimg.text() == 'left' else self.layer1CustomColor_right
-
-		# 	if combobox.currentText() == 'none':
-		# 		if self.img_right_layer2 is not None and self.checkBox_layer2.isChecked():
-		# 			blend = self.blendImages([img,self.img_right_layer2])
-		# 			return QtGui.QPixmap.fromImage(qimage2ndarray.array2qimage(blend))
-		# 		else:
-		# 			return QtGui.QPixmap.fromImage(qimage2ndarray.array2qimage(img))
-		# 	elif combobox.currentText() == 'red':
-		# 		imgC = np.zeros([img.shape[0],img.shape[1],3])
-		# 		imgC[:,:,0] = img
-		# 		return QtGui.QPixmap.fromImage(qimage2ndarray.array2qimage(imgC))
-		# 	elif combobox.currentText() == 'green':
-		# 		imgC = np.zeros([img.shape[0],img.shape[1],3])
-		# 		imgC[:,:,1] = img
-		# 		return QtGui.QPixmap.fromImage(qimage2ndarray.array2qimage(imgC))
-		# 	elif combobox.currentText() == 'blue':
-		# 		imgC = np.zeros([img.shape[0],img.shape[1],3])
-		# 		imgC[:,:,2] = img
-		# 		return QtGui.QPixmap.fromImage(qimage2ndarray.array2qimage(imgC))
-		# 	elif combobox.currentText() == 'custom':
 		imgC = np.zeros([img.shape[0],img.shape[1],3])
 		colorChannel = img*(color[0]/255.0)
 		imgC[:,:,0] = colorChannel.astype(dtype='uint8')
@@ -1259,7 +1156,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 				elif layer == 3:
 					return self.layer3CustomColor_right
 
-	def displayImage(self,side=None):
+	def displayImage(self,side=None,save=False):
 		"""
 		Display all active images. Set side to 'left' or 'right' for specific refresh, otherwise the active focused image side is used.
 		"""
@@ -1303,6 +1200,9 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			QtGui.QGraphicsItem.stackBefore(self.pixmap_item_right, self.sceneRight.items()[-1])
 			## fix bug, where markers vanished behind image, by setting z value low enough
 			self.pixmap_item_right.setZValue(-10)
+		if save is True:
+			timestamp = time.strftime("%Y-%m-%d_%H-%M-%S")
+			cv2.imwrite(os.path.join(self.workingdir,timestamp+"_image.tif"), cv2.cvtColor(img_blend,cv2.COLOR_RGB2BGR))
 
 	def blendImages(self,images,blendmode='screen'):
 		"""
@@ -1311,7 +1211,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		if len(images) == 0:
 			return np.zeros([10,10],dtype='uint8')-1
 		if len(images) == 1:
-			return images[0]
+			return images[0].astype(dtype='uint8')
 		else:
 			blend = []
 			for i in range(len(images)):
