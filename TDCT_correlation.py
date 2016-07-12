@@ -179,14 +179,19 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 																frame=self.checkBox_scatterPlotFrame.isChecked(),
 																framesize=self.doubleSpinBox_scatterPlotFrameSize.value()))
 		self.checkBox_MIP.stateChanged.connect(self.selectSlice)
-		self.checkBox_layer1.stateChanged.connect(lambda: self.layerCtrl('layer1'))
-		self.checkBox_layer2.stateChanged.connect(lambda: self.layerCtrl('layer2'))
-		self.checkBox_layer3.stateChanged.connect(lambda: self.layerCtrl('layer3'))
+		self.checkBox_layer1.toggled.connect(lambda: self.layerCtrl('layer1'))
+		self.checkBox_layer2.toggled.connect(lambda: self.layerCtrl('layer2'))
+		self.checkBox_layer3.toggled.connect(lambda: self.layerCtrl('layer3'))
 
 		## Comboboxes
 		self.comboBox_channelColorLayer1.currentIndexChanged.connect(self.changeColorChannel)
 		self.comboBox_channelColorLayer2.currentIndexChanged.connect(self.changeColorChannel)
 		self.comboBox_channelColorLayer3.currentIndexChanged.connect(self.changeColorChannel)
+
+		## Radiobuttons
+		self.radioButton_layer1.clicked.connect(self.setSliders)
+		self.radioButton_layer2.clicked.connect(self.setSliders)
+		self.radioButton_layer3.clicked.connect(self.setSliders)
 
 		## Buttons
 		self.toolButton_rotcw.clicked.connect(lambda: self.rotateImage45(direction='cw'))
@@ -201,8 +206,8 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		self.commandLinkButton_correlate.clicked.connect(self.correlate)
 
 		## Sliders
-		self.horizontalSlider_brightness.valueChanged.connect(self.adjustBrightCont)
-		self.horizontalSlider_contrast.valueChanged.connect(self.adjustBrightCont)
+		self.horizontalSlider_brightness.valueChanged.connect(self.setBrightCont)
+		self.horizontalSlider_contrast.valueChanged.connect(self.setBrightCont)
 		## Capture focus change events
 		QtCore.QObject.connect(QtGui.QApplication.instance(), QtCore.SIGNAL("focusChanged(QWidget *, QWidget *)"), self.changedFocusSlot)
 
@@ -298,7 +303,8 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 											'spinBox_rot','spinBox_markerSize','spinBox_slice','horizontalSlider_brightness','horizontalSlider_contrast',
 											'doubleSpinBox_custom_rot_center_x','doubleSpinBox_custom_rot_center_y','doubleSpinBox_custom_rot_center_z',
 											'checkBox_MIP','checkBox_layer1','checkBox_layer2','checkBox_layer3',
-											'comboBox_channelColorLayer1','comboBox_channelColorLayer2','comboBox_channelColorLayer3','']:
+											'comboBox_channelColorLayer1','comboBox_channelColorLayer2','comboBox_channelColorLayer3',
+											'radioButton_layer1','radioButton_layer2','radioButton_layer3','']:
 			pass
 		else:
 			if self.currentFocusedWidgetName != 'graphicsView_left' and self.currentFocusedWidgetName != 'graphicsView_right':
@@ -380,8 +386,18 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			self.checkBox_layer3.setChecked(self.layer3CHKbox_left)
 			self.comboBox_channelColorLayer3.setEnabled(self.layer3CHKbox_left)
 			self.comboBox_channelColorLayer3.setCurrentIndex(self.layer3Color_left)
-			self.horizontalSlider_brightness.setValue(self.brightness_left_layer1)
-			self.horizontalSlider_contrast.setValue(self.contrast_left_layer1)
+			self.radioButton_layer1.setEnabled(self.layer1CHKbox_left)
+			self.radioButton_layer2.setEnabled(self.layer2CHKbox_left)
+			self.radioButton_layer3.setEnabled(self.layer3CHKbox_left)
+			if self.radioButton_layer1.isChecked():
+				self.horizontalSlider_brightness.setValue(self.brightness_left_layer1)
+				self.horizontalSlider_contrast.setValue(self.contrast_left_layer1)
+			elif self.radioButton_layer2.isChecked():
+				self.horizontalSlider_brightness.setValue(self.brightness_left_layer2)
+				self.horizontalSlider_contrast.setValue(self.contrast_left_layer2)
+			elif self.radioButton_layer3.isChecked():
+				self.horizontalSlider_brightness.setValue(self.brightness_left_layer3)
+				self.horizontalSlider_contrast.setValue(self.contrast_left_layer3)
 			self.label_imgpxsize.setText(str(self.sceneLeft.pixelSize))  # + ' um') # breaks marker size adjustments check
 			self.label_imgpxsizeUnit.setText('um') if self.sceneLeft.pixelSize else self.label_imgpxsizeUnit.setText('')
 		elif self.currentFocusedWidgetName == 'graphicsView_right':
@@ -398,8 +414,18 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			self.checkBox_layer3.setChecked(self.layer3CHKbox_right)
 			self.comboBox_channelColorLayer3.setEnabled(self.layer3CHKbox_right)
 			self.comboBox_channelColorLayer3.setCurrentIndex(self.layer3Color_right)
-			self.horizontalSlider_brightness.setValue(self.brightness_right_layer1)
-			self.horizontalSlider_contrast.setValue(self.contrast_right_layer1)
+			self.radioButton_layer1.setEnabled(self.layer1CHKbox_right)
+			self.radioButton_layer2.setEnabled(self.layer2CHKbox_right)
+			self.radioButton_layer3.setEnabled(self.layer3CHKbox_right)
+			if self.radioButton_layer1.isChecked():
+				self.horizontalSlider_brightness.setValue(self.brightness_right_layer1)
+				self.horizontalSlider_contrast.setValue(self.contrast_right_layer1)
+			if self.radioButton_layer2.isChecked():
+				self.horizontalSlider_brightness.setValue(self.brightness_right_layer2)
+				self.horizontalSlider_contrast.setValue(self.contrast_right_layer2)
+			if self.radioButton_layer3.isChecked():
+				self.horizontalSlider_brightness.setValue(self.brightness_right_layer3)
+				self.horizontalSlider_contrast.setValue(self.contrast_right_layer3)
 			self.label_imgpxsize.setText(str(self.sceneRight.pixelSize))  # + ' um') # breaks marker size adjustments check
 			self.label_imgpxsizeUnit.setText('um') if self.sceneRight.pixelSize else self.label_imgpxsizeUnit.setText('')
 		# Unblock emitting signals.
@@ -428,6 +454,9 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		self.comboBox_channelColorLayer1.setEnabled(False)
 		self.comboBox_channelColorLayer2.setEnabled(False)
 		self.comboBox_channelColorLayer3.setEnabled(False)
+		self.radioButton_layer1.setEnabled(False)
+		self.radioButton_layer2.setEnabled(False)
+		self.radioButton_layer3.setEnabled(False)
 		self.horizontalSlider_brightness.setEnabled(status)
 		self.horizontalSlider_contrast.setEnabled(status)
 		self.toolButton_brightness_reset.setEnabled(status)
@@ -439,6 +468,32 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		self.toolButton_loadLayer1.setEnabled(status)
 		self.toolButton_loadLayer2.setEnabled(status)
 		self.toolButton_loadLayer3.setEnabled(status)
+
+	def setSliders(self):
+		self.horizontalSlider_brightness.blockSignals(True)
+		self.horizontalSlider_contrast.blockSignals(True)
+		if self.label_selimg.text() == 'left':
+			if self.radioButton_layer1.isChecked():
+				self.horizontalSlider_brightness.setValue(self.brightness_left_layer1)
+				self.horizontalSlider_contrast.setValue(self.contrast_left_layer1)
+			elif self.radioButton_layer2.isChecked():
+				self.horizontalSlider_brightness.setValue(self.brightness_left_layer2)
+				self.horizontalSlider_contrast.setValue(self.contrast_left_layer2)
+			elif self.radioButton_layer3.isChecked():
+				self.horizontalSlider_brightness.setValue(self.brightness_left_layer3)
+				self.horizontalSlider_contrast.setValue(self.contrast_left_layer3)
+		if self.label_selimg.text() == 'right':
+			if self.radioButton_layer1.isChecked():
+				self.horizontalSlider_brightness.setValue(self.brightness_right_layer1)
+				self.horizontalSlider_contrast.setValue(self.contrast_right_layer1)
+			if self.radioButton_layer2.isChecked():
+				self.horizontalSlider_brightness.setValue(self.brightness_right_layer2)
+				self.horizontalSlider_contrast.setValue(self.contrast_right_layer2)
+			if self.radioButton_layer3.isChecked():
+				self.horizontalSlider_brightness.setValue(self.brightness_right_layer3)
+				self.horizontalSlider_contrast.setValue(self.contrast_right_layer3)
+		self.horizontalSlider_brightness.blockSignals(False)
+		self.horizontalSlider_contrast.blockSignals(False)
 
 	def colorModels(self):
 		rowsLeft = self.modelLleft.rowCount()
@@ -933,68 +988,55 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		# else:
 		# 	return QtGui.QPixmap.fromImage(qimage2ndarray.array2qimage(img))
 
-	## Adjust Brightness and Contrast by sliders
-	def adjustBrightCont(self):
-		if debug is True: print clrmsg.DEBUG + "===== adjustBrightCont"
+	def setBrightCont(self):
 		if self.label_selimg.text() == 'left':
-			self.brightness_left_layer1 = self.horizontalSlider_brightness.value()
-			self.contrast_left_layer1 = self.horizontalSlider_contrast.value()
-			# print self.brightness_left_layer1,self.contrast_left_layer1
-			## Load replacement
-			self.img_adj_left_layer1 = np.copy(self.img_left_displayed_layer1)
-			## Load contrast value (Slider value between 0 and 100)
-			contr = self.contrast_left_layer1*0.1
-			## Adjusting contrast
-			self.img_adj_left_layer1 = np.where(self.img_adj_left_layer1*contr >= 255,255,self.img_adj_left_layer1*contr)
-			## Convert float64 back to uint8
-			self.img_adj_left_layer1 = self.img_adj_left_layer1.astype(dtype='uint8')
-			## Adjust brightness
-			if self.brightness_left_layer1 > 0:
-				self.img_adj_left_layer1 = np.where(255-self.img_adj_left_layer1 <= self.brightness_left_layer1,255,self.img_adj_left_layer1+self.brightness_left_layer1)
-			else:
-				self.img_adj_left_layer1 = np.where(self.img_adj_left_layer1 <= -self.brightness_left_layer1,0,self.img_adj_left_layer1+self.brightness_left_layer1)
-				## Convert from int16 back to uint8
-				self.img_adj_left_layer1 = self.img_adj_left_layer1.astype(dtype='uint8')
-			## Display image
-			self.displayImage()
-			## Remove image (item)
-			# self.sceneLeft.removeItem(self.pixmap_item_left)
-			# self.pixmap_left = self.cv2Qimage(self.img_adj_left_layer1)
-			# self.pixmap_item_left = QtGui.QGraphicsPixmapItem(self.pixmap_left, None, self.sceneLeft)
-			# ## Put exchanged image into background
-			# QtGui.QGraphicsItem.stackBefore(self.pixmap_item_left, self.sceneLeft.items()[-1])
-			# ## fix bug, where markers vanished behind image, by setting z value low enough
-			# self.pixmap_item_left.setZValue(-10)
-		elif self.label_selimg.text() == 'right':
-			self.brightness_right_layer1 = self.horizontalSlider_brightness.value()
-			self.contrast_right_layer1 = self.horizontalSlider_contrast.value()
-			# print self.brightness_right_layer1,self.contrast_right_layer1
-			## Load replacement
-			self.img_adj_right_layer1 = np.copy(self.img_right_displayed_layer1)
-			## Load contrast value (Slider value between 0 and 100)
-			contr = self.contrast_right_layer1*0.1
-			## Adjusting contrast
-			self.img_adj_right_layer1 = np.where(self.img_adj_right_layer1*contr >= 255,255,self.img_adj_right_layer1*contr)
-			## Convert float64 back to uint8
-			self.img_adj_right_layer1 = self.img_adj_right_layer1.astype(dtype='uint8')
-			## Adjust brightness
-			if self.brightness_right_layer1 > 0:
-				self.img_adj_right_layer1 = np.where(255-self.img_adj_right_layer1 <= self.brightness_right_layer1,255,self.img_adj_right_layer1+self.brightness_right_layer1)
-			else:
-				self.img_adj_right_layer1 = np.where(self.img_adj_right_layer1 <= -self.brightness_right_layer1,0,self.img_adj_right_layer1+self.brightness_right_layer1)
-				## Convert from int16 back to uint8
-				self.img_adj_right_layer1 = self.img_adj_right_layer1.astype(dtype='uint8')
-			## Display image
-			self.displayImage()
-			## Remove image (item)
-			# self.sceneRight.removeItem(self.pixmap_item_right)
-			# self.pixmap_right = self.cv2Qimage(self.img_adj_right_layer1)
-			# self.pixmap_item_right = QtGui.QGraphicsPixmapItem(self.pixmap_right, None, self.sceneRight)
-			# ## Put exchanged image into background
-			# QtGui.QGraphicsItem.stackBefore(self.pixmap_item_right, self.sceneRight.items()[-1])
-			# ## fix bug, where markers vanished behind image, by setting z value low enough
-			# self.pixmap_item_right.setZValue(-10)
-		# self.changeMarkerSize()
+			if self.radioButton_layer1.isChecked():
+				self.brightness_left_layer1 = self.horizontalSlider_brightness.value()
+				self.contrast_left_layer1 = self.horizontalSlider_contrast.value()
+				self.img_adj_left_layer1 = self.adjustBrightCont(self.img_left_displayed_layer1,self.img_adj_left_layer1,self.brightness_left_layer1,self.contrast_left_layer1)
+			elif self.radioButton_layer2.isChecked():
+				self.brightness_left_layer2 = self.horizontalSlider_brightness.value()
+				self.contrast_left_layer2 = self.horizontalSlider_contrast.value()
+				self.img_adj_left_layer2 = self.adjustBrightCont(self.img_left_displayed_layer2,self.img_adj_left_layer2,self.brightness_left_layer2,self.contrast_left_layer2)
+			elif self.radioButton_layer3.isChecked():
+				self.brightness_left_layer3 = self.horizontalSlider_brightness.value()
+				self.contrast_left_layer3 = self.horizontalSlider_contrast.value()
+				self.img_adj_left_layer3 = self.adjustBrightCont(self.img_left_displayed_layer3,self.img_adj_left_layer3,self.brightness_left_layer3,self.contrast_left_layer3)
+		if self.label_selimg.text() == 'right':
+			if self.radioButton_layer1.isChecked():
+				self.brightness_right_layer1 = self.horizontalSlider_brightness.value()
+				self.contrast_right_layer1 = self.horizontalSlider_contrast.value()
+				self.img_adj_right_layer1 = self.adjustBrightCont(self.img_right_displayed_layer1,self.img_adj_right_layer1,self.brightness_right_layer1,self.contrast_right_layer1)
+			elif self.radioButton_layer2.isChecked():
+				self.brightness_right_layer2 = self.horizontalSlider_brightness.value()
+				self.contrast_right_layer2 = self.horizontalSlider_contrast.value()
+				self.img_adj_right_layer2 = self.adjustBrightCont(self.img_right_displayed_layer2,self.img_adj_right_layer2,self.brightness_right_layer2,self.contrast_right_layer2)
+			elif self.radioButton_layer3.isChecked():
+				self.brightness_right_layer3 = self.horizontalSlider_brightness.value()
+				self.contrast_right_layer3 = self.horizontalSlider_contrast.value()
+				self.img_adj_right_layer3 = self.adjustBrightCont(self.img_right_displayed_layer3,self.img_adj_right_layer3,self.brightness_right_layer3,self.contrast_right_layer3)
+		## Display image
+		self.displayImage()
+
+	## Adjust Brightness and Contrast by sliders
+	def adjustBrightCont(self,img_displayed,img_adjusted,brightness,contrast):
+		if debug is True: print clrmsg.DEBUG + "===== adjustBrightCont"
+		## Load replacement
+		img_adjusted = np.copy(img_displayed)
+		## Load contrast value (Slider value between 0 and 100)
+		contr = contrast*0.1
+		## Adjusting contrast
+		img_adjusted = np.where(img_adjusted*contr >= 255,255,img_adjusted*contr)
+		## Convert float64 back to uint8
+		img_adjusted = img_adjusted.astype(dtype='uint8')
+		## Adjust brightness
+		if brightness > 0:
+			img_adjusted = np.where(255-img_adjusted <= brightness,255,img_adjusted+brightness)
+		else:
+			img_adjusted = np.where(img_adjusted <= -brightness,0,img_adjusted+brightness)
+			## Convert from int16 back to uint8
+			img_adjusted = img_adjusted.astype(dtype='uint8')
+		return img_adjusted
 
 	## Normalize Image
 	def norm_img(self,img,copy=False):
@@ -1068,7 +1110,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 				self.img_adj_left_layer3 = self.img_left_layer3
 				self.displayImage('left')
 				if self.brightness_left_layer1 != 0 and self.contrast_left_layer1 != 10:
-					self.adjustBrightCont()
+					self.setBrightCont()
 				# self.resetImageLeft(img=None)
 			elif self.label_selimg.text() == 'right' and '{0:b}'.format(self.sceneRight.imagetype)[-1] == '0':
 				self.img_right_displayed_layer1 = self.img_right_layer1
@@ -1080,7 +1122,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 				self.displayImage('right')
 				# self.resetImageRight(img=None)
 				if self.brightness_right_layer1 != 0 or self.contrast_right_layer1 != 10:
-					self.adjustBrightCont()
+					self.setBrightCont()
 		else:
 			if self.label_selimg.text() == 'left' and '{0:b}'.format(self.sceneLeft.imagetype)[-1] == '0':
 				self.slice_left = int(self.spinBox_slice.value())
@@ -1096,7 +1138,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 				self.displayImage('left')
 				# self.resetImageLeft(img=img)
 				if self.brightness_left_layer1 != 0 and self.contrast_left_layer1 != 10:
-					self.adjustBrightCont()
+					self.setBrightCont()
 			elif self.label_selimg.text() == 'right' and '{0:b}'.format(self.sceneRight.imagetype)[-1] == '0':
 				self.slice_right = int(self.spinBox_slice.value())
 				# img = self.imgstack_right_layer1[self.slice_right,:]
@@ -1111,7 +1153,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 				self.displayImage('right')
 				# self.resetImageRight(img=img)
 				if self.brightness_right_layer1 != 0 or self.contrast_right_layer1 != 10:
-					self.adjustBrightCont()
+					self.setBrightCont()
 		# self.img_adj_left_layer1
 
 	def changeColorChannel(self):
@@ -1128,7 +1170,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 				self.layer3Color_left = self.comboBox_channelColorLayer3.currentIndex()
 				if self.layer3Color_left == 4:
 					self.layer3CustomColor_left = self.getCustomChannelColor()
-			self.adjustBrightCont()
+			self.displayImage(side='left')
 		elif self.label_selimg.text() == 'right':
 			if self.layer1Color_right != self.comboBox_channelColorLayer1.currentIndex():
 				self.layer1Color_right = self.comboBox_channelColorLayer1.currentIndex()
@@ -1142,7 +1184,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 				self.layer3Color_right = self.comboBox_channelColorLayer3.currentIndex()
 				if self.layer3Color_right == 4:
 					self.layer3CustomColor_right = self.getCustomChannelColor()
-			self.adjustBrightCont()
+			self.displayImage(side='right')
 
 	def colorizeImage(self,img,color=None):
 		if color is None and all(comboboxColor == 'none' for comboboxColor in [
@@ -1286,6 +1328,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		"""
 		Keeping tabs on which layers are active or not
 		"""
+		print layer
 		if layer == 'layer1':
 			if self.label_selimg.text() == 'left':
 				self.layer1CHKbox_left = self.checkBox_layer1.isChecked()
@@ -1305,8 +1348,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 						return
 					path = '/Users/jan/Desktop/correlation_test_dataset/single_tif_files/single_tif_files_1.tif'
 					self.img_left_layer2,self.sceneLeft.imagetype_layer2,self.imgstack_left_layer2 = self.imread(path)
-					self.img_left_displayed_layer2 = np.copy(self.img_left_layer2)
-					self.img_adj_left_layer2 = np.copy(self.img_left_layer2)
+					self.selectSlice()
 			else:
 				self.layer2CHKbox_right = self.checkBox_layer2.isChecked()
 				if self.img_right_layer2 is None and self.checkBox_layer2.isChecked():
@@ -1319,8 +1361,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 						return
 					path = '/Users/jan/Desktop/correlation_test_dataset/single_tif_files/single_tif_files_1.tif'
 					self.img_right_layer2,self.sceneRight.imagetype_layer2,self.imgstack_right_layer2 = self.imread(path)
-					self.img_right_displayed_layer2 = np.copy(self.img_right_layer2)
-					self.img_adj_right_layer2 = np.copy(self.img_right_layer2)
+					self.selectSlice()
 			print 'LAYER 2', self.checkBox_layer2.isChecked(), self.layer2CHKbox_left if self.label_selimg.text() == 'left' else self.layer2CHKbox_right
 		elif layer == 'layer3':
 			if self.label_selimg.text() == 'left':
@@ -1335,8 +1376,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 						return
 					path = '/Users/jan/Desktop/correlation_test_dataset/single_tif_files/single_tif_files_1.tif'
 					self.img_left_layer3,self.sceneLeft.imagetype_layer3,self.imgstack_left_layer3 = self.imread(path)
-					self.img_left_displayed_layer3 = np.copy(self.img_left_layer3)
-					self.img_adj_left_layer3 = np.copy(self.img_left_layer3)
+					self.selectSlice()
 			else:
 				self.layer3CHKbox_right = self.checkBox_layer3.isChecked()
 				if self.img_right_layer3 is None and self.checkBox_layer3.isChecked():
@@ -1349,10 +1389,8 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 						return
 					path = '/Users/jan/Desktop/correlation_test_dataset/single_tif_files/single_tif_files_1.tif'
 					self.img_right_layer3,self.sceneRight.imagetype_layer3,self.imgstack_right_layer3 = self.imread(path)
-					self.img_right_displayed_layer3 = np.copy(self.img_right_layer3)
-					self.img_adj_right_layer3 = np.copy(self.img_right_layer3)
+					self.selectSlice()
 			print 'LAYER 3', self.checkBox_layer3.isChecked(), self.layer3CHKbox_left if self.label_selimg.text() == 'left' else self.layer3CHKbox_right
-		self.adjustBrightCont()
 
 												##################### END #####################
 												######    Image processing functions    #######
