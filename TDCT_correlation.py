@@ -1124,12 +1124,12 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			img = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
 		imgC = np.zeros([img.shape[0],img.shape[1],3])
 		colorChannel = img*(color[0]/255.0)
-		imgC[:,:,0] = colorChannel.astype(dtype='uint8')
+		imgC[:,:,0] = colorChannel
 		colorChannel = img*(color[1]/255.0)
-		imgC[:,:,1] = colorChannel.astype(dtype='uint8')
+		imgC[:,:,1] = colorChannel
 		colorChannel = img*(color[2]/255.0)
-		imgC[:,:,2] = colorChannel.astype(dtype='uint8')
-		return imgC
+		imgC[:,:,2] = colorChannel
+		return imgC.astype(dtype='uint8')
 
 	def colorCoder(self,code,side,layer):
 		if code == 0:
@@ -1156,7 +1156,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 				elif layer == 3:
 					return self.layer3CustomColor_right
 
-	def displayImage(self,side=None,save=False):
+	def displayImage(self,side=None,save=False,keepRGB=False):
 		"""
 		Display all active images. Set side to 'left' or 'right' for specific refresh, otherwise the active focused image side is used.
 		"""
@@ -1164,7 +1164,10 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			side = self.label_selimg.text()
 		if side == 'left':
 			if self.layer1CHKbox_left is True:
-				image_list = [self.colorizeImage(self.img_adj_left_layer1,color=self.colorCoder(self.layer1Color_left,'left',1))]
+				if keepRGB:
+					image_list = [self.img_adj_left_layer1]
+				else:
+					image_list = [self.colorizeImage(self.img_adj_left_layer1,color=self.colorCoder(self.layer1Color_left,'left',1))]
 			else:
 				image_list = []
 			if self.img_left_layer2 is not None and self.layer2CHKbox_left is True:
@@ -1369,7 +1372,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			model2D = self.modelLleft
 			model3D = self.modelRight
 			## Temporary img to draw results and save it
-			img = np.copy(self.img_adj_left_layer1)
+			img = np.copy(self.colorizeImage(self.img_adj_left_layer1,color=self.colorCoder(self.layer1Color_left,'left',1)))
 			imgSide = 'left'
 			## SEM/FIB imaging size is:	512x442, 1024x884, 2048x1768 or 4096x3536. Saved image file is
 			#  SEM/FIB image + footer:	512x470, 1024x941, 2048x1883 or 4096x3767
@@ -1391,7 +1394,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			model2D = self.modelRight
 			model3D = self.modelLleft
 			## Temporary img to draw results and save it
-			img = np.copy(self.img_adj_right_layer1)
+			img = np.copy(self.colorizeImage(self.img_adj_right_layer1,color=self.colorCoder(self.layer1Color_right,'right',1)))
 			imgSide = 'right'
 			## SEM/FIB imaging size is:	512x442, 1024x884, 2048x1768 or 4096x3536. Saved image file is
 			#  SEM/FIB image + footer:	512x470, 1024x941, 2048x1883 or 4096x3767
@@ -1441,13 +1444,13 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 					model2D = self.modelRight
 					model3D = self.modelLleft
 					## Temporary img to draw results and save it
-					img = np.copy(self.img_adj_right_layer1)
+					img = np.copy(self.colorizeImage(self.img_adj_right_layer1,color=self.colorCoder(self.layer1Color_right,'right',1)))
 					imgSide = 'right'
 				elif corrMsgBoxRetVal == 'r2l':
 					model2D = self.modelLleft
 					model3D = self.modelRight
 					## Temporary img to draw results and save it
-					img = np.copy(self.img_adj_left_layer1)
+					img = np.copy(self.colorizeImage(self.img_adj_left_layer1,color=self.colorCoder(self.layer1Color_left,'left',1)))
 					imgSide = 'left'
 				else:
 					return
@@ -1472,13 +1475,13 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 					model2D = self.modelRight
 					model3D = self.modelLleft
 					## Temporary img to draw results and save it
-					img = np.copy(self.img_adj_right_layer1)
+					img = np.copy(self.colorizeImage(self.img_adj_right_layer1,color=self.colorCoder(self.layer1Color_right,'right',1)))
 					imgSide = 'right'
 				elif corrMsgBoxRetVal == 'r2l':
 					model2D = self.modelLleft
 					model3D = self.modelRight
 					## Temporary img to draw results and save it
-					img = np.copy(self.img_adj_left_layer1)
+					img = np.copy(self.colorizeImage(self.img_adj_left_layer1,color=self.colorCoder(self.layer1Color_left,'left',1)))
 					imgSide = 'left'
 				else:
 					return
@@ -1525,6 +1528,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		transf_3d = self.correlation_results[1]
 		alpha = self.doubleSpinBox_markerAlpha.value()
 		radius = self.spinBox_markerRadius.value()
+		img = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
 		img_orig = np.copy(img)
 		for i in range(transf_3d.shape[1]):
 			cv2.circle(img, (int(round(transf_3d[0,i])), int(round(transf_3d[1,i]))), radius, self.markerColor, -1)
@@ -1550,15 +1554,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 
 			self.img_left_displayed_layer1 = np.copy(img)
 			self.img_adj_left_layer1 = np.copy(img)
-			self.displayImage(side='left')
-			# ## Remove image (item)
-			# self.sceneLeft.removeItem(self.pixmap_item_left)
-			# self.pixmap_left = self.cv2Qimage(img)
-			# self.pixmap_item_left = QtGui.QGraphicsPixmapItem(self.pixmap_left, None, self.sceneLeft)
-			# ## Put exchanged image into background
-			# QtGui.QGraphicsItem.stackBefore(self.pixmap_item_left, self.sceneLeft.items()[-1])
-			# ## fix bug, where markers vanished behind image, by setting z value low enough
-			# self.pixmap_item_left.setZValue(-10)
+			self.displayImage(side='left',keepRGB=True)
 		else:
 			## reset brightness contrast
 			self.brightness_right_layer1 = 0
@@ -1568,15 +1564,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 
 			self.img_right_displayed_layer1 = np.copy(img)
 			self.img_adj_right_layer1 = np.copy(img)
-			self.displayImage(side='right')
-			# ## Remove image (item)
-			# self.sceneRight.removeItem(self.pixmap_item_right)
-			# self.pixmap_right = self.cv2Qimage(img)
-			# self.pixmap_item_right = QtGui.QGraphicsPixmapItem(self.pixmap_right, None, self.sceneRight)
-			# ## Put exchanged image into background
-			# QtGui.QGraphicsItem.stackBefore(self.pixmap_item_right, self.sceneRight.items()[-1])
-			# ## fix bug, where markers vanished behind image, by setting z value low enough
-			# self.pixmap_item_right.setZValue(-10)
+			self.displayImage(side='right',keepRGB=True)
 
 		# self.displayResults(frame=False,framesize=None)
 		self.displayResults(frame=self.checkBox_scatterPlotFrame.isChecked(),framesize=self.doubleSpinBox_scatterPlotFrameSize.value())
