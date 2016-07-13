@@ -122,6 +122,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		self.layer1CustomColor_left = [255,0,255]
 		self.layer2CustomColor_left = [255,0,255]
 		self.layer3CustomColor_left = [255,0,255]
+		self.img_left_overlay = None
 		# self.img_left_layer1 = None
 		self.img_left_layer2 = None
 		self.img_left_layer3 = None
@@ -144,6 +145,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		self.layer1CustomColor_right = [255,0,255]
 		self.layer2CustomColor_right = [255,0,255]
 		self.layer3CustomColor_right = [255,0,255]
+		self.img_right_overlay = None
 		# self.img_right_layer1 = None
 		self.img_right_layer2 = None
 		self.img_right_layer3 = None
@@ -706,6 +708,8 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			self.horizontalSlider_brightness.setValue(0)
 			self.horizontalSlider_contrast.setValue(10)
 		# print img.shape
+		## Reset Overlay
+		self.img_left_overlay = None
 		## Load original
 		self.img_left_displayed_layer1 = np.copy(img)
 		self.img_adj_left_layer1 = np.copy(img)
@@ -730,6 +734,8 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			self.horizontalSlider_brightness.setValue(0)
 			self.horizontalSlider_contrast.setValue(10)
 		# print img.shape
+		## Reset Overlay
+		self.img_right_overlay = None
 		## Load original
 		self.img_right_displayed_layer1 = np.copy(img)
 		self.img_adj_right_layer1 = np.copy(img)
@@ -1164,7 +1170,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			side = self.label_selimg.text()
 		if side == 'left':
 			if self.layer1CHKbox_left is True:
-				if keepRGB:
+				if keepRGB is True:
 					image_list = [self.img_adj_left_layer1]
 				else:
 					image_list = [self.colorizeImage(self.img_adj_left_layer1,color=self.colorCoder(self.layer1Color_left,'left',1))]
@@ -1174,6 +1180,8 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 				image_list.append(self.colorizeImage(self.img_adj_left_layer2,color=self.colorCoder(self.layer2Color_left,'left',2)))
 			if self.img_left_layer3 is not None and self.layer3CHKbox_left is True:
 				image_list.append(self.colorizeImage(self.img_adj_left_layer3,color=self.colorCoder(self.layer3Color_left,'left',3)))
+			if self.img_left_overlay is not None:
+				image_list.append(self.img_left_overlay)
 			img_blend = self.blendImages(image_list)
 			## Display image
 			## Remove image (item)
@@ -1193,6 +1201,8 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 				image_list.append(self.colorizeImage(self.img_adj_right_layer2,color=self.colorCoder(self.layer2Color_right,'right',2)))
 			if self.img_right_layer3 is not None and self.layer3CHKbox_right is True:
 				image_list.append(self.colorizeImage(self.img_adj_right_layer3,color=self.colorCoder(self.layer3Color_right,'right',3)))
+			if self.img_right_overlay is not None:
+				image_list.append(self.img_right_overlay)
 			img_blend = self.blendImages(image_list)
 			## Display image
 			## Remove image (item)
@@ -1528,43 +1538,52 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		transf_3d = self.correlation_results[1]
 		alpha = self.doubleSpinBox_markerAlpha.value()
 		radius = self.spinBox_markerRadius.value()
+		## convert RGB to BGR for cv2 handling
 		img = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
 		img_orig = np.copy(img)
+		img_overlay = np.zeros(img.shape,dtype=img.dtype)
 		for i in range(transf_3d.shape[1]):
 			cv2.circle(img, (int(round(transf_3d[0,i])), int(round(transf_3d[1,i]))), radius, self.markerColor, -1)
+			cv2.circle(img_overlay, (int(round(transf_3d[0,i])), int(round(transf_3d[1,i]))), radius, self.markerColor, -1)
 		img = cv2.addWeighted(img, alpha, img_orig, 1-alpha, 0.0)
+		img_overlay = cv2.addWeighted(img_overlay, alpha, np.zeros(img.shape,dtype=img.dtype), 1-alpha, 0.0)
 		if self.correlation_results[2] is not None:
 			calc_spots_2d = self.correlation_results[2]
 			# draw POI cv2.circle(img, (center x, center y), radius, [b,g,r], thickness(-1 for filled))
 			for i in range(calc_spots_2d.shape[1]):
 				cv2.circle(img, (int(round(calc_spots_2d[0,i])), int(round(calc_spots_2d[1,i]))), 1, self.poiColor, -1)
+				cv2.circle(img_overlay, (int(round(calc_spots_2d[0,i])), int(round(calc_spots_2d[1,i]))), 1, self.poiColor, -1)
 		if self.checkBox_writeReport.isChecked():
 			cv2.imwrite(os.path.join(self.workingdir,timestamp+"_correlated.tif"), img)
+		## back to RGB again for displaying in QT
 		try:
 			img = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
+			img_overlay = cv2.cvtColor(img_overlay,cv2.COLOR_BGR2RGB)
 		except:
 			pass
 		## Display image
 		if imgSide == 'left':
 			## reset brightness contrast
-			self.brightness_left_layer1 = 0
-			self.contrast_left_layer1 = 10
-			self.horizontalSlider_brightness.setValue(0)
-			self.horizontalSlider_contrast.setValue(10)
+			# self.brightness_left_layer1 = 0
+			# self.contrast_left_layer1 = 10
+			# self.horizontalSlider_brightness.setValue(0)
+			# self.horizontalSlider_contrast.setValue(10)
 
-			self.img_left_displayed_layer1 = np.copy(img)
-			self.img_adj_left_layer1 = np.copy(img)
-			self.displayImage(side='left',keepRGB=True)
+			# self.img_left_displayed_layer1 = np.copy(img)
+			# self.img_adj_left_layer1 = np.copy(img)
+			self.img_left_overlay = np.copy(img_overlay)
+			self.displayImage(side='left',keepRGB=False)
 		else:
 			## reset brightness contrast
-			self.brightness_right_layer1 = 0
-			self.contrast_right_layer1 = 10
-			self.horizontalSlider_brightness.setValue(0)
-			self.horizontalSlider_contrast.setValue(10)
+			# self.brightness_right_layer1 = 0
+			# self.contrast_right_layer1 = 10
+			# self.horizontalSlider_brightness.setValue(0)
+			# self.horizontalSlider_contrast.setValue(10)
 
-			self.img_right_displayed_layer1 = np.copy(img)
-			self.img_adj_right_layer1 = np.copy(img)
-			self.displayImage(side='right',keepRGB=True)
+			# self.img_right_displayed_layer1 = np.copy(img)
+			# self.img_adj_right_layer1 = np.copy(img)
+			self.img_right_overlay = np.copy(img_overlay)
+			self.displayImage(side='right',keepRGB=False)
 
 		# self.displayResults(frame=False,framesize=None)
 		self.displayResults(frame=self.checkBox_scatterPlotFrame.isChecked(),framesize=self.doubleSpinBox_scatterPlotFrameSize.value())
