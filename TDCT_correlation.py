@@ -672,6 +672,16 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			None,"Select image file for correlation", self.workingdir,"Image Files (*.tif *.tiff);; All (*.*)"))
 		self.activateWindow()
 		if path != '':
+			## Set focus to corresponding side to properly reset layer checkboxes
+			self.graphicsView_left.setFocus()
+			## Reset Layers
+			self.img_left_layer2,self.sceneLeft.imagetype_layer2,self.imgstack_left_layer2 = None, None, None
+			self.layer2CHKbox_left = False
+			self.checkBox_layer2.setChecked(False)
+			self.img_left_layer3,self.sceneLeft.imagetype_layer3,self.imgstack_left_layer3 = None, None, None
+			self.layer3CHKbox_left = False
+			self.checkBox_layer3.setChecked(False)
+			## Load new image
 			self.leftImage = path
 			self.initImageLeft()
 			self.tableView_left._scene = self.sceneLeft
@@ -685,6 +695,16 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			None,"Select image file for correlation", self.workingdir,"Image Files (*.tif *.tiff);; All (*.*)"))
 		self.activateWindow()
 		if path != '':
+			## Set focus to corresponding side to properly reset layer checkboxes
+			self.graphicsView_right.setFocus()
+			## Reset Layers
+			self.img_right_layer2,self.sceneRight.imagetype_layer2,self.imgstack_right_layer2 = None, None, None
+			self.layer2CHKbox_right = False
+			self.checkBox_layer2.setChecked(False)
+			self.img_right_layer3,self.sceneRight.imagetype_layer3,self.imgstack_right_layer3 = None, None, None
+			self.layer3CHKbox_right = False
+			self.checkBox_layer3.setChecked(False)
+			## Load new image
 			self.rightImage = path
 			self.initImageRight()
 			self.tableView_right._scene = self.sceneRight
@@ -872,7 +892,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		## Displaying issues with uint16 images -> convert to uint8
 		if img.dtype == 'uint16':
 			img = img*(255.0/img.max())
-			img = img.astype(dtype='uint8')
+			img = img.astype(dtype=np.uint8)
 			if debug is True: print clrmsg.DEBUG + "Image dtype converted to:", img.shape, img.dtype
 		if img.ndim == 4:
 			if debug is True: print clrmsg.DEBUG + "Calculating multichannel MIP"
@@ -977,6 +997,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 
 	## Adjust Brightness and Contrast by sliders
 	def adjustBrightCont(self,img_displayed,img_adjusted,brightness,contrast):
+		if debug is True: ping = time.time()
 		if debug is True: print clrmsg.DEBUG + "===== adjustBrightCont"
 		## Load replacement
 		img_adjusted = np.copy(img_displayed)
@@ -985,14 +1006,16 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		## Adjusting contrast
 		img_adjusted = np.where(img_adjusted*contr >= 255,255,img_adjusted*contr)
 		## Convert float64 back to uint8
-		img_adjusted = img_adjusted.astype(dtype='uint8')
+		img_adjusted = img_adjusted.astype(dtype=np.uint8)
 		## Adjust brightness
 		if brightness > 0:
 			img_adjusted = np.where(255-img_adjusted <= brightness,255,img_adjusted+brightness)
 		else:
 			img_adjusted = np.where(img_adjusted <= -brightness,0,img_adjusted+brightness)
 			## Convert from int16 back to uint8
-			img_adjusted = img_adjusted.astype(dtype='uint8')
+			img_adjusted = img_adjusted.astype(dtype=np.uint8)
+		if debug is True: pong = time.time()
+		if debug is True: print clrmsg.DEBUG + 'adjusting brightness/contrast in s:', pong-ping
 		return img_adjusted
 
 	## Normalize Image
@@ -1038,10 +1061,11 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 				self.img_left_displayed_layer2 = self.img_left_layer2
 				self.img_adj_left_layer2 = self.img_left_layer2
 				self.img_left_displayed_layer3 = self.img_left_layer3
-				self.img_adj_left_layer3 = self.img_left_layer3
 				self.displayImage('left')
 				if self.brightness_left_layer1 != 0 and self.contrast_left_layer1 != 10:
 					self.setBrightCont()
+				else:
+					self.img_adj_left_layer3 = self.img_left_layer3
 				# self.resetImageLeft(img=None)
 			elif self.label_selimg.text() == 'right' and '{0:b}'.format(self.sceneRight.imagetype)[-1] == '0':
 				self.img_right_displayed_layer1 = self.img_right_layer1
@@ -1050,10 +1074,11 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 				self.img_adj_right_layer2 = self.img_right_layer2
 				self.img_right_displayed_layer3 = self.img_right_layer3
 				self.img_adj_right_layer3 = self.img_right_layer3
-				self.displayImage('right')
 				# self.resetImageRight(img=None)
 				if self.brightness_right_layer1 != 0 or self.contrast_right_layer1 != 10:
 					self.setBrightCont()
+				else:
+					self.displayImage('right')
 		else:
 			if self.label_selimg.text() == 'left' and '{0:b}'.format(self.sceneLeft.imagetype)[-1] == '0':
 				self.slice_left = int(self.spinBox_slice.value())
@@ -1066,10 +1091,11 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 				if self.img_left_layer3 is not None:
 					self.img_left_displayed_layer3 = self.imgstack_left_layer3[self.slice_left,:]
 					self.img_adj_left_layer3 = self.imgstack_left_layer3[self.slice_left,:]
-				self.displayImage('left')
 				# self.resetImageLeft(img=img)
 				if self.brightness_left_layer1 != 0 and self.contrast_left_layer1 != 10:
 					self.setBrightCont()
+				else:
+					self.displayImage('left')
 			elif self.label_selimg.text() == 'right' and '{0:b}'.format(self.sceneRight.imagetype)[-1] == '0':
 				self.slice_right = int(self.spinBox_slice.value())
 				# img = self.imgstack_right_layer1[self.slice_right,:]
@@ -1081,10 +1107,11 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 				if self.img_right_layer3 is not None:
 					self.img_right_displayed_layer3 = self.imgstack_right_layer3[self.slice_right,:]
 					self.img_adj_right_layer3 = self.imgstack_right_layer3[self.slice_right,:]
-				self.displayImage('right')
 				# self.resetImageRight(img=img)
 				if self.brightness_right_layer1 != 0 or self.contrast_right_layer1 != 10:
 					self.setBrightCont()
+				else:
+					self.displayImage('right')
 		# self.img_adj_left_layer1
 
 	def changeColorChannel(self):
@@ -1118,24 +1145,26 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			self.displayImage(side='right')
 
 	def colorizeImage(self,img,color=None):
+		if debug is True: ping = time.time()
 		if color is None and all(comboboxColor == 'none' for comboboxColor in [
 																self.comboBox_channelColorLayer1.currentText(),
 																self.comboBox_channelColorLayer2.currentText(),
 																self.comboBox_channelColorLayer3.currentText()]):
+			if debug is True: pong = time.time()
+			if debug is True: print clrmsg.DEBUG + 'colorize image in s:', pong-ping
 			return img
 		elif color is None:
 			color = [255,255,255]
 		## rgb to gray scale if colored
 		if img.ndim == 3:
 			img = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
-		imgC = np.zeros([img.shape[0],img.shape[1],3])
-		colorChannel = img*(color[0]/255.0)
-		imgC[:,:,0] = colorChannel
-		colorChannel = img*(color[1]/255.0)
-		imgC[:,:,1] = colorChannel
-		colorChannel = img*(color[2]/255.0)
-		imgC[:,:,2] = colorChannel
-		return imgC.astype(dtype='uint8')
+		imgC = np.zeros([img.shape[0],img.shape[1],3], dtype=np.uint8)
+		imgC[:,:,0] = img*(color[0]/255.0)
+		imgC[:,:,1] = img*(color[1]/255.0)
+		imgC[:,:,2] = img*(color[2]/255.0)
+		if debug is True: pong = time.time()
+		if debug is True: print clrmsg.DEBUG + 'colorize image in s:', pong-ping
+		return imgC.astype(dtype=np.uint8)
 
 	def colorCoder(self,code,side,layer):
 		if code == 0:
@@ -1166,6 +1195,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		"""
 		Display all active images. Set side to 'left' or 'right' for specific refresh, otherwise the active focused image side is used.
 		"""
+		if debug is True: ping = time.time()
 		if side is None:
 			side = self.label_selimg.text()
 		if side == 'left':
@@ -1216,15 +1246,18 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		if save is True:
 			timestamp = time.strftime("%Y-%m-%d_%H-%M-%S")
 			cv2.imwrite(os.path.join(self.workingdir,timestamp+"_image.tif"), cv2.cvtColor(img_blend,cv2.COLOR_RGB2BGR))
+		if debug is True: pong = time.time()
+		if debug is True: print clrmsg.DEBUG + 'displaying image in s:', pong-ping
 
 	def blendImages(self,images,blendmode='screen'):
 		"""
 		Blends multiple images (same numpy size and type) and returns a single image (numpy array). Images are passed in as a list argument.
 		"""
+		if debug is True: ping = time.time()
 		if len(images) == 0:
-			return np.zeros([10,10],dtype='uint8')-1
+			return np.zeros([10,10],dtype=np.uint8)-1
 		if len(images) == 1:
-			return images[0].astype(dtype='uint8')
+			return images[0].astype(dtype=np.uint8)
 		else:
 			blend = []
 			for i in range(len(images)):
@@ -1232,22 +1265,22 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 					blend = images[i]
 				else:
 					if blendmode == 'screen':
-						blend = blend + images[i] - (blend * images[i].astype(dtype='float')/255.0)
+						blend = blend + images[i] - (blend * images[i].astype(dtype=np.float32)/255.0)
 					elif blendmode == 'minimum':
 						blend = np.minimum(blend,images[i])
-			return blend.astype(dtype='uint8')
+			if debug is True: pong = time.time()
+			if debug is True: print clrmsg.DEBUG + 'blending images in s:', pong-ping
+			return blend.astype(dtype=np.uint8)
 
 	def layerCtrl(self,layer):
 		"""
 		Keeping tabs on which layers are active or not
 		"""
-		print layer
 		if layer == 'layer1':
 			if self.label_selimg.text() == 'left':
 				self.layer1CHKbox_left = self.checkBox_layer1.isChecked()
 			else:
 				self.layer1CHKbox_right = self.checkBox_layer1.isChecked()
-			print 'LAYER 1', self.checkBox_layer1.isChecked(), self.layer1CHKbox_left if self.label_selimg.text() == 'left' else self.layer1CHKbox_right
 		elif layer == 'layer2':
 			if self.label_selimg.text() == 'left':
 				self.layer2CHKbox_left = self.checkBox_layer2.isChecked()
@@ -1259,9 +1292,34 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 						self.layer2CHKbox_left = False
 						self.checkBox_layer2.setChecked(False)
 						return
-					path = '/Users/jan/Desktop/correlation_test_dataset/single_tif_files/single_tif_files_1.tif'
+					# path = '/Users/jan/Desktop/correlation_test_dataset/single_tif_files/single_tif_files_1.tif'
 					self.img_left_layer2,self.sceneLeft.imagetype_layer2,self.imgstack_left_layer2 = self.imread(path)
-					self.selectSlice()
+					if self.sceneLeft.imagetype_layer2 != self.sceneLeft.imagetype:
+						QtGui.QMessageBox.critical(
+							self,"Warning", "This image file does not seem to be of the same kind as the first image!")
+						self.img_left_layer2,self.sceneLeft.imagetype_layer2,self.imgstack_left_layer2 = None, None, None
+						self.layer2CHKbox_left = False
+						self.checkBox_layer2.setChecked(False)
+					elif self.imgstack_left_layer1 is not None and self.imgstack_left_layer2.shape != self.imgstack_left_layer1.shape:
+						QtGui.QMessageBox.critical(
+							self,"Warning",
+							"This image file does not have the same dimensions as the first image: \nNeeds to be {0}\nbut is{1}".format(
+								self.imgstack_left_layer1.shape, self.imgstack_left_layer2.shape))
+						self.img_left_layer2,self.sceneLeft.imagetype_layer2,self.imgstack_left_layer2 = None, None, None
+						self.layer2CHKbox_left = False
+						self.checkBox_layer2.setChecked(False)
+					elif self.imgstack_left_layer1 is None and self.img_left_layer2.shape != self.img_left_layer1.shape:
+						QtGui.QMessageBox.critical(
+							self,"Warning",
+							"This image file does not have the same dimensions as the first image: \nNeeds to be {0}\nbut is{1}".format(
+								self.img_left_layer1.shape, self.img_left_layer2.shape))
+						self.img_left_layer2,self.sceneLeft.imagetype_layer2,self.imgstack_left_layer2 = None, None, None
+						self.layer2CHKbox_left = False
+						self.checkBox_layer2.setChecked(False)
+					else:
+						self.img_adj_left_layer2 = self.img_left_layer2
+						self.img_left_displayed_layer2 = self.img_left_layer2
+						self.selectSlice()
 			else:
 				self.layer2CHKbox_right = self.checkBox_layer2.isChecked()
 				if self.img_right_layer2 is None and self.checkBox_layer2.isChecked():
@@ -1272,10 +1330,34 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 						self.layer2CHKbox_right = False
 						self.checkBox_layer2.setChecked(False)
 						return
-					path = '/Users/jan/Desktop/correlation_test_dataset/single_tif_files/single_tif_files_1.tif'
+					# path = '/Users/jan/Desktop/correlation_test_dataset/single_tif_files/single_tif_files_1.tif'
 					self.img_right_layer2,self.sceneRight.imagetype_layer2,self.imgstack_right_layer2 = self.imread(path)
-					self.selectSlice()
-			print 'LAYER 2', self.checkBox_layer2.isChecked(), self.layer2CHKbox_left if self.label_selimg.text() == 'left' else self.layer2CHKbox_right
+					if self.sceneRight.imagetype_layer2 != self.sceneRight.imagetype:
+						QtGui.QMessageBox.critical(
+							self,"Warning", "This image file does not seem to be of the same kind as the first image!")
+						self.img_right_layer2,self.sceneRight.imagetype_layer2,self.imgstack_right_layer2 = None, None, None
+						self.layer2CHKbox_right = False
+						self.checkBox_layer2.setChecked(False)
+					elif self.imgstack_right_layer1 is not None and self.imgstack_right_layer2.shape != self.imgstack_right_layer1.shape:
+						QtGui.QMessageBox.critical(
+							self,"Warning",
+							"This image file does not have the same dimensions as the first image: \nNeeds to be {0}\nbut is{1}".format(
+								self.imgstack_right_layer1.shape, self.imgstack_right_layer2.shape))
+						self.img_right_layer2,self.sceneRight.imagetype_layer2,self.imgstack_right_layer2 = None, None, None
+						self.layer2CHKbox_right = False
+						self.checkBox_layer2.setChecked(False)
+					elif self.imgstack_right_layer1 is None and self.img_right_layer2.shape != self.img_right_layer1.shape:
+						QtGui.QMessageBox.critical(
+							self,"Warning",
+							"This image file does not have the same dimensions as the first image: \nNeeds to be {0}\nbut is{1}".format(
+								self.img_right_layer1.shape, self.img_right_layer2.shape))
+						self.img_right_layer2,self.sceneRight.imagetype_layer2,self.imgstack_right_layer2 = None, None, None
+						self.layer2CHKbox_right = False
+						self.checkBox_layer2.setChecked(False)
+					else:
+						self.img_adj_right_layer2 = self.img_right_layer2
+						self.img_aight_displayed_layer2 = self.img_right_layer2
+						self.selectSlice()
 		elif layer == 'layer3':
 			if self.label_selimg.text() == 'left':
 				self.layer3CHKbox_left = self.checkBox_layer3.isChecked()
@@ -1287,9 +1369,34 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 						self.layer3CHKbox_left = False
 						self.checkBox_layer3.setChecked(False)
 						return
-					path = '/Users/jan/Desktop/correlation_test_dataset/single_tif_files/single_tif_files_1.tif'
+					# path = '/Users/jan/Desktop/correlation_test_dataset/single_tif_files/single_tif_files_1.tif'
 					self.img_left_layer3,self.sceneLeft.imagetype_layer3,self.imgstack_left_layer3 = self.imread(path)
-					self.selectSlice()
+					if self.sceneLeft.imagetype_layer3 != self.sceneLeft.imagetype:
+						QtGui.QMessageBox.critical(
+							self,"Warning", "This image file does not seem to be of the same kind as the first image!")
+						self.img_left_layer3,self.sceneLeft.imagetype_layer3,self.imgstack_left_layer3 = None, None, None
+						self.layer3CHKbox_left = False
+						self.checkBox_layer3.setChecked(False)
+					elif self.imgstack_left_layer1 is not None and self.imgstack_left_layer3.shape != self.imgstack_left_layer1.shape:
+						QtGui.QMessageBox.critical(
+							self,"Warning",
+							"This image file does not have the same dimensions as the first image: \nNeeds to be {0}\nbut is{1}".format(
+								self.imgstack_left_layer1.shape, self.imgstack_left_layer3.shape))
+						self.img_left_layer3,self.sceneLeft.imagetype_layer3,self.imgstack_left_layer3 = None, None, None
+						self.layer3CHKbox_left = False
+						self.checkBox_layer3.setChecked(False)
+					elif self.imgstack_left_layer1 is None and self.img_left_layer3.shape != self.img_left_layer1.shape:
+						QtGui.QMessageBox.critical(
+							self,"Warning",
+							"This image file does not have the same dimensions as the first image: \nNeeds to be {0}\nbut is{1}".format(
+								self.img_left_layer1.shape, self.img_left_layer3.shape))
+						self.img_left_layer3,self.sceneLeft.imagetype_layer3,self.imgstack_left_layer3 = None, None, None
+						self.layer3CHKbox_left = False
+						self.checkBox_layer3.setChecked(False)
+					else:
+						self.img_adj_left_layer3 = self.img_left_layer3
+						self.img_left_displayed_layer3 = self.img_left_layer3
+						self.selectSlice()
 			else:
 				self.layer3CHKbox_right = self.checkBox_layer3.isChecked()
 				if self.img_right_layer3 is None and self.checkBox_layer3.isChecked():
@@ -1300,10 +1407,35 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 						self.layer3CHKbox_right = False
 						self.checkBox_layer3.setChecked(False)
 						return
-					path = '/Users/jan/Desktop/correlation_test_dataset/single_tif_files/single_tif_files_1.tif'
+					# path = '/Users/jan/Desktop/correlation_test_dataset/single_tif_files/single_tif_files_1.tif'
 					self.img_right_layer3,self.sceneRight.imagetype_layer3,self.imgstack_right_layer3 = self.imread(path)
-					self.selectSlice()
-			print 'LAYER 3', self.checkBox_layer3.isChecked(), self.layer3CHKbox_left if self.label_selimg.text() == 'left' else self.layer3CHKbox_right
+					if self.sceneRight.imagetype_layer3 != self.sceneRight.imagetype:
+						QtGui.QMessageBox.critical(
+							self,"Warning", "This image file does not seem to be of the same kind as the first image!")
+						self.img_right_layer3,self.sceneRight.imagetype_layer3,self.imgstack_right_layer3 = None, None, None
+						self.layer3CHKbox_right = False
+						self.checkBox_layer3.setChecked(False)
+					elif self.imgstack_right_layer1 is not None and self.imgstack_right_layer3.shape != self.imgstack_right_layer1.shape:
+						QtGui.QMessageBox.critical(
+							self,"Warning",
+							"This image file does not have the same dimensions as the first image: \nNeeds to be {0}\nbut is{1}".format(
+								self.imgstack_right_layer1.shape, self.imgstack_right_layer3.shape))
+						self.img_right_layer3,self.sceneRight.imagetype_layer3,self.imgstack_right_layer3 = None, None, None
+						self.layer3CHKbox_right = False
+						self.checkBox_layer3.setChecked(False)
+					elif self.imgstack_right_layer1 is None and self.img_right_layer3.shape != self.img_right_layer1.shape:
+						QtGui.QMessageBox.critical(
+							self,"Warning",
+							"This image file does not have the same dimensions as the first image: \nNeeds to be {0}\nbut is{1}".format(
+								self.img_right_layer1.shape, self.img_right_layer3.shape))
+						self.img_right_layer3,self.sceneRight.imagetype_layer3,self.imgstack_right_layer3 = None, None, None
+						self.layer3CHKbox_right = False
+						self.checkBox_layer3.setChecked(False)
+					else:
+						self.img_adj_right_layer3 = self.img_right_layer3
+						self.img_aight_displayed_layer3 = self.img_right_layer3
+						self.selectSlice()
+		self.displayImage()
 
 												##################### END #####################
 												######    Image processing functions    #######
