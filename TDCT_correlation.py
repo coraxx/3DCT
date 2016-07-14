@@ -53,7 +53,7 @@ qtCreatorFile_main = os.path.join(execdir, "TDCT_correlation.ui")
 Ui_WidgetWindow, QtBaseClass = uic.loadUiType(qtCreatorFile_main)
 
 debug = TDCT_debug.debug
-debug = True
+# debug = True
 if debug is True: print clrmsg.DEBUG + "Execdir =", execdir
 
 
