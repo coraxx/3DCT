@@ -209,6 +209,8 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		self.toolButton_selectPoiColor.clicked.connect(self.getPoiColor)
 		self.toolButton_saveImage_left.clicked.connect(lambda: self.displayImage(side='left',save=True))
 		self.toolButton_saveImage_right.clicked.connect(lambda: self.displayImage(side='right',save=True))
+		self.toolButton_loadLayer2.clicked.connect(lambda: self.layerCtrl('layer2',load=True))
+		self.toolButton_loadLayer3.clicked.connect(lambda: self.layerCtrl('layer3',load=True))
 		self.commandLinkButton_correlate.clicked.connect(self.correlate)
 
 		## Sliders
@@ -483,7 +485,6 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		self.toolButton_rotccw.setEnabled(status)
 		self.toolButton_importPoints.setEnabled(not status)
 		self.toolButton_exportPoints.setEnabled(not status)
-		self.toolButton_loadLayer1.setEnabled(status)
 		self.toolButton_loadLayer2.setEnabled(status)
 		self.toolButton_loadLayer3.setEnabled(status)
 
@@ -681,6 +682,9 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			self.img_left_layer3,self.sceneLeft.imagetype_layer3,self.imgstack_left_layer3 = None, None, None
 			self.layer3CHKbox_left = False
 			self.checkBox_layer3.setChecked(False)
+			self.comboBox_channelColorLayer1.setCurrentIndex(0)
+			self.comboBox_channelColorLayer2.setCurrentIndex(0)
+			self.comboBox_channelColorLayer3.setCurrentIndex(0)
 			## Load new image
 			self.leftImage = path
 			self.initImageLeft()
@@ -704,6 +708,9 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			self.img_right_layer3,self.sceneRight.imagetype_layer3,self.imgstack_right_layer3 = None, None, None
 			self.layer3CHKbox_right = False
 			self.checkBox_layer3.setChecked(False)
+			self.comboBox_channelColorLayer1.setCurrentIndex(0)
+			self.comboBox_channelColorLayer2.setCurrentIndex(0)
+			self.comboBox_channelColorLayer3.setCurrentIndex(0)
 			## Load new image
 			self.rightImage = path
 			self.initImageRight()
@@ -1272,7 +1279,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			if debug is True: print clrmsg.DEBUG + 'blending images in s:', pong-ping
 			return blend.astype(dtype=np.uint8)
 
-	def layerCtrl(self,layer):
+	def layerCtrl(self,layer,load=False):
 		"""
 		Keeping tabs on which layers are active or not
 		"""
@@ -1284,14 +1291,17 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		elif layer == 'layer2':
 			if self.label_selimg.text() == 'left':
 				self.layer2CHKbox_left = self.checkBox_layer2.isChecked()
-				if self.img_left_layer2 is None and self.checkBox_layer2.isChecked():
+				if self.img_left_layer2 is None and self.checkBox_layer2.isChecked() or load is True:
 					path = str(QtGui.QFileDialog.getOpenFileName(
 						None,"Select image file", execdir,"Image Files (*.tif *.tiff);; All (*.*)"))
 					self.activateWindow()
 					if path == '':
-						self.layer2CHKbox_left = False
-						self.checkBox_layer2.setChecked(False)
-						return
+						if load is True:
+							return
+						else:
+							self.layer2CHKbox_left = False
+							self.checkBox_layer2.setChecked(False)
+							return
 					# path = '/Users/jan/Desktop/correlation_test_dataset/single_tif_files/single_tif_files_1.tif'
 					self.img_left_layer2,self.sceneLeft.imagetype_layer2,self.imgstack_left_layer2 = self.imread(path)
 					if self.sceneLeft.imagetype_layer2 != self.sceneLeft.imagetype:
@@ -1317,19 +1327,25 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 						self.layer2CHKbox_left = False
 						self.checkBox_layer2.setChecked(False)
 					else:
+						if load is True:
+							self.layer2CHKbox_left = True
+							self.checkBox_layer2.setChecked(True)
 						self.img_adj_left_layer2 = self.img_left_layer2
 						self.img_left_displayed_layer2 = self.img_left_layer2
 						self.selectSlice()
 			else:
 				self.layer2CHKbox_right = self.checkBox_layer2.isChecked()
-				if self.img_right_layer2 is None and self.checkBox_layer2.isChecked():
+				if self.img_right_layer2 is None and self.checkBox_layer2.isChecked() or load is True:
 					path = str(QtGui.QFileDialog.getOpenFileName(
 						None,"Select image file", execdir,"Image Files (*.tif *.tiff);; All (*.*)"))
 					self.activateWindow()
 					if path == '':
-						self.layer2CHKbox_right = False
-						self.checkBox_layer2.setChecked(False)
-						return
+						if load is True:
+							return
+						else:
+							self.layer2CHKbox_right = False
+							self.checkBox_layer2.setChecked(False)
+							return
 					# path = '/Users/jan/Desktop/correlation_test_dataset/single_tif_files/single_tif_files_1.tif'
 					self.img_right_layer2,self.sceneRight.imagetype_layer2,self.imgstack_right_layer2 = self.imread(path)
 					if self.sceneRight.imagetype_layer2 != self.sceneRight.imagetype:
@@ -1355,20 +1371,26 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 						self.layer2CHKbox_right = False
 						self.checkBox_layer2.setChecked(False)
 					else:
+						if load is True:
+							self.layer2CHKbox_right = True
+							self.checkBox_layer2.setChecked(True)
 						self.img_adj_right_layer2 = self.img_right_layer2
 						self.img_aight_displayed_layer2 = self.img_right_layer2
 						self.selectSlice()
 		elif layer == 'layer3':
 			if self.label_selimg.text() == 'left':
 				self.layer3CHKbox_left = self.checkBox_layer3.isChecked()
-				if self.img_left_layer3 is None and self.checkBox_layer3.isChecked():
+				if self.img_left_layer3 is None and self.checkBox_layer3.isChecked() or load is True:
 					path = str(QtGui.QFileDialog.getOpenFileName(
 						None,"Select image file", execdir,"Image Files (*.tif *.tiff);; All (*.*)"))
 					self.activateWindow()
 					if path == '':
-						self.layer3CHKbox_left = False
-						self.checkBox_layer3.setChecked(False)
-						return
+						if load is True:
+							return
+						else:
+							self.layer3CHKbox_left = False
+							self.checkBox_layer3.setChecked(False)
+							return
 					# path = '/Users/jan/Desktop/correlation_test_dataset/single_tif_files/single_tif_files_1.tif'
 					self.img_left_layer3,self.sceneLeft.imagetype_layer3,self.imgstack_left_layer3 = self.imread(path)
 					if self.sceneLeft.imagetype_layer3 != self.sceneLeft.imagetype:
@@ -1394,19 +1416,25 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 						self.layer3CHKbox_left = False
 						self.checkBox_layer3.setChecked(False)
 					else:
+						if load is True:
+							self.layer3CHKbox_left = True
+							self.checkBox_layer3.setChecked(True)
 						self.img_adj_left_layer3 = self.img_left_layer3
 						self.img_left_displayed_layer3 = self.img_left_layer3
 						self.selectSlice()
 			else:
 				self.layer3CHKbox_right = self.checkBox_layer3.isChecked()
-				if self.img_right_layer3 is None and self.checkBox_layer3.isChecked():
+				if self.img_right_layer3 is None and self.checkBox_layer3.isChecked() or load is True:
 					path = str(QtGui.QFileDialog.getOpenFileName(
 						None,"Select image file", execdir,"Image Files (*.tif *.tiff);; All (*.*)"))
 					self.activateWindow()
 					if path == '':
-						self.layer3CHKbox_right = False
-						self.checkBox_layer3.setChecked(False)
-						return
+						if load is True:
+							return
+						else:
+							self.layer3CHKbox_right = False
+							self.checkBox_layer3.setChecked(False)
+							return
 					# path = '/Users/jan/Desktop/correlation_test_dataset/single_tif_files/single_tif_files_1.tif'
 					self.img_right_layer3,self.sceneRight.imagetype_layer3,self.imgstack_right_layer3 = self.imread(path)
 					if self.sceneRight.imagetype_layer3 != self.sceneRight.imagetype:
@@ -1432,6 +1460,9 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 						self.layer3CHKbox_right = False
 						self.checkBox_layer3.setChecked(False)
 					else:
+						if load is True:
+							self.layer3CHKbox_right = True
+							self.checkBox_layer3.setChecked(True)
 						self.img_adj_right_layer3 = self.img_right_layer3
 						self.img_aight_displayed_layer3 = self.img_right_layer3
 						self.selectSlice()
