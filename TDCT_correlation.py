@@ -676,11 +676,11 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			## Set focus to corresponding side to properly reset layer checkboxes
 			self.graphicsView_left.setFocus()
 			## Reset Layers
-			self.img_left_layer2,self.sceneLeft.imagetype_layer2,self.imgstack_left_layer2 = None, None, None
+			self.img_left_layer2,self.img_adj_left_layer2,self.sceneLeft.imagetype_layer2,self.imgstack_left_layer2 = None, None, None, None
+			self.img_left_layer3,self.img_adj_left_layer3,self.sceneLeft.imagetype_layer3,self.imgstack_left_layer3 = None, None, None, None
 			self.layer2CHKbox_left = False
-			self.checkBox_layer2.setChecked(False)
-			self.img_left_layer3,self.sceneLeft.imagetype_layer3,self.imgstack_left_layer3 = None, None, None
 			self.layer3CHKbox_left = False
+			self.checkBox_layer2.setChecked(False)
 			self.checkBox_layer3.setChecked(False)
 			self.comboBox_channelColorLayer1.setCurrentIndex(0)
 			self.comboBox_channelColorLayer2.setCurrentIndex(0)
@@ -702,11 +702,11 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			## Set focus to corresponding side to properly reset layer checkboxes
 			self.graphicsView_right.setFocus()
 			## Reset Layers
-			self.img_right_layer2,self.sceneRight.imagetype_layer2,self.imgstack_right_layer2 = None, None, None
+			self.img_right_layer2,self.img_adj_right_layer2,self.sceneRight.imagetype_layer2,self.imgstack_right_layer2 = None, None, None, None
+			self.img_right_layer3,self.img_adj_right_layer3,self.sceneRight.imagetype_layer3,self.imgstack_right_layer3 = None, None, None, None
 			self.layer2CHKbox_right = False
-			self.checkBox_layer2.setChecked(False)
-			self.img_right_layer3,self.sceneRight.imagetype_layer3,self.imgstack_right_layer3 = None, None, None
 			self.layer3CHKbox_right = False
+			self.checkBox_layer2.setChecked(False)
 			self.checkBox_layer3.setChecked(False)
 			self.comboBox_channelColorLayer1.setCurrentIndex(0)
 			self.comboBox_channelColorLayer2.setCurrentIndex(0)
@@ -977,28 +977,34 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			if self.radioButton_layer1.isChecked():
 				self.brightness_left_layer1 = self.horizontalSlider_brightness.value()
 				self.contrast_left_layer1 = self.horizontalSlider_contrast.value()
-				self.img_adj_left_layer1 = self.adjustBrightCont(self.img_left_displayed_layer1,self.img_adj_left_layer1,self.brightness_left_layer1,self.contrast_left_layer1)
+				self.img_adj_left_layer1 = self.adjustBrightCont(
+					self.img_left_displayed_layer1,self.img_adj_left_layer1,self.brightness_left_layer1,self.contrast_left_layer1)
 			elif self.radioButton_layer2.isChecked():
 				self.brightness_left_layer2 = self.horizontalSlider_brightness.value()
 				self.contrast_left_layer2 = self.horizontalSlider_contrast.value()
-				self.img_adj_left_layer2 = self.adjustBrightCont(self.img_left_displayed_layer2,self.img_adj_left_layer2,self.brightness_left_layer2,self.contrast_left_layer2)
+				self.img_adj_left_layer2 = self.adjustBrightCont(
+					self.img_left_displayed_layer2,self.img_adj_left_layer2,self.brightness_left_layer2,self.contrast_left_layer2)
 			elif self.radioButton_layer3.isChecked():
 				self.brightness_left_layer3 = self.horizontalSlider_brightness.value()
 				self.contrast_left_layer3 = self.horizontalSlider_contrast.value()
-				self.img_adj_left_layer3 = self.adjustBrightCont(self.img_left_displayed_layer3,self.img_adj_left_layer3,self.brightness_left_layer3,self.contrast_left_layer3)
+				self.img_adj_left_layer3 = self.adjustBrightCont(
+					self.img_left_displayed_layer3,self.img_adj_left_layer3,self.brightness_left_layer3,self.contrast_left_layer3)
 		if self.label_selimg.text() == 'right':
 			if self.radioButton_layer1.isChecked():
 				self.brightness_right_layer1 = self.horizontalSlider_brightness.value()
 				self.contrast_right_layer1 = self.horizontalSlider_contrast.value()
-				self.img_adj_right_layer1 = self.adjustBrightCont(self.img_right_displayed_layer1,self.img_adj_right_layer1,self.brightness_right_layer1,self.contrast_right_layer1)
+				self.img_adj_right_layer1 = self.adjustBrightCont(
+					self.img_right_displayed_layer1,self.img_adj_right_layer1,self.brightness_right_layer1,self.contrast_right_layer1)
 			elif self.radioButton_layer2.isChecked():
 				self.brightness_right_layer2 = self.horizontalSlider_brightness.value()
 				self.contrast_right_layer2 = self.horizontalSlider_contrast.value()
-				self.img_adj_right_layer2 = self.adjustBrightCont(self.img_right_displayed_layer2,self.img_adj_right_layer2,self.brightness_right_layer2,self.contrast_right_layer2)
+				self.img_adj_right_layer2 = self.adjustBrightCont(
+					self.img_right_displayed_layer2,self.img_adj_right_layer2,self.brightness_right_layer2,self.contrast_right_layer2)
 			elif self.radioButton_layer3.isChecked():
 				self.brightness_right_layer3 = self.horizontalSlider_brightness.value()
 				self.contrast_right_layer3 = self.horizontalSlider_contrast.value()
-				self.img_adj_right_layer3 = self.adjustBrightCont(self.img_right_displayed_layer3,self.img_adj_right_layer3,self.brightness_right_layer3,self.contrast_right_layer3)
+				self.img_adj_right_layer3 = self.adjustBrightCont(
+					self.img_right_displayed_layer3,self.img_adj_right_layer3,self.brightness_right_layer3,self.contrast_right_layer3)
 		## Display image
 		self.displayImage()
 
@@ -1175,7 +1181,12 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 
 	def colorCoder(self,code,side,layer):
 		if code == 0:
-			return None
+			if side == 'left' and self.img_left_overlay is not None:
+				return [255,255,255]
+			elif side == 'right' and self.img_right_overlay is not None:
+				return [255,255,255]
+			else:
+				return None
 		elif code == 1:
 			return [255,0,0]
 		elif code == 2:
@@ -1293,7 +1304,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 				self.layer2CHKbox_left = self.checkBox_layer2.isChecked()
 				if self.img_left_layer2 is None and self.checkBox_layer2.isChecked() or load is True:
 					path = str(QtGui.QFileDialog.getOpenFileName(
-						None,"Select image file", execdir,"Image Files (*.tif *.tiff);; All (*.*)"))
+						None,"Select image file", self.workingdir,"Image Files (*.tif *.tiff);; All (*.*)"))
 					self.activateWindow()
 					if path == '':
 						if load is True:
@@ -1304,6 +1315,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 							return
 					# path = '/Users/jan/Desktop/correlation_test_dataset/single_tif_files/single_tif_files_1.tif'
 					self.img_left_layer2,self.sceneLeft.imagetype_layer2,self.imgstack_left_layer2 = self.imread(path)
+					self.img_adj_left_layer2 = np.copy(self.img_left_layer2)
 					if self.sceneLeft.imagetype_layer2 != self.sceneLeft.imagetype:
 						QtGui.QMessageBox.critical(
 							self,"Warning", "This image file does not seem to be of the same kind as the first image!")
@@ -1328,16 +1340,17 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 						self.checkBox_layer2.setChecked(False)
 					else:
 						if load is True:
+							self.checkBox_layer2.blockSignals(True)
 							self.layer2CHKbox_left = True
 							self.checkBox_layer2.setChecked(True)
-						self.img_adj_left_layer2 = self.img_left_layer2
+							self.checkBox_layer2.blockSignals(False)
 						self.img_left_displayed_layer2 = self.img_left_layer2
 						self.selectSlice()
 			else:
 				self.layer2CHKbox_right = self.checkBox_layer2.isChecked()
 				if self.img_right_layer2 is None and self.checkBox_layer2.isChecked() or load is True:
 					path = str(QtGui.QFileDialog.getOpenFileName(
-						None,"Select image file", execdir,"Image Files (*.tif *.tiff);; All (*.*)"))
+						None,"Select image file", self.workingdir,"Image Files (*.tif *.tiff);; All (*.*)"))
 					self.activateWindow()
 					if path == '':
 						if load is True:
@@ -1348,6 +1361,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 							return
 					# path = '/Users/jan/Desktop/correlation_test_dataset/single_tif_files/single_tif_files_1.tif'
 					self.img_right_layer2,self.sceneRight.imagetype_layer2,self.imgstack_right_layer2 = self.imread(path)
+					self.img_adj_right_layer2 = np.copy(self.img_right_layer2)
 					if self.sceneRight.imagetype_layer2 != self.sceneRight.imagetype:
 						QtGui.QMessageBox.critical(
 							self,"Warning", "This image file does not seem to be of the same kind as the first image!")
@@ -1372,17 +1386,18 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 						self.checkBox_layer2.setChecked(False)
 					else:
 						if load is True:
+							self.checkBox_layer2.blockSignals(True)
 							self.layer2CHKbox_right = True
 							self.checkBox_layer2.setChecked(True)
-						self.img_adj_right_layer2 = self.img_right_layer2
-						self.img_aight_displayed_layer2 = self.img_right_layer2
+							self.checkBox_layer2.blockSignals(False)
+						self.img_right_displayed_layer2 = self.img_right_layer2
 						self.selectSlice()
 		elif layer == 'layer3':
 			if self.label_selimg.text() == 'left':
 				self.layer3CHKbox_left = self.checkBox_layer3.isChecked()
 				if self.img_left_layer3 is None and self.checkBox_layer3.isChecked() or load is True:
 					path = str(QtGui.QFileDialog.getOpenFileName(
-						None,"Select image file", execdir,"Image Files (*.tif *.tiff);; All (*.*)"))
+						None,"Select image file", self.workingdir,"Image Files (*.tif *.tiff);; All (*.*)"))
 					self.activateWindow()
 					if path == '':
 						if load is True:
@@ -1393,6 +1408,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 							return
 					# path = '/Users/jan/Desktop/correlation_test_dataset/single_tif_files/single_tif_files_1.tif'
 					self.img_left_layer3,self.sceneLeft.imagetype_layer3,self.imgstack_left_layer3 = self.imread(path)
+					self.img_adj_left_layer3 = np.copy(self.img_left_layer3)
 					if self.sceneLeft.imagetype_layer3 != self.sceneLeft.imagetype:
 						QtGui.QMessageBox.critical(
 							self,"Warning", "This image file does not seem to be of the same kind as the first image!")
@@ -1417,16 +1433,17 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 						self.checkBox_layer3.setChecked(False)
 					else:
 						if load is True:
+							self.checkBox_layer3.blockSignals(True)
 							self.layer3CHKbox_left = True
 							self.checkBox_layer3.setChecked(True)
-						self.img_adj_left_layer3 = self.img_left_layer3
+							self.checkBox_layer3.blockSignals(False)
 						self.img_left_displayed_layer3 = self.img_left_layer3
 						self.selectSlice()
 			else:
 				self.layer3CHKbox_right = self.checkBox_layer3.isChecked()
 				if self.img_right_layer3 is None and self.checkBox_layer3.isChecked() or load is True:
 					path = str(QtGui.QFileDialog.getOpenFileName(
-						None,"Select image file", execdir,"Image Files (*.tif *.tiff);; All (*.*)"))
+						None,"Select image file", self.workingdir,"Image Files (*.tif *.tiff);; All (*.*)"))
 					self.activateWindow()
 					if path == '':
 						if load is True:
@@ -1437,6 +1454,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 							return
 					# path = '/Users/jan/Desktop/correlation_test_dataset/single_tif_files/single_tif_files_1.tif'
 					self.img_right_layer3,self.sceneRight.imagetype_layer3,self.imgstack_right_layer3 = self.imread(path)
+					self.img_adj_right_layer3 = np.copy(self.img_right_layer3)
 					if self.sceneRight.imagetype_layer3 != self.sceneRight.imagetype:
 						QtGui.QMessageBox.critical(
 							self,"Warning", "This image file does not seem to be of the same kind as the first image!")
@@ -1461,10 +1479,11 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 						self.checkBox_layer3.setChecked(False)
 					else:
 						if load is True:
+							self.checkBox_layer3.blockSignals(True)
 							self.layer3CHKbox_right = True
 							self.checkBox_layer3.setChecked(True)
-						self.img_adj_right_layer3 = self.img_right_layer3
-						self.img_aight_displayed_layer3 = self.img_right_layer3
+							self.checkBox_layer3.blockSignals(False)
+						self.img_right_displayed_layer3 = self.img_right_layer3
 						self.selectSlice()
 		self.displayImage()
 
