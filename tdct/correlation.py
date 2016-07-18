@@ -109,7 +109,7 @@ The procedure is organized as follows:
 # @Credits			:
 # @Maintainer		: Vladan Lucic, Jan Arnold
 # @Date				: 2015/10
-# @Version			: 3DCT 2.1.0 module rev. 3
+# @Version			: 3DCT 2.2.0b module rev. 3
 # @Status			: stable
 # @Usage			: import correlation.py and call main(markers_3d,markers_2d,spots_3d,rotation_center,results_file)
 # 					: "markers_3d", "markers_2d" and "spots_3d" are numpy arrays. Those contain 3D coordinates

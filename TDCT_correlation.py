@@ -16,7 +16,7 @@ to one single stack file, ...).
 # @Credits			:
 # @Maintainer		: Jan Arnold
 # @Date				: 2016/01
-# @Version			: 3DCT 2.1.0 module rev. 26
+# @Version			: 3DCT 2.2.0b module rev. 27
 # @Status			: stable
 # @Usage			: part of 3D Correlation Toolbox
 # @Notes			:
@@ -39,7 +39,7 @@ import qimage2ndarray
 ## and correlation algorithm
 from tdct import clrmsg, TDCT_debug, QtCustom, csvHandler, correlation
 
-__version__ = 'v2.1.0'
+__version__ = 'v2.2.0b'
 
 # add working directory temporarily to PYTHONPATH
 if getattr(sys, 'frozen', False):
@@ -1343,6 +1343,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 							self.checkBox_layer2.blockSignals(True)
 							self.layer2CHKbox_left = True
 							self.checkBox_layer2.setChecked(True)
+							self.comboBox_channelColorLayer2.setEnabled(True)
 							self.checkBox_layer2.blockSignals(False)
 						self.img_left_displayed_layer2 = self.img_left_layer2
 						self.selectSlice()
@@ -1389,6 +1390,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 							self.checkBox_layer2.blockSignals(True)
 							self.layer2CHKbox_right = True
 							self.checkBox_layer2.setChecked(True)
+							self.comboBox_channelColorLayer2.setEnabled(True)
 							self.checkBox_layer2.blockSignals(False)
 						self.img_right_displayed_layer2 = self.img_right_layer2
 						self.selectSlice()
@@ -1436,6 +1438,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 							self.checkBox_layer3.blockSignals(True)
 							self.layer3CHKbox_left = True
 							self.checkBox_layer3.setChecked(True)
+							self.comboBox_channelColorLayer3.setEnabled(True)
 							self.checkBox_layer3.blockSignals(False)
 						self.img_left_displayed_layer3 = self.img_left_layer3
 						self.selectSlice()
@@ -1482,6 +1485,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 							self.checkBox_layer3.blockSignals(True)
 							self.layer3CHKbox_right = True
 							self.checkBox_layer3.setChecked(True)
+							self.comboBox_channelColorLayer3.setEnabled(True)
 							self.checkBox_layer3.blockSignals(False)
 						self.img_right_displayed_layer3 = self.img_right_layer3
 						self.selectSlice()
@@ -2072,15 +2076,15 @@ if __name__ == "__main__":
 
 	## File dialogs for standalone mode
 	## *.png *.jpg *.bmp not yet supported
-	# left = str(QtGui.QFileDialog.getOpenFileName(
-	# 	None,"Select first image file for correlation", execdir,"Image Files (*.tif *.tiff);; All (*.*)"))
-	# if left == '': sys.exit()
-	# right = str(QtGui.QFileDialog.getOpenFileName(
-	# 	None,"Select second image file for correlation", execdir,"Image Files (*.tif *.tiff);; All (*.*)"))
-	# if right == '': sys.exit()
-	left = '/Users/jan/Desktop/correlation_test_dataset/IB_030.tif'
-	right = '/Users/jan/Desktop/correlation_test_dataset/LM_green_image_stack_reslized.tif'
-	right = '/Users/jan/Desktop/correlation_test_dataset/single_tif_files/single_tif_files_0.tif'
+	left = str(QtGui.QFileDialog.getOpenFileName(
+		None,"Select first image file for correlation", execdir,"Image Files (*.tif *.tiff);; All (*.*)"))
+	if left == '': sys.exit()
+	right = str(QtGui.QFileDialog.getOpenFileName(
+		None,"Select second image file for correlation", execdir,"Image Files (*.tif *.tiff);; All (*.*)"))
+	if right == '': sys.exit()
+	# left = '/Users/jan/Desktop/correlation_test_dataset/IB_030.tif'
+	# right = '/Users/jan/Desktop/correlation_test_dataset/LM_green_image_stack_reslized.tif'
+	# right = '/Users/jan/Desktop/correlation_test_dataset/single_tif_files/single_tif_files_0.tif'
 
 	main = Main(leftImage=left,rightImage=right)
 
