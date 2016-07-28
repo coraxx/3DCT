@@ -15,7 +15,7 @@ This generates the MATLAB script and runs in the matlab -nodisplay console.
 # @Credits			: Florian Beck, Max-Planck-Institute of Biochemistry
 # @Maintainer		: Jan Arnold
 # @Date				: 2016/01
-# @Version			: 3DCT 2.2.0b module rev. 1
+# @Version			: 3DCT 2.2.1b module rev. 1
 # @Status			: development
 # @Usage			: Meant to be imported, i.e. import matlab3Drotation.py and used with calling
 # 					: matlab_rotate(img_vol,)

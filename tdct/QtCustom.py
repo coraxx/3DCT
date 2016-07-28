@@ -18,7 +18,7 @@ Custom Qt classes. Some widgets in QT Designer are promoted to these classes:
 # @Credits			:
 # @Maintainer		: Jan Arnold
 # @Date				: 2016/02/27
-# @Version			: 3DCT 2.2.0b module rev. 44
+# @Version			: 3DCT 2.2.1b module rev. 44
 # @Status			: stable
 # @Usage			: part of 3D Correlation Toolbox
 # @Notes			: Some widgets in QT Designer are promoted to these classes
@@ -655,7 +655,11 @@ class QLineEditFilePath(QtGui.QLineEdit):
 						"\n"
 						"		  Reference:\n"
 						"		  http://stackoverflow.com/questions/34689562/pyqt-mimedata-filename")
-			self.setText(filepath)
+			## bugfix for suse, missing "/" in the beginning of the path
+			if sys.platform == 'linux2':
+				self.setText('/'+filepath)
+			else:
+				self.setText(filepath)
 
 	## http://stackoverflow.com/questions/34689562/pyqt-mimedata-filename
 	def getUrlFromLocalFileID(self, localFileID):

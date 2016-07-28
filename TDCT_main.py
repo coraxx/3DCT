@@ -54,7 +54,7 @@ A test dataset can be downloaded here: http://3dct.semper.space/download/3D_corr
 # 					  Max-Planck-Institute of Biochemistry
 # 					  Department of Molecular Structural Biology
 # @Date				: 2015/08
-# @Version			: 3DCT 2.2.0b
+# @Version			: 3DCT 2.2.1b
 # @Status			: stable
 # @Usage			: python -u TDCT_main.py
 # @Notes			:
@@ -89,7 +89,7 @@ if sys.platform == 'win32':
 	if debug is True: print clrmsg.INFO + 'PATH before:', os.environ.get('PATH','')
 	os.environ['PATH'] = execdir + '\;' + os.environ.get('PATH','')
 	if debug is True: print clrmsg.INFO + 'PATH after: ', os.environ.get('PATH','')
-__version__ = 'v2.2.0b'
+__version__ = 'v2.2.1b'
 
 if debug is True: print clrmsg.DEBUG + "Execdir =", execdir
 ########## GUI layout file #######################################################
@@ -457,7 +457,8 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 		"""
 		self.listWidget_WorkingDir.clear()
 		self.listWidget_WorkingDir.itempath = path
-		for fname in os.listdir(path):
+		## bugfix for linux: os.listdir returns unsorted file list
+		for fname in sorted(os.listdir(path)):
 			checkdir = os.path.join(path, fname)
 			if (
 				os.path.isdir(checkdir) is False and

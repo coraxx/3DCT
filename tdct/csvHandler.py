@@ -20,7 +20,7 @@ e.g. export:
 # @Credits			:
 # @Maintainer		: Jan Arnold
 # @Date				: 2015/09
-# @Version			: 3DCT 2.2.0b module rev. 3
+# @Version			: 3DCT 2.2.1b module rev. 3
 # @Status			: stable
 # @Usage			: import csvHandler
 # 					: e.g. import: >>> model = csvHandler.csv2model('test.csv',delimiter="\t",sniff=False,parent=None)

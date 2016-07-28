@@ -16,7 +16,7 @@ to one single stack file, ...).
 # @Credits			:
 # @Maintainer		: Jan Arnold
 # @Date				: 2016/01
-# @Version			: 3DCT 2.2.0b module rev. 27
+# @Version			: 3DCT 2.2.1b module rev. 27
 # @Status			: stable
 # @Usage			: part of 3D Correlation Toolbox
 # @Notes			:
@@ -39,7 +39,7 @@ import qimage2ndarray
 ## and correlation algorithm
 from tdct import clrmsg, TDCT_debug, QtCustom, csvHandler, correlation
 
-__version__ = 'v2.2.0b'
+__version__ = 'v2.2.1b'
 
 # add working directory temporarily to PYTHONPATH
 if getattr(sys, 'frozen', False):
@@ -306,7 +306,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			self.formerFocusedWidget = former
 
 		## Label showing selected image
-		## WORKAROUND: check against empty string, because the popup from the comboboxes emit an emptz focus object name string.
+		## WORKAROUND: check against empty string, because the popup from the comboboxes emit an empty focus object name string.
 		if self.currentFocusedWidgetName in [
 											'spinBox_rot','spinBox_markerSize','spinBox_slice','horizontalSlider_brightness','horizontalSlider_contrast',
 											'doubleSpinBox_custom_rot_center_x','doubleSpinBox_custom_rot_center_y','doubleSpinBox_custom_rot_center_z',
@@ -353,7 +353,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 				if self.mipCHKbox_right is False:
 					self.spinBox_slice.setEnabled(True)
 
-		# ## Label showing selected table
+		## Label showing selected table
 		if self.currentFocusedWidgetName != 'tableView_left' and self.currentFocusedWidgetName != 'tableView_right':
 			self.label_selectedTable.setStyleSheet(self.stylesheet_orange)
 			self.label_selectedTable.setText('none')
@@ -1506,14 +1506,17 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		csvHandler.model2csv(self.modelRight,csv_file_out,delimiter="\t")
 
 	def exportPoints(self):
-		if self.label_selectedTable.text() == 'left':
+		## bugfix for KDE file dialog
+		side = self.label_selectedTable.text()
+
+		if side == 'left':
 			model = self.modelLleft
-		elif self.label_selectedTable.text() == 'right':
+		elif side == 'right':
 			model = self.modelRight
 		## Export Dialog. Needs check for extension or add default extension
 		csv_file_out, filterdialog = QtGui.QFileDialog.getSaveFileNameAndFilter(
 			self, 'Export file as',
-			os.path.dirname(self.leftImage) if self.label_selectedTable.text() == 'left' else os.path.dirname(self.rightImage),
+			os.path.dirname(self.leftImage) if side == 'left' else os.path.dirname(self.rightImage),
 			"Tabstop separated (*.csv *.txt);;Comma separated (*.csv *.txt)")
 		self.activateWindow()
 		if str(filterdialog).startswith('Comma') is True:
@@ -1522,23 +1525,26 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			csvHandler.model2csv(model,csv_file_out,delimiter="\t")
 
 	def importPoints(self):
+		## bugfix for KDE file dialog
+		side = self.label_selectedTable.text()
+
 		csv_file_in, filterdialog = QtGui.QFileDialog.getOpenFileNameAndFilter(
 			self, 'Import file as',
-			os.path.dirname(self.leftImage) if self.label_selectedTable.text() == 'left' else os.path.dirname(self.rightImage),
+			os.path.dirname(self.leftImage) if side == 'left' else os.path.dirname(self.rightImage),
 			"Tabstop separated (*.csv *.txt);;Comma separated (*.csv *.txt)")
 		self.activateWindow()
 		if str(filterdialog).startswith('Comma') is True:
 			itemlist = csvHandler.csv2list(csv_file_in,delimiter=",",parent=self,sniff=True)
 		elif str(filterdialog).startswith('Tabstop') is True:
 			itemlist = csvHandler.csv2list(csv_file_in,delimiter="\t",parent=self,sniff=True)
-		if self.label_selectedTable.text() == 'left':
+		if side == 'left':
 			for item in itemlist: self.sceneLeft.addCircle(
 				float(item[0]),
 				float(item[1]),
 				float(item[2]) if len(item) > 2 else 0)
 			self.sceneLeft.itemsToModel()
 			# csvHandler.csvAppend2model(csv_file_in,self.modelLleft,delimiter="\t",parent=self,sniff=True)
-		elif self.label_selectedTable.text() == 'right':
+		elif side == 'right':
 			for item in itemlist: self.sceneRight.addCircle(
 				float(item[0]),
 				float(item[1]),

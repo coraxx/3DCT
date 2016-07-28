@@ -39,7 +39,7 @@ kwargs:
 # @Credits			:
 # @Maintainer		: Jan Arnold
 # @Date				: 2016/01
-# @Version			: 3DCT 2.2.0b module rev. 6
+# @Version			: 3DCT 2.2.1b module rev. 7
 # @Status			: stable
 # @Usage			: Can be used as standalone application, i.e. run python -u stackProcessing.py
 # 					: or import stackProcessing.py and use main function like:
@@ -165,7 +165,8 @@ def main(img_path, ss_in, ss_out, qtprocessbar=None, interpolationmethod='linear
 		if qtprocessbar:
 			qtprocessbar.setValue(5)
 			QtGui.QApplication.processEvents()
-		files = os.listdir(img_path)
+		## bugfix for linux: os.listdir returns unsorted file list
+		files = sorted(os.listdir(img_path))
 		if debug is True: print clrmsg.DEBUG, "Checking directory: ", img_path
 		channels = []
 		## Setting trigger for FEI MAPS/LA filename scheme (only one that can be handled at the moment)
