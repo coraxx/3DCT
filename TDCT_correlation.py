@@ -675,7 +675,19 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		if path != '':
 			## Set focus to corresponding side to properly reset layer checkboxes
 			self.graphicsView_left.setFocus()
+			## reset brightness contrast
+			self.brightness_left_layer1 = 0
+			self.brightness_left_layer2 = 0
+			self.brightness_left_layer3 = 0
+			self.contrast_left_layer1 = 10
+			self.contrast_left_layer2 = 10
+			self.contrast_left_layer3 = 10
+			self.radioButton_layer1.setChecked(True)
+			self.horizontalSlider_brightness.setValue(0)
+			self.horizontalSlider_contrast.setValue(10)
 			## Reset Layers
+			self.spinBox_slice.setValue(0)
+			self.checkBox_MIP.setChecked(True)
 			self.img_left_layer2,self.img_adj_left_layer2,self.sceneLeft.imagetype_layer2,self.imgstack_left_layer2 = None, None, None, None
 			self.img_left_layer3,self.img_adj_left_layer3,self.sceneLeft.imagetype_layer3,self.imgstack_left_layer3 = None, None, None, None
 			self.layer2CHKbox_left = False
@@ -687,11 +699,15 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			self.comboBox_channelColorLayer3.setCurrentIndex(0)
 			## Load new image
 			self.leftImage = path
+			self.sceneLeft.clear()
 			self.initImageLeft()
 			self.tableView_left._scene = self.sceneLeft
 			for i in range(self.tableView_left._model.rowCount()):
 				self.sceneLeft.addCircle(0.0,0.0,0.0)
 			self.tableView_left.updateItems()
+			## Update controls (GUI)
+			self.tableView_left.setFocus()
+			self.graphicsView_left.setFocus()
 
 	def openImageRight(self):
 		## *.png *.jpg *.bmp not yet supported
@@ -701,7 +717,19 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		if path != '':
 			## Set focus to corresponding side to properly reset layer checkboxes
 			self.graphicsView_right.setFocus()
+			## reset brightness contrast
+			self.brightness_right_layer1 = 0
+			self.brightness_right_layer2 = 0
+			self.brightness_right_layer3 = 0
+			self.contrast_right_layer1 = 10
+			self.contrast_right_layer2 = 10
+			self.contrast_right_layer3 = 10
+			self.radioButton_layer1.setChecked(True)
+			self.horizontalSlider_brightness.setValue(0)
+			self.horizontalSlider_contrast.setValue(10)
 			## Reset Layers
+			self.spinBox_slice.setValue(0)
+			self.checkBox_MIP.setChecked(True)
 			self.img_right_layer2,self.img_adj_right_layer2,self.sceneRight.imagetype_layer2,self.imgstack_right_layer2 = None, None, None, None
 			self.img_right_layer3,self.img_adj_right_layer3,self.sceneRight.imagetype_layer3,self.imgstack_right_layer3 = None, None, None, None
 			self.layer2CHKbox_right = False
@@ -713,11 +741,15 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			self.comboBox_channelColorLayer3.setCurrentIndex(0)
 			## Load new image
 			self.rightImage = path
+			self.sceneRight.clear()
 			self.initImageRight()
 			self.tableView_right._scene = self.sceneRight
 			for i in range(self.tableView_right._model.rowCount()):
 				self.sceneRight.addCircle(0.0,0.0,0.0)
 			self.tableView_right.updateItems()
+			## Update controls (GUI)
+			self.tableView_right.setFocus()
+			self.graphicsView_right.setFocus()
 
 	def resetImageLeft(self,img=None):
 		if img is None and self.mipCHKbox_left is False:
@@ -1344,6 +1376,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 							self.layer2CHKbox_left = True
 							self.checkBox_layer2.setChecked(True)
 							self.comboBox_channelColorLayer2.setEnabled(True)
+							self.radioButton_layer2.setEnabled(True)
 							self.checkBox_layer2.blockSignals(False)
 						self.img_left_displayed_layer2 = self.img_left_layer2
 						self.selectSlice()
@@ -1391,6 +1424,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 							self.layer2CHKbox_right = True
 							self.checkBox_layer2.setChecked(True)
 							self.comboBox_channelColorLayer2.setEnabled(True)
+							self.radioButton_layer2.setEnabled(True)
 							self.checkBox_layer2.blockSignals(False)
 						self.img_right_displayed_layer2 = self.img_right_layer2
 						self.selectSlice()
@@ -1439,6 +1473,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 							self.layer3CHKbox_left = True
 							self.checkBox_layer3.setChecked(True)
 							self.comboBox_channelColorLayer3.setEnabled(True)
+							self.radioButton_layer3.setEnabled(True)
 							self.checkBox_layer3.blockSignals(False)
 						self.img_left_displayed_layer3 = self.img_left_layer3
 						self.selectSlice()
@@ -1486,6 +1521,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 							self.layer3CHKbox_right = True
 							self.checkBox_layer3.setChecked(True)
 							self.comboBox_channelColorLayer3.setEnabled(True)
+							self.radioButton_layer3.setEnabled(True)
 							self.checkBox_layer3.blockSignals(False)
 						self.img_right_displayed_layer3 = self.img_right_layer3
 						self.selectSlice()
