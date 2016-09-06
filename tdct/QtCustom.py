@@ -18,7 +18,7 @@ Custom Qt classes. Some widgets in QT Designer are promoted to these classes:
 # @Credits			:
 # @Maintainer		: Jan Arnold
 # @Date				: 2016/02/27
-# @Version			: 3DCT 2.2.1b module rev. 44
+# @Version			: 3DCT 2.2.2b module rev. 45
 # @Status			: stable
 # @Usage			: part of 3D Correlation Toolbox
 # @Notes			: Some widgets in QT Designer are promoted to these classes

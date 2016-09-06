@@ -39,7 +39,7 @@ kwargs:
 # @Credits			:
 # @Maintainer		: Jan Arnold
 # @Date				: 2016/01
-# @Version			: 3DCT 2.2.1b module rev. 7
+# @Version			: 3DCT 2.2.2b module rev. 7
 # @Status			: stable
 # @Usage			: Can be used as standalone application, i.e. run python -u stackProcessing.py
 # 					: or import stackProcessing.py and use main function like:
