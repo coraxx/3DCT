@@ -1597,6 +1597,11 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 												#################### START ####################
 
 	def model2np(self,model,rows):
+		"""
+		Convert Qt model to numpy array.
+		Pass the model and the range of rows to convert. E.g. if the model has rows nr 1,2,3,4,5,6,7,8 
+		model2np(model, [3,7]) would convert rows 4,5,6,7 of the model to a numpy array.
+		"""
 		listarray = []
 		for rowNumber in range(*rows):
 			fields = [

@@ -2,11 +2,11 @@
 Contains class Affine2D for preforming affine transformation (general linear
 transformation followed by translation) on points (vectors) in 2D.
 
-# Author: Vladan Lucic (Max Planck Institute of Biochemistry)
-# $Id: affine_2d.py 1292 2016-04-27 10:35:30Z vladan $
+# Author: Vladan Lucic (Max Planck Institute for Biochemistry)
+# $Id: affine_2d.py 1311 2016-06-13 12:41:50Z vladan $
 """
 
-__version__ = "$Revision: 1292 $"
+__version__ = "$Revision: 1311 $"
 
 
 import logging
@@ -96,6 +96,10 @@ class Affine2D(Affine):
             
             if not isinstance(scale, (numpy.ndarray, list)):
                 scale = self.makeS(scale)
+            elif isinstance(scale, numpy.adarray) and (len(scale.shape) == 1):
+                scale = self.makeS(scale)
+            elif isinstance(scale, list) and not isinstance(scale[0], list):
+                scale = self.makeS(scale)
 
             qp = numpy.inner(self.makeQ(phi), self.makeP(parity))
             sm = numpy.inner(scale, self.makeM(shear))
@@ -138,10 +142,12 @@ class Affine2D(Affine):
     #
 
     @classmethod
-    def identity(cls):
+    def identity(cls, ndim=2):
         """
         Returnes an identity object of this class, that is a transformation 
         that leaves all vectors invariant.
+
+        Argument ndim is ignored, it should be 2 here.
         """
 
         obj = cls.__base__.identity(ndim=2)        
@@ -447,7 +453,7 @@ class Affine2D(Affine):
 
         if type_ == 'gl':
 
-            # run Affine.base and doncast
+            # run Affine.base and downcast
             base_inst = cls.__base__.find(
                 x=x, y=y, x_ref=x_ref, y_ref=y_ref, xy_axes=xy_axes)
             inst = cls.downcast(affine=base_inst)

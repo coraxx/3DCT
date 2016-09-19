@@ -223,4 +223,5 @@ ModelManifest.xml
 *.spec
 spec/
 __init__.py
-test/
+# test/
+.cache/

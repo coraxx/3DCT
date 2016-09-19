@@ -250,7 +250,7 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 		gif = os.path.join(execdir,'icons','SplashScreen.gif')
 		if os.path.isfile(gif):
 			movie = QtGui.QMovie(gif)
-			print movie
+			if debug is True: print clrmsg.DEBUG, movie
 			## MovieSplashScreen class defined at end of file with info text settings etc.
 			splash = MovieSplashScreen(movie)
 			splash.show()
@@ -495,7 +495,7 @@ class APP(QtGui.QMainWindow, Ui_MainWindow):
 
 	def runCorrelationModule(self):
 		"""
-		Star the correlation tool with the two selected image files.
+		Start the correlation tool with the two selected image files.
 		"""
 		if hasattr(self, 'correlationModul'):
 			if hasattr(self.correlationModul, 'window'):
