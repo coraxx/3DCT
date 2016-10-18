@@ -94,6 +94,59 @@ def test_model2np(tdct_CorrelationInstance_setup):
 	assert TDCT_correlation.np.testing.assert_array_equal(retArray, compArray) is None
 
 
+@pytest.mark.skipif(TDCT_error != "", reason="TDCT_correlation import failed: {0}".format(TDCT_error))
+def test_anglectrl(tdct_CorrelationInstance_setup):
+	testArray = {-1:359,0:0,1:1,359:359,360:0,361:1}
+	for k,v in testArray.iteritems():
+		print "Testing angle {0:03}, expecting {1:03} ... ".format(k, v),
+		angle = tdct_CorrelationInstance_setup.window.anglectrl(angle=k)
+		assert angle == v
+		print "OK"
+
+
+@pytest.mark.skipif(TDCT_error != "", reason="TDCT_correlation import failed: {0}".format(TDCT_error))
+def test_pxSize(tdct_CorrelationInstance_setup, image_RGB, image_Grey):
+	pixelSize = tdct_CorrelationInstance_setup.window.pxSize(str(image_RGB),z=False)
+	assert pixelSize == 123.
+	pixelSize = tdct_CorrelationInstance_setup.window.pxSize(str(image_Grey),z=False)
+	assert pixelSize == 4.56e-006*1e006
+	pixelSize = tdct_CorrelationInstance_setup.window.pxSize(str(image_RGB),z=True)
+	assert pixelSize == 456.
+	pixelSize = tdct_CorrelationInstance_setup.window.pxSize(str(image_Grey),z=True)
+	assert pixelSize == 123.
+
+
+@pytest.mark.skipif(TDCT_error != "", reason="TDCT_correlation import failed: {0}".format(TDCT_error))
+def test_norm_img(tdct_CorrelationInstance_setup):
+	compArray = TDCT_correlation.np.array([[127, 127, 127],[254, 254, 254]], dtype='uint8')
+	retArray = tdct_CorrelationInstance_setup.window.norm_img(TDCT_correlation.np.array([[1,1,1],[2,2,2]],dtype='uint8'))
+	assert TDCT_correlation.np.testing.assert_array_equal(retArray, compArray) is None
+
+
+@pytest.mark.skipif(TDCT_error != "", reason="TDCT_correlation import failed: {0}".format(TDCT_error))
+def test_blendImages(tdct_CorrelationInstance_setup):
+	## Blending images
+	img1 = TDCT_correlation.np.array([[1,1],[2,2]],dtype='uint8')
+	img2 = TDCT_correlation.np.array([[3,4],[4,4]],dtype='uint8')
+
+	## Blending using "screen"
+	compArray = TDCT_correlation.np.array([[3,4],[5,5]], dtype='uint8')
+	retArray = tdct_CorrelationInstance_setup.window.blendImages([img1,img2], blendmode='screen')
+	assert TDCT_correlation.np.testing.assert_array_equal(retArray, compArray) is None
+
+	## Blending using "minimum"
+	compArray = TDCT_correlation.np.array([[1,1],[2,2]], dtype='uint8')
+	retArray = tdct_CorrelationInstance_setup.window.blendImages([img1,img2], blendmode='minimum')
+	assert TDCT_correlation.np.testing.assert_array_equal(retArray, compArray) is None
+
+	## Passing no images should return a "white image" i.e. array with all pixels = 255
+	compArray = TDCT_correlation.np.zeros([10,10], dtype='uint8')-1
+	retArray = tdct_CorrelationInstance_setup.window.blendImages([], blendmode='screen')
+	assert TDCT_correlation.np.testing.assert_array_equal(retArray, compArray) is None
+	retArray = tdct_CorrelationInstance_setup.window.blendImages([], blendmode='minimum')
+	assert TDCT_correlation.np.testing.assert_array_equal(retArray, compArray) is None
+
+
 # @pytest.fixture(scope='module')
 # def resource_a_setup(request):
 # 	print('\nresources_a_setup()')

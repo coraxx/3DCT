@@ -131,7 +131,7 @@ def getzGauss(x,y,img,parent=None,optimize=False,threshold=None,threshVal=0.6,cu
 			data_z = img[:,y,x]
 			data = np.array([np.arange(len(data_z)), data_z])
 			poptZ, pcov = gaussfit(data,parent,hold=True)
-			parent.refreshUI()
+			if parent: parent.refreshUI()
 			time.sleep(0.01)
 		return x, y, poptZ[1]
 
@@ -326,36 +326,6 @@ def gaussfit(data,parent=None,hold=False):
 	return popt, pcov
 
 
-def test1Dgauss(data=None):
-	if not data:
-		data = np.random.normal(loc=5., size=10000)
-	hist, bin_edges = np.histogram(data, density=True)
-	bin_centres = (bin_edges[:-1] + bin_edges[1:])/2
-	data = np.array([bin_centres, hist])
-	# data = np.array([[0,1,2,3,4,5,6,7,8,9],[10,12,11,15,25,18,13,9,11,10]])
-	popt, pcov = gaussfit(data)
-
-	x = []
-	y = []
-	for i in np.arange(len(data[0])):
-		x.append(i)
-		y.append(gauss(i,*popt))
-	plt.clf()
-	plt.plot(data[0], data[1], label='Test data')
-	plt.plot(x, y, label='Gaussian fit')
-
-	new_bin_centers = np.linspace(bin_centres[0], bin_centres[-1], 200)
-	new_hist_fit = gauss(new_bin_centers, *popt)
-	plt.plot(new_bin_centers, new_hist_fit,label='Interpolated')
-
-	plt.legend()
-	plt.show()
-	if clrmsg and debug is True:
-		from scipy.stats import ks_2samp
-		print clrmsg.DEBUG + ('Mean dy : %.6f' % np.absolute(y-data[1]).mean())
-		print clrmsg.DEBUG + str(ks_2samp(y, data[1]))
-
-
 ## Gaussian 2D fit from http://scipy.github.io/old-wiki/pages/Cookbook/FittingData
 def gaussian(height, center_x, center_y, width_x, width_y):
 	"""Returns a Gaussian function with the given parameters"""
@@ -407,6 +377,36 @@ def fitgaussian(data,parent=None):
 						"width_y : %.1f") % (x, y, width_x, width_y)
 		parent.widget_matplotlib.matshowPlot(mat=data,contour=contour,labelContour=labelContour)
 	return p
+
+
+# def test1Dgauss(data=None):
+# 	if not data:
+# 		data = np.random.normal(loc=5., size=10000)
+# 	hist, bin_edges = np.histogram(data, density=True)
+# 	bin_centres = (bin_edges[:-1] + bin_edges[1:])/2
+# 	data = np.array([bin_centres, hist])
+# 	# data = np.array([[0,1,2,3,4,5,6,7,8,9],[10,12,11,15,25,18,13,9,11,10]])
+# 	popt, pcov = gaussfit(data)
+
+# 	x = []
+# 	y = []
+# 	for i in np.arange(len(data[0])):
+# 		x.append(i)
+# 		y.append(gauss(i,*popt))
+# 	plt.clf()
+# 	plt.plot(data[0], data[1], label='Test data')
+# 	plt.plot(x, y, label='Gaussian fit')
+
+# 	new_bin_centers = np.linspace(bin_centres[0], bin_centres[-1], 200)
+# 	new_hist_fit = gauss(new_bin_centers, *popt)
+# 	plt.plot(new_bin_centers, new_hist_fit,label='Interpolated')
+
+# 	plt.legend()
+# 	plt.show()
+# 	if clrmsg and debug is True:
+# 		from scipy.stats import ks_2samp
+# 		print clrmsg.DEBUG + ('Mean dy : %.6f' % np.absolute(y-data[1]).mean())
+# 		print clrmsg.DEBUG + str(ks_2samp(y, data[1]))
 
 
 # def test2Dgauss(data=None):

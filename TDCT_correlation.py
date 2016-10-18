@@ -976,7 +976,10 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 								elif keyword == 'PixelWidth':
 									for piece in tag.value[tagpos:tagpos+30].split('='):
 										try:
-											pixelSize = float(piece.strip().split('\r\n')[0])
+											try:
+												pixelSize = float(piece.strip().split('\r\n')[0])
+											except:
+												pixelSize = float(piece.strip().split(r'\r\n')[0])
 											if debug is True: print clrmsg.DEBUG + "Pixel size from exif metakey:", keyword
 											## *1E6 because these values from SEM/FIB image is in m
 											return pixelSize*1E6

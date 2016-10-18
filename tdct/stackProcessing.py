@@ -278,7 +278,7 @@ def pxSize(img_path,z=False):
 					for keyword in ['PhysicalSizeX','PixelWidth','PixelSize'] if not z else ['PhysicalSizeZ','FocusStepSize']:
 						tagposs = [m.start() for m in re.finditer(keyword, tag.value)]
 						for tagpos in tagposs:
-							if keyword == 'PhysicalSizeX' or 'PhysicalSizeZ':
+							if keyword == 'PhysicalSizeX' or keyword == 'PhysicalSizeZ':
 								for piece in tag.value[tagpos:tagpos+30].split('"'):
 									try:
 										pixelsize = float(piece)
@@ -288,7 +288,10 @@ def pxSize(img_path,z=False):
 							elif keyword == 'PixelWidth':
 								for piece in tag.value[tagpos:tagpos+30].split('='):
 									try:
-										pixelsize = float(piece.strip().split('\r\n')[0])
+										try:
+											pixelsize = float(piece.strip().split('\r\n')[0])
+										except:
+											pixelsize = float(piece.strip().split(r'\r\n')[0])
 										return pixelsize
 									except:
 										pass
@@ -367,9 +370,17 @@ def showgraph_(img, ss_in, ss_out, sl_in, sl_out, block=True):
 
 
 def spline(img, img_int_shape, ss_in, ss_out, sl_in, sl_out):
-	"""Spline interpolating"""
+	"""
+	Spline interpolation
+
+	# possible depricated due to changes in code -> marked for futur code changes
+	ss_in : step size input stack
+	ss_out : step size output stack
+	sl_in : slices input stack
+	sl_out : slices output stack
+	"""
 	## Known x values in interpolated stack size.
-	zx = np.arange(0,sl_out,(ss_in/ss_out))
+	zx = np.arange(0,sl_out,ss_in/ss_out)
 	zxnew = np.arange(0, (sl_in-1)*ss_in/ss_out, 1)  # First slice of original and interpolated are both 0. n-1 to discard last slice
 	if ss_in/ss_out < 1.0:
 		zx_mod = []

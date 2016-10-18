@@ -105,6 +105,7 @@ def model2csv(model,csv_file_out,delimiter="\t"):
 				for columnNumber in range(model.columnCount())]
 			writer.writerow(fields)
 
+
 if __name__ == "__main__":
 	print(
 		r"""Please import me and use me like this:
