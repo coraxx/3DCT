@@ -215,6 +215,9 @@ ModelManifest.xml
 *.sublime-project
 *.sublime-workspace
 
+# VS Code
+.vscode
+
 # Python
 *.pyc
 *.pyo

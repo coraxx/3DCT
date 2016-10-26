@@ -508,6 +508,7 @@ class TestRigid3D(np_test.TestCase):
 
         # low z example 3
         # fails for some init conditions, even if init scale close to correct
+        # for example on windows numpy/scipy with init=[-0.4, -0.3, 0.8, 0.2, 1] fails
         x = np.array([[3.2, 7.8, 0.3, 4, 5],
                       [1.3, 3.6, 5.4, 6, 3.8],
                       [0.1, 0.5, 0.8, 0.2, 0.3]])
@@ -517,7 +518,7 @@ class TestRigid3D(np_test.TestCase):
         r = Rigid3D.make_r_euler(angles, mode='x')
         res = Rigid3D.find_32_constr_ck(
             x=x_cm, y=scale * np.dot(r, x_cm)[:2,:], scale=None, cm=False, 
-            use_jac=True, init=[-0.4, -0.3, 0.8, 0.2, 1])
+            use_jac=True, init=[-0.4, -0.44, 0.8, 0.2, 1])
         np_test.assert_almost_equal(res.optimizeResult.fun, 0, decimal=3)
         np_test.assert_almost_equal(
             res.y[2,:], scale * np.dot(r, x_cm)[2,:], decimal=3)

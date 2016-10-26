@@ -27,7 +27,7 @@ import numpy as np
 def test_getzPoly(testVolume):
 	retVal = beadPos.getzPoly(70,20,testVolume,n=None,optimize=False)
 	# assert int(retVal) == 37
-	assert retVal == 37.148076923076893
+	# assert retVal == 37.148076923076893
 	assert abs(retVal-37.148076923076893) < 0.0001
 	## Not testing "optimized" parameter since it is still broken
 

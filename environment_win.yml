@@ -1,32 +1,51 @@
 name: 3dct
+
+channels:
+- conda-forge
+
 dependencies:
+- conda-forge::ca-certificates=2016.8.31=0
+- conda-forge::certifi=2016.8.31=py27_0
+- conda-forge::colorama=0.3.7=py27_0
+- conda-forge::cycler=0.10.0=py27_0
 - conda-forge::opencv=2.4.12=np111py27_1
+- conda-forge::openssl=1.0.2h=vc9_0
+- conda-forge::pip=8.1.2=py27_0
+- conda-forge::pytest=3.0.3=py27_0
+- conda-forge::python=2.7.12=0
+- conda-forge::python-dateutil=2.5.3=py27_0
+- conda-forge::pytz=2016.6.1=py27_0
+- conda-forge::setuptools=26.1.1=py27_0
+- conda-forge::sip=4.18=py27_0
+- conda-forge::six=1.10.0=py27_0
 - conda-forge::tifffile=0.9.0=np111py27_0
-- cycler=0.10.0=py27_0
+- conda-forge::wheel=0.29.0=py27_0
+- conda-forge::wincertstore=0.2=py27_0
+- conda-forge::zlib=1.2.8=vc9_3
 - jpeg=8d=vc9_0
 - libpng=1.6.22=vc9_0
 - libtiff=4.0.6=vc9_2
 - matplotlib=1.5.1=np111py27_0
 - mkl=11.3.3=1
 - numpy=1.11.1=py27_1
-- openssl=1.0.2h=vc9_0
-- pip=8.1.2=py27_0
+- py=1.4.31=py27_0
 - pyparsing=2.1.4=py27_0
 - pyqt=4.11.4=py27_7
-- python=2.7.12=0
-- python-dateutil=2.5.3=py27_0
-- pytz=2016.6.1=py27_0
 - qt=4.8.7=vc9_9
 - scipy=0.18.0=np111py27_0
-- setuptools=26.1.1=py27_0
-- sip=4.18=py27_0
-- six=1.10.0=py27_0
 - tk=8.5.18=vc9_0
 - vs2008_runtime=9.00.30729.1=2
-- wheel=0.29.0=py27_0
-- zlib=1.2.8=vc9_3
 - pip:
+  - certifi==2016.8.31
   - colorama==0.3.7
+  - cycler==0.10.0
+  - pip==8.1.2
+  - pytest==3.0.3
+  - python-dateutil==2.5.3
+  - pytz==2016.6.1
   - qimage2ndarray==1.6
+  - setuptools==26.1.1.post20160901
+  - six==1.10.0
   - tifffile==0.9.0
-
+  - wheel==0.29.0
+  - wincertstore==0.2
