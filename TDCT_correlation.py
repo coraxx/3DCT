@@ -16,7 +16,7 @@ to one single stack file, ...).
 # @Credits			:
 # @Maintainer		: Jan Arnold
 # @Date				: 2016/01
-# @Version			: 3DCT 2.2.2b module rev. 28
+# @Version			: 3DCT 2.2.2b module rev. 29
 # @Status			: stable
 # @Usage			: part of 3D Correlation Toolbox
 # @Notes			:
@@ -58,7 +58,7 @@ if debug is True: print clrmsg.DEBUG + "Execdir =", execdir
 
 
 class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
-	def __init__(self, parent=None, leftImage=None, rightImage=None,workingdir=None):
+	def __init__(self, parent=None, leftImage=None, rightImage=None, workingdir=None):
 		if debug is True: print clrmsg.DEBUG + 'Debug messages enabled'
 		QtGui.QWidget.__init__(self)
 		Ui_WidgetWindow.__init__(self)
@@ -1602,7 +1602,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 	def model2np(self,model,rows):
 		"""
 		Convert Qt model to numpy array.
-		Pass the model and the range of rows to convert. E.g. if the model has rows nr 1,2,3,4,5,6,7,8 
+		Pass the model and the range of rows to convert. E.g. if the model has rows nr 1,2,3,4,5,6,7,8
 		model2np(model, [3,7]) would convert rows 4,5,6,7 of the model to a numpy array.
 		"""
 		listarray = []
@@ -1750,6 +1750,8 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 								self.doubleSpinBox_custom_rot_center_x.value(),
 								self.doubleSpinBox_custom_rot_center_y.value(),
 								self.doubleSpinBox_custom_rot_center_z.value()]
+
+		if imageProps is not None and None in imageProps: imageProps = None
 
 		if nrRowsModel2D >= 3:
 			if nrRowsModel2D <= nrRowsModel3D:
