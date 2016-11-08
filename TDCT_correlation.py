@@ -16,7 +16,7 @@ to one single stack file, ...).
 # @Credits			:
 # @Maintainer		: Jan Arnold
 # @Date				: 2016/01
-# @Version			: 3DCT 2.2.2b module rev. 29
+# @Version			: 3DCT 2.2.2 module rev. 29
 # @Status			: stable
 # @Usage			: part of 3D Correlation Toolbox
 # @Notes			:

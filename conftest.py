@@ -13,7 +13,7 @@
 # @Credits			:
 # @Maintainer		: Jan Arnold
 # @Date				: 2016/09
-# @Version			: 3DCT 2.2.2b module rev. 1
+# @Version			: 3DCT 2.2.2 module rev. 1
 # @Status			: stable
 # @Usage			: pytest
 # @Notes			:

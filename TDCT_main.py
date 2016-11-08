@@ -54,7 +54,7 @@ A test dataset can be downloaded here: http://3dct.semper.space/download/3D_corr
 # 					  Max-Planck-Institute of Biochemistry
 # 					  Department of Molecular Structural Biology
 # @Date				: 2015/08
-# @Version			: 3DCT 2.2.2b
+# @Version			: 3DCT 2.2.2
 # @Status			: stable
 # @Usage			: python -u TDCT_main.py
 # @Notes			:
