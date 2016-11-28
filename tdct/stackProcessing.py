@@ -441,7 +441,11 @@ def norm_img(img,copy=False,qtprocessbar=None):
 	[z,c,y,x]
 	[c,z,y,x]
 	"""
-	if copy is True: img = np.copy(img)
+	if copy is True:
+		img = np.copy(img)
+	else:
+		# quick bug fix for immutable numpy array read-only error
+		img = np.copy(img)
 	dtype = str(img.dtype)
 	if dtype == "uint16" or dtype == "int16": typesize = 65535
 	elif dtype == "uint8" or dtype == "int8": typesize = 255

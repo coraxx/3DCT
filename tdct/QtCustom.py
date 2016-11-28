@@ -51,7 +51,7 @@ style.use('fivethirtyeight')
 class QTableViewCustom(QtGui.QTableView):
 	def __init__(self,parent=None):
 		"""
-		Test bla bla
+		Custom QTableView widget for handling coordinates and z-height extraction of beads.
 		"""
 		QtGui.QTableView.__init__(self,parent)
 
@@ -148,29 +148,54 @@ class QTableViewCustom(QtGui.QTableView):
 		if indices:
 			cmDelete = QtGui.QAction('Delete', self)
 			cmDelete.triggered.connect(self.deleteItem)
-			cmGetZgauss = QtGui.QAction('Get z gauss', self)
-			cmGetZgauss.triggered.connect(lambda: self.getz(gauss=True))
-			cmGetZgaussOpt = QtGui.QAction('Get x,y,z gauss', self)
-			cmGetZgaussOpt.triggered.connect(lambda: self.getz(gauss=True,optimize=True))
+
+			# Layer 1
+			cmGetZgaussL1 = QtGui.QAction('Get z gauss layer 1', self)
+			cmGetZgaussL1.triggered.connect(lambda: self.getz(self.img1, gauss=True))
+			cmGetZgaussOptL1 = QtGui.QAction('Get x,y,z gauss layer 1', self)
+			cmGetZgaussOptL1.triggered.connect(lambda: self.getz(self.img1, gauss=True,optimize=True))
+			# Layer 2
+			cmGetZgaussL2 = QtGui.QAction('Get z gauss layer 2', self)
+			cmGetZgaussL2.triggered.connect(lambda: self.getz(self.img2, gauss=True))
+			cmGetZgaussOptL2 = QtGui.QAction('Get x,y,z gauss layer 2', self)
+			cmGetZgaussOptL2.triggered.connect(lambda: self.getz(self.img2, gauss=True,optimize=True))
+			# Layer 3
+			cmGetZgaussL3 = QtGui.QAction('Get z gauss layer 3', self)
+			cmGetZgaussL3.triggered.connect(lambda: self.getz(self.img3, gauss=True))
+			cmGetZgaussOptL3 = QtGui.QAction('Get x,y,z gauss layer 3', self)
+			cmGetZgaussOptL3.triggered.connect(lambda: self.getz(self.img3, gauss=True,optimize=True))
+
 			# broken and not used atm
 			# cmGetZpoly = QtGui.QAction('Get z poly (deprecated)', self)
 			# cmGetZpoly.triggered.connect(self.getz)
 			# cmGetZpolyOpt = QtGui.QAction('Get x,y,z poly (deprecated)', self)
 			# cmGetZpolyOpt.triggered.connect(lambda: self.getz(optimize=True))
-			if self.img is None:
-				cmGetZgauss.setEnabled(False)
-				cmGetZgaussOpt.setEnabled(False)
+			if self.img1 is None:
+				cmGetZgaussL1.setEnabled(False)
+				cmGetZgaussOptL1.setEnabled(False)
+			if self.img2 is None:
+				cmGetZgaussL2.setEnabled(False)
+				cmGetZgaussOptL2.setEnabled(False)
+			if self.img3 is None:
+				cmGetZgaussL3.setEnabled(False)
+				cmGetZgaussOptL3.setEnabled(False)
 				# cmGetZpoly.setEnabled(False)  # broken atm
 				# cmGetZpolyOpt.setEnabled(False)  # broken atm
 			self.contextMenu = QtGui.QMenu(self)
 			self.contextMenu.addAction(cmDelete)
-			self.contextMenu.addAction(cmGetZgauss)
-			self.contextMenu.addAction(cmGetZgaussOpt)
+			self.contextMenu.addSeparator()
+			self.contextMenu.addAction(cmGetZgaussL1)
+			self.contextMenu.addAction(cmGetZgaussL2)
+			self.contextMenu.addAction(cmGetZgaussL3)
+			self.contextMenu.addSeparator()
+			self.contextMenu.addAction(cmGetZgaussOptL1)
+			self.contextMenu.addAction(cmGetZgaussOptL2)
+			self.contextMenu.addAction(cmGetZgaussOptL3)
 			# self.contextMenu.addAction(cmGetZpoly)  # broken atm
 			# self.contextMenu.addAction(cmGetZpolyOpt)  # broken atm
 			self.contextMenu.popup(QtGui.QCursor.pos())
 
-	def getz(self,optimize=False,gauss=False):
+	def getz(self,img,optimize=False,gauss=False):
 		indices = self.selectedIndexes()
 		## Determine z for selected rows
 		if indices:
@@ -192,9 +217,9 @@ class QTableViewCustom(QtGui.QTableView):
 
 				if gauss is True:
 					if optimize is False:
-						zopt = beadPos.getzGauss(x,y,self.img,parent=self.mainParent)
-						if debug is True: print clrmsg.DEBUG + str(self.img.shape), zopt
-						if 0 <= zopt <= self.img.shape[-3]:
+						zopt = beadPos.getzGauss(x,y,img,parent=self.mainParent)
+						if debug is True: print clrmsg.DEBUG + str(img.shape), zopt
+						if 0 <= zopt <= img.shape[-3]:
 							self._scene.zValuesDict[activeitems[row]][1] = (0,0,0)
 							self._model.itemFromIndex(self._model.index(row, 2)).setForeground(QtCore.Qt.black)
 						else:
@@ -203,13 +228,13 @@ class QTableViewCustom(QtGui.QTableView):
 						self._model.itemFromIndex(self._model.index(row, 2)).setText(str(zopt))
 					else:
 						xopt,yopt,zopt = beadPos.getzGauss(
-							x,y,self.img,parent=self.mainParent,optimize=True,threshold=True,
+							x,y,img,parent=self.mainParent,optimize=True,threshold=True,
 							threshVal=self.mainParent.doubleSpinBox_treshVal.value(),cutout=self._scene.markerSize)
-						if debug is True: print clrmsg.DEBUG + str(self.img.shape), xopt,yopt,zopt
+						if debug is True: print clrmsg.DEBUG + str(img.shape), xopt,yopt,zopt
 						if (
 							abs(x - xopt) <= 2 * self._scene.markerSize and
 							abs(y - yopt) <= 2 * self._scene.markerSize and
-							0 <= zopt <= self.img.shape[-3]):
+							0 <= zopt <= img.shape[-3]):
 							self._scene.zValuesDict[activeitems[row]][1] = (255,0,0)
 							self._model.itemFromIndex(self._model.index(row, 2)).setForeground(QtCore.Qt.black)
 						else:
@@ -220,9 +245,9 @@ class QTableViewCustom(QtGui.QTableView):
 						self._model.itemFromIndex(self._model.index(row, 1)).setText(str(yopt))
 						self._model.itemFromIndex(self._model.index(row, 2)).setText(str(zopt))
 				elif optimize is False:
-					zopt = beadPos.getzPoly(x,y,self.img,n=None)
-					if debug is True: print clrmsg.DEBUG + str(self.img.shape), zopt
-					if 0 <= zopt <= self.img.shape[-3]:
+					zopt = beadPos.getzPoly(x,y,img,n=None)
+					if debug is True: print clrmsg.DEBUG + str(img.shape), zopt
+					if 0 <= zopt <= img.shape[-3]:
 						self._scene.zValuesDict[activeitems[row]][1] = (0,0,0)
 						self._model.itemFromIndex(self._model.index(row, 2)).setForeground(QtCore.Qt.black)
 					else:
@@ -230,9 +255,9 @@ class QTableViewCustom(QtGui.QTableView):
 						self._model.itemFromIndex(self._model.index(row, 2)).setForeground(QtCore.Qt.red)
 					self._model.itemFromIndex(self._model.index(row, 2)).setText(str(zopt))
 				elif optimize is True:
-					xopt,yopt,zopt = beadPos.getzPoly(x,y,self.img,n=None,optimize=True)
-					if debug is True: print clrmsg.DEBUG + str(self.img.shape), xopt,yopt,zopt
-					if 0 <= xopt <= self.img.shape[-1] and 0 <= yopt <= self.img.shape[-2] and 0 <= zopt <= self.img.shape[-3]:
+					xopt,yopt,zopt = beadPos.getzPoly(x,y,img,n=None,optimize=True)
+					if debug is True: print clrmsg.DEBUG + str(img.shape), xopt,yopt,zopt
+					if 0 <= xopt <= img.shape[-1] and 0 <= yopt <= img.shape[-2] and 0 <= zopt <= img.shape[-3]:
 						self._scene.zValuesDict[activeitems[row]][1] = (255,0,0)
 						self._model.itemFromIndex(self._model.index(row, 2)).setForeground(QtCore.Qt.black)
 					else:

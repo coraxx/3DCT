@@ -125,7 +125,9 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		self.img_left_overlay = None
 		# self.img_left_layer1 = None
 		self.img_left_layer2 = None
+		self.imgstack_left_layer2 = None
 		self.img_left_layer3 = None
+		self.imgstack_left_layer3 = None
 		## right
 		self.selectedLayer_right = 1
 		self.brightness_right_layer1 = 0
@@ -148,7 +150,9 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		self.img_right_overlay = None
 		# self.img_right_layer1 = None
 		self.img_right_layer2 = None
+		self.imgstack_right_layer2 = None
 		self.img_right_layer3 = None
+		self.imgstack_right_layer3 = None
 		## Initialize Images and connect image load buttons
 		self.toolButton_loadLeftImage.clicked.connect(self.openImageLeft)
 		self.toolButton_loadRightImage.clicked.connect(self.openImageRight)
@@ -604,7 +608,9 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 				self.slice_left = 0
 				self.spinBox_slice.setMaximum(self.imgstack_left_layer1.shape[0]-1)
 			## link image to QTableview for determining z
-			self.tableView_left.img = self.imgstack_left_layer1
+			self.tableView_left.img1 = self.imgstack_left_layer1
+			self.tableView_left.img2 = self.imgstack_left_layer2
+			self.tableView_left.img3 = self.imgstack_left_layer3
 			## check if coloring z values in table is needed (correlation needs z=0 in 2D image, so no checking for valid z
 			## with 2D images needed)
 			if self.imgstack_left_layer1 is None:
@@ -648,7 +654,9 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 				self.slice_left = 0
 				self.spinBox_slice.setMaximum(self.imgstack_right_layer1.shape[0]-1)
 			## link image to QTableview for determining z
-			self.tableView_right.img = self.imgstack_right_layer1
+			self.tableView_right.img1 = self.imgstack_right_layer1
+			self.tableView_right.img2 = self.imgstack_right_layer2
+			self.tableView_right.img3 = self.imgstack_right_layer3
 			## check if coloring z values in table is needed (correlation needs z=0 in 2D image, so no checking for valid z
 			## with 2D images needed)
 			if self.imgstack_right_layer1 is None:
@@ -690,6 +698,8 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			self.checkBox_MIP.setChecked(True)
 			self.img_left_layer2,self.img_adj_left_layer2,self.sceneLeft.imagetype_layer2,self.imgstack_left_layer2 = None, None, None, None
 			self.img_left_layer3,self.img_adj_left_layer3,self.sceneLeft.imagetype_layer3,self.imgstack_left_layer3 = None, None, None, None
+			self.tableView_left.img2 = self.imgstack_left_layer2
+			self.tableView_left.img3 = self.imgstack_left_layer3
 			self.layer2CHKbox_left = False
 			self.layer3CHKbox_left = False
 			self.checkBox_layer2.setChecked(False)
@@ -732,6 +742,8 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			self.checkBox_MIP.setChecked(True)
 			self.img_right_layer2,self.img_adj_right_layer2,self.sceneRight.imagetype_layer2,self.imgstack_right_layer2 = None, None, None, None
 			self.img_right_layer3,self.img_adj_right_layer3,self.sceneRight.imagetype_layer3,self.imgstack_right_layer3 = None, None, None, None
+			self.tableView_right.img2 = self.imgstack_right_layer2
+			self.tableView_right.img3 = self.imgstack_right_layer3
 			self.layer2CHKbox_right = False
 			self.layer3CHKbox_right = False
 			self.checkBox_layer2.setChecked(False)
@@ -1528,6 +1540,15 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 							self.checkBox_layer3.blockSignals(False)
 						self.img_right_displayed_layer3 = self.img_right_layer3
 						self.selectSlice()
+
+		self.tableView_left.img1 = self.imgstack_left_layer1
+		self.tableView_left.img2 = self.imgstack_left_layer2
+		self.tableView_left.img3 = self.imgstack_left_layer3
+
+		self.tableView_right.img1 = self.imgstack_right_layer1
+		self.tableView_right.img2 = self.imgstack_right_layer2
+		self.tableView_right.img3 = self.imgstack_right_layer3
+
 		self.displayImage()
 
 												##################### END #####################
