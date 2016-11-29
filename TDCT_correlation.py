@@ -39,7 +39,7 @@ import qimage2ndarray
 ## and correlation algorithm
 from tdct import clrmsg, TDCT_debug, QtCustom, csvHandler, correlation
 
-__version__ = 'v2.2.2b'
+__version__ = 'v2.2.2'
 
 # add working directory temporarily to PYTHONPATH
 if getattr(sys, 'frozen', False):

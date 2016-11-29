@@ -89,7 +89,7 @@ if sys.platform == 'win32':
 	if debug is True: print clrmsg.INFO + 'PATH before:', os.environ.get('PATH','')
 	os.environ['PATH'] = execdir + '\;' + os.environ.get('PATH','')
 	if debug is True: print clrmsg.INFO + 'PATH after: ', os.environ.get('PATH','')
-__version__ = 'v2.2.2b'
+__version__ = 'v2.2.2'
 
 if debug is True: print clrmsg.DEBUG + "Execdir =", execdir
 ########## GUI layout file #######################################################
@@ -719,7 +719,7 @@ class GenericThread(QtCore.QThread):
 if __name__ == "__main__":
 	if debug is True:
 		print clrmsg.DEBUG + 'Debug active'
-		print clrmsg.OK + 'Imports OK'
+		print clrmsg.OK + 'Main imports OK'
 		print clrmsg.INFO + 'This is 3D Correlation Toolbox', __version__
 		print clrmsg.WARNING + 'Debug mode can/will slow down parts of the Toolbox (e.g. marker clicking)'
 

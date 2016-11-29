@@ -28,6 +28,7 @@ dependencies:
 - zlib=1.2.8=3
 - pip:
   - colorama==0.3.7
+  - pyobjc==3.1.1
   - qimage2ndarray==1.6
   - tifffile==0.9.2
 prefix: /Users/jan/anaconda/envs/3dct

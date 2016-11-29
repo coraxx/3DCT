@@ -681,7 +681,8 @@ class QLineEditFilePath(QtGui.QLineEdit):
 						"		  Reference:\n"
 						"		  http://stackoverflow.com/questions/34689562/pyqt-mimedata-filename")
 			## bugfix for suse, missing "/" in the beginning of the path
-			if sys.platform in ['linux2', 'darwin']:
+			# if sys.platform in ['linux2', 'darwin']: #  was fixed in pyobj version for mac
+			if sys.platform in ['linux2']:
 				self.setText('/' + filepath)
 			else:
 				self.setText(filepath)
