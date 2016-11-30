@@ -1,34 +1,42 @@
 # User's Guide #
 ![3D Correlation Toolbox](http://3dct.semper.space/img/userguide/header.png "3D Correlation Toolbox")
 
-last edited: 27.04.2016
+last edited: 30.11.2016
 
 ## Table of Contents ##
-[TOC]
+<!-- TOC insertAnchor:false orderedList:false -->
 
-<!-- 1. [Introduction](#introduction)
-2. [Installation](#installation)
-	2.1. [Pyinstaller builds](#pyinstaller-builds)
-		2.1.1. [Mac Os X](#mac-os-x)
-		2.1.2. [Windows](#windows)
-		2.1.3. [Linux](#linux)
-	2.2. [From source](#from-source)
-3. [Interface](#interface)
-	3.1. [Main Toolbox Window](#main-toolbox-window)
-	3.2. [Correlation Module Window](#correlation-module-window)
-4. [Data processing tools](#data-processing-tools)
-	4.1. [Reslicing](#reslicing)
-	4.2. [Normalize](#normalize)
-	4.3. [Maximum intensity projection](#maximum-intensity-projection)
-5. [Correlation](#correlation)
-	5.1. [Side by side image navigation](#side-by-side-image-navigation)
-	5.2. [Coordinates tables](#coordinates-tables)
-	5.3. [Graphs](#graphs)
-	5.4. [Tabs](#tabs)
-	5.5. [Run correlation](#run-correlation)
-6. [Planned features](#planned-features)
-7. [License](#license)
-8. [Citing](#citing) -->
+- [User's Guide](#users-guide)
+    - [Table of Contents](#table-of-contents)
+    - [Introduction](#introduction)
+    - [Installation](#installation)
+        - [Pyinstaller builds](#pyinstaller-builds)
+            - [Mac Os X](#mac-os-x)
+            - [Windows](#windows)
+            - [Linux](#linux)
+        - [From source](#from-source)
+            - [Regular Python](#regular-python)
+            - [Anaconda](#anaconda)
+    - [Interface](#interface)
+        - [Main Toolbox Window](#main-toolbox-window)
+        - [Correlation Module Window](#correlation-module-window)
+    - [Data processing tools](#data-processing-tools)
+        - [Reslicing](#reslicing)
+        - [Normalize](#normalize)
+        - [Maximum intensity projection](#maximum-intensity-projection)
+    - [Correlation module](#correlation-module)
+        - [Side by side image navigation](#side-by-side-image-navigation)
+        - [Coordinates tables](#coordinates-tables)
+        - [Graphs](#graphs)
+        - [Tabs](#tabs)
+        - [Run correlation](#run-correlation)
+    - [General GUI hints](#general-gui-hints)
+    - [Debug mode](#debug-mode)
+    - [Planned features](#planned-features)
+    - [License](#license)
+    - [Citing](#citing)
+
+<!-- /TOC -->
 
 
 ## Introduction ##
@@ -91,6 +99,8 @@ This version is build under Ubuntu 15.04.
 
 ### From source ###
 
+#### Regular Python ####
+
 The Toolbox is written in Python 2.7 and comes with a PyQt4 GUI. Make sure these packages/modules are installed:
 
 * python-qt ([PyQt4](https://www.riverbankcomputing.com/software/pyqt/intro))[^1]
@@ -110,24 +120,59 @@ These are just rough ideas on how to install Python 2.7 and all the modules need
 
 Mac users can check out [brew](http://brew.sh). With brew installed you can easily install all packages with brew install PACKAGE.
 Check out this [guide](https://joernhees.de/blog/2014/02/25/scientific-python-on-mac-os-x-10-9-with-homebrew/) on how to install python with numpy, scipy, matplotlib, qt and pyqt. After this you will only need
-```brew install opencv```
+```
+brew install opencv
+```
 and
-```pip install tifffile cv2 colorama```
+```
+pip install tifffile cv2 colorama
+```
 
 Windows users can do a Python 2.7 installation from scratch or use [WinPython](https://sourceforge.net/projects/winpython/files/WinPython_2.7/). This has numpy, scipy, matplotlib and pyqt on board. But you will need openCV. You also can build this from scratch or get a precompiled binary [here](http://www.lfd.uci.edu/~gohlke/pythonlibs/#opencv). To install this, open up the command line shortcut in the WinPython directory (here the path to Python and pip is correctly set) and install the opencv binary with
-```pip install PATH_TO_DOWNLOADED_OPENCV.whl```
+```
+pip install PATH_TO_DOWNLOADED_OPENCV.whl
+```
 The additional packages can be installed via
-```pip install tifffile colorama cv2```
+```
+pip install tifffile colorama cv2
+```
 
 Linux users can use their favorite package management software (apt-get, zippy, yast, etc...) to install python, python-qt and python-opencv.
 e.g.
-```apt-get install python, python-qt and python-opencv```
+```
+apt-get install python, python-qt and python-opencv
+```
 The rest can be installed via
-```pip install numpy scipy matplotlib cv2 tifffile colorama```
+```
+pip install numpy scipy matplotlib cv2 tifffile colorama
+```
 
-To get the source code either use git
-```git clone git@bitbucket.org:splo0sh/3dct.git```
-or you can got to [https://bitbucket.org/splo0sh/3dct/downloads](https://bitbucket.org/splo0sh/3dct/downloads) and download the latest release.
+Get the source code either via git at
+```
+git clone --depth=1 https://bitbucket.org/splo0sh/3dct.git
+```
+or
+```
+git clone --depth=1 https://github.com/Splo0sh/3DCT.git
+```
+or you can got to [https://bitbucket.org/splo0sh/3dct/downloads](https://bitbucket.org/splo0sh/3dct/downloads) or [https://github.com/Splo0sh/3DCT/releases](https://github.com/Splo0sh/3DCT/releases) respectively to download the latest release there.
+
+
+#### Anaconda ####
+
+For [Anaconda](https://www.continuum.io/downloads) first get the source code from either
+```
+git clone --depth=1 https://bitbucket.org/splo0sh/3dct.git
+```
+or
+```
+git clone --depth=1 https://github.com/Splo0sh/3DCT.git
+```
+Then create a new environment with e.g.
+```
+conda env create -f environment_osx.yml python=2
+```
+`environment_osx.yml` being the one for Anaconda under Mac. For other systems use the appropriate win or linux environment file.
 
 
 
@@ -303,8 +348,8 @@ Please keep in mind, that the application can be slower/more sluggish in debug m
 [_back to top_](#)
 
 ## Planned features ##
-- open multiple channels of an Light Microscope image and blend them together
-- scrolling through z-stack
+- open multiple channels of an Light Microscope image and blend them together <- implemented but not yet documented
+- scrolling through z-stack <- implemented but not yet documented
 - optimizing marker handling (internal)
 
 

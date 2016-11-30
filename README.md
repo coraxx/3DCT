@@ -46,7 +46,7 @@ Copyright (C) 2016  Jan Arnold
 
 Version 2.0 is the first public release and received a revised GUI and image stack handling (reslicing) done in python (formerly outsourced to FIJI)
 
-Most recent stable release version is 2.1.0.
+Most recent stable release version is 2.2.2.
 
 ### Binaries ###
 
