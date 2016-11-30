@@ -232,7 +232,7 @@ Marker positions are displayed here. _See [Coordinates tables](#coordinates-tabl
 Graphs for marker z position extraction and correlation are displayed here. _See [Graphs](#graphs) for more details._
 
 4. **Image controls**
-Image controls like loading/reseting images, brightness and contrast, rotation and marker size can be adjusted here. _See [Image Control](#image-controls) for more details._
+Image controls like loading/resetting images, brightness and contrast, rotation and marker size can be adjusted here. _See [Image Control](#image-controls) for more details._
 
 5. **Correlation results**
 This tab shows correlation results like the rotation, scale, translation and error between the two datasets. _See [Correlation results](#correlation-results) for more details._
