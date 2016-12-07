@@ -27,6 +27,7 @@ import tifffile as tf
 try:
 	import TDCT_correlation
 	TDCT_error = ""
+	TDCT_correlation.debug = False
 except Exception as e:
 	TDCT_error = e
 

@@ -23,6 +23,8 @@
 from tdct import beadPos
 import numpy as np
 
+beadPos.debug = False
+
 
 def test_getzPoly(testVolume):
 	retVal = beadPos.getzPoly(70,20,testVolume,n=None,optimize=False)

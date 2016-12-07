@@ -26,6 +26,7 @@ import os
 try:
 	import TDCT_main
 	TDCT_error = ""
+	TDCT_main.debug = False
 except Exception as e:
 	TDCT_error = e
 

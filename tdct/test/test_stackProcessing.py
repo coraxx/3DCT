@@ -23,6 +23,8 @@
 from tdct import stackProcessing
 import numpy as np
 
+stackProcessing.debug = False
+
 
 def test_norm_img():
 	compArray = np.array([[127, 127, 127],[254, 254, 254]], dtype='uint8')
