@@ -320,6 +320,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			pass
 		else:
 			if self.currentFocusedWidgetName != 'graphicsView_left' and self.currentFocusedWidgetName != 'graphicsView_right':
+				self.borderControl(None,1)
 				self.label_selimg.setStyleSheet(self.stylesheet_orange)
 				self.label_selimg.setText('none')
 				self.label_markerSizeNano.setText('')
@@ -329,6 +330,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 				self.label_imagetype.setText('')
 				self.ctrlEnDisAble(False)
 			elif self.currentFocusedWidgetName == 'graphicsView_left':
+				self.borderControl(current)
 				self.label_selimg.setStyleSheet(self.stylesheet_green)
 				self.label_selimg.setText('left')
 				self.label_imagetype.setStyleSheet(self.stylesheet_green)
@@ -343,6 +345,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 				if self.mipCHKbox_left is False:
 					self.spinBox_slice.setEnabled(True)
 			elif self.currentFocusedWidgetName == 'graphicsView_right':
+				self.borderControl(current)
 				self.label_selimg.setStyleSheet(self.stylesheet_blue)
 				self.label_selimg.setText('right')
 				self.label_imagetype.setStyleSheet(self.stylesheet_blue)
@@ -359,14 +362,17 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 
 		## Label showing selected table
 		if self.currentFocusedWidgetName != 'tableView_left' and self.currentFocusedWidgetName != 'tableView_right':
+			self.borderControl(None,2)
 			self.label_selectedTable.setStyleSheet(self.stylesheet_orange)
 			self.label_selectedTable.setText('none')
 			# self.ctrlEnDisAble(False)
 		elif self.currentFocusedWidgetName == 'tableView_left':
+			self.borderControl(current)
 			self.label_selectedTable.setStyleSheet(self.stylesheet_green)
 			self.label_selectedTable.setText('left')
 			self.ctrlEnDisAble(False)
 		elif self.currentFocusedWidgetName == 'tableView_right':
+			self.borderControl(current)
 			self.label_selectedTable.setStyleSheet(self.stylesheet_blue)
 			self.label_selectedTable.setText('right')
 			self.ctrlEnDisAble(False)
@@ -466,6 +472,21 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		# update marker size in nm
 		self.changeMarkerSize()
 
+	def borderControl(self,widget,idx=0):
+		if idx == 0:
+			self.graphicsView_left.setStyleSheet("border: 1px solid rgb(223, 223, 223)")
+			self.graphicsView_right.setStyleSheet("border: 1px solid rgb(223, 223, 223)")
+			self.tableView_left.setStyleSheet("border: 1px solid rgb(223, 223, 223)")
+			self.tableView_right.setStyleSheet("border: 1px solid rgb(223, 223, 223)")
+		elif idx == 1:
+			self.graphicsView_left.setStyleSheet("border: 1px solid rgb(223, 223, 223)")
+			self.graphicsView_right.setStyleSheet("border: 1px solid rgb(223, 223, 223)")
+		elif idx == 2:
+			self.tableView_left.setStyleSheet("border: 1px solid rgb(223, 223, 223)")
+			self.tableView_right.setStyleSheet("border: 1px solid rgb(223, 223, 223)")
+		if widget is not None:
+			widget.setStyleSheet("border: 1px solid rgb(100, 140, 220)")
+
 	## Function to dis-/enabling the buttons controlling rotation and contrast/brightness
 	def ctrlEnDisAble(self,status):
 		self.spinBox_rot.setEnabled(status)
@@ -531,13 +552,19 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 		for row in range(min([rowsLeft,rowsRight])):
 			color_correlate = (50,220,175,alpha)
 			if rowsLeft != 0:
-				self.modelLleft.item(row, 0).setBackground(QtGui.QColor(*color_correlate))
-				self.modelLleft.item(row, 1).setBackground(QtGui.QColor(*color_correlate))
-				self.modelLleft.item(row, 2).setBackground(QtGui.QColor(*color_correlate))
+				try:
+					self.modelLleft.item(row, 0).setBackground(QtGui.QColor(*color_correlate))
+					self.modelLleft.item(row, 1).setBackground(QtGui.QColor(*color_correlate))
+					self.modelLleft.item(row, 2).setBackground(QtGui.QColor(*color_correlate))
+				except:
+					if debug is True: print clrmsg.DEBUG + "Model item is None"
 			if rowsRight != 0:
-				self.modelRight.item(row, 0).setBackground(QtGui.QColor(*color_correlate))
-				self.modelRight.item(row, 1).setBackground(QtGui.QColor(*color_correlate))
-				self.modelRight.item(row, 2).setBackground(QtGui.QColor(*color_correlate))
+				try:
+					self.modelRight.item(row, 0).setBackground(QtGui.QColor(*color_correlate))
+					self.modelRight.item(row, 1).setBackground(QtGui.QColor(*color_correlate))
+					self.modelRight.item(row, 2).setBackground(QtGui.QColor(*color_correlate))
+				except:
+					if debug is True: print clrmsg.DEBUG + "Model item is None"
 		if rowsLeft > rowsRight:
 			if '{0:b}'.format(self.sceneLeft.imagetype)[-1] == '0' or '{0:b}'.format(
 												self.sceneLeft.imagetype)[-1] == '{0:b}'.format(self.sceneRight.imagetype)[-1]:
@@ -545,9 +572,12 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			else:
 				color_overflow = (220,25,105,alpha)  # red(ish) color to indicate unbalanced amount of markers for correlation
 			for row in range(rowsRight,rowsLeft):
-				self.modelLleft.item(row, 0).setBackground(QtGui.QColor(*color_overflow))
-				self.modelLleft.item(row, 1).setBackground(QtGui.QColor(*color_overflow))
-				self.modelLleft.item(row, 2).setBackground(QtGui.QColor(*color_overflow))
+				try:
+					self.modelLleft.item(row, 0).setBackground(QtGui.QColor(*color_overflow))
+					self.modelLleft.item(row, 1).setBackground(QtGui.QColor(*color_overflow))
+					self.modelLleft.item(row, 2).setBackground(QtGui.QColor(*color_overflow))
+				except:
+					if debug is True: print clrmsg.DEBUG + "Model item is None"
 		elif rowsLeft < rowsRight:
 			if '{0:b}'.format(self.sceneRight.imagetype)[-1] == '0' or '{0:b}'.format(
 												self.sceneLeft.imagetype)[-1] == '{0:b}'.format(self.sceneRight.imagetype)[-1]:
@@ -555,9 +585,12 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
 			else:
 				color_overflow = (220,25,105,alpha)  # red(ish) color to indicate unbalanced amount of markers for correlation
 			for row in range(rowsLeft,rowsRight):
-				self.modelRight.item(row, 0).setBackground(QtGui.QColor(*color_overflow))
-				self.modelRight.item(row, 1).setBackground(QtGui.QColor(*color_overflow))
-				self.modelRight.item(row, 2).setBackground(QtGui.QColor(*color_overflow))
+				try:
+					self.modelRight.item(row, 0).setBackground(QtGui.QColor(*color_overflow))
+					self.modelRight.item(row, 1).setBackground(QtGui.QColor(*color_overflow))
+					self.modelRight.item(row, 2).setBackground(QtGui.QColor(*color_overflow))
+				except:
+					if debug is True: print clrmsg.DEBUG + "Model item is None"
 
 	def getMarkerColor(self):
 		color = QtGui.QColorDialog.getColor()
