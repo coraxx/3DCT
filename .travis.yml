@@ -12,7 +12,7 @@ install:
   # Useful for debugging any issues with conda
   - conda info -a
 
-  - conda create -q -f environment_linux.yml python=2.7
+  - conda env create -q -f environment_linux.yml python=2.7
   - source activate 3dct
   - python setup.py install
 
