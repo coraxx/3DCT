@@ -14,6 +14,5 @@ install:
 
   - conda env create -q -f environment_linux.yml python=2.7
   - source activate 3dct
-  - python setup.py install
 
 script: pytest
