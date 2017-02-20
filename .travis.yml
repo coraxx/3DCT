@@ -11,11 +11,16 @@ install:
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
-  # Useful for debugging any issues with conda
+
+  # for debugging
   - conda info -a
+
   - conda env create -q -f environment_linux.yml python=2.7
   - source activate 3dct
   - conda install pytest
+
+  # for debugging
+  - conda list
 
 script:
   - xvfb-run --auto-servernum --server-num=1 pytest
