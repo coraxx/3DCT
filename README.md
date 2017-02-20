@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/coraxx/3DCT.svg?branch=master)](https://travis-ci.org/coraxx/3DCT)
+
 # README #
 
 This Toolbox is build for 3D correlative microscopy. It helps with 3D to 2D correlation of three dimensional confocal image stacks to two dimensional SEM/FIB dual beam microscope images. Though it is not limited to that.
