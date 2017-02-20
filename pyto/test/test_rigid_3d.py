@@ -518,7 +518,7 @@ class TestRigid3D(np_test.TestCase):
         r = Rigid3D.make_r_euler(angles, mode='x')
         res = Rigid3D.find_32_constr_ck(
             x=x_cm, y=scale * np.dot(r, x_cm)[:2,:], scale=None, cm=False, 
-            use_jac=True, init=[-0.4, -0.44, 0.8, 0.2, 1])
+            use_jac=True, init=[-0.4, -0.41, 0.8, 0.2, 1])
         np_test.assert_almost_equal(res.optimizeResult.fun, 0, decimal=3)
         np_test.assert_almost_equal(
             res.y[2,:], scale * np.dot(r, x_cm)[2,:], decimal=3)

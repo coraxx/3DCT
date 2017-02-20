@@ -1,0 +1,26 @@
+language: python
+python:
+  - "2.7"
+install:
+  - sudo apt-get update
+  # installing pyqt, opencv, build essentials for tifffile pip package and xvfb to test pyqt gui
+  - sudo apt-get install -y build-essential python-qt4 python-opencv xvfb
+  - wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh;
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - export PATH="$HOME/miniconda/bin:$PATH"
+  - hash -r
+  - conda config --set always_yes yes --set changeps1 no
+  - conda update -q conda
+
+  # for debugging
+  - conda info -a
+
+  - conda env create -q -f environment_linux.yml python=2.7
+  - source activate 3dct
+  - conda install pytest
+
+  # for debugging
+  - conda list
+
+script:
+  - xvfb-run --auto-servernum --server-num=1 pytest
