@@ -1229,9 +1229,9 @@
                <property name="geometry">
                 <rect>
                  <x>0</x>
-                 <y>-164</y>
+                 <y>0</y>
                  <width>212</width>
-                 <height>692</height>
+                 <height>773</height>
                 </rect>
                </property>
                <layout class="QVBoxLayout" name="verticalLayout_17">
@@ -1370,6 +1370,12 @@
                      </item>
                      <item>
                       <widget class="QDoubleSpinBox" name="doubleSpinBox_markerAlpha">
+                       <property name="maximumSize">
+                        <size>
+                         <width>68</width>
+                         <height>16777215</height>
+                        </size>
+                       </property>
                        <property name="decimals">
                         <number>2</number>
                        </property>
@@ -1400,12 +1406,118 @@
                      </item>
                      <item>
                       <widget class="QSpinBox" name="spinBox_markerRadius">
+                       <property name="maximumSize">
+                        <size>
+                         <width>68</width>
+                         <height>16777215</height>
+                        </size>
+                       </property>
+                       <property name="suffix">
+                        <string> px</string>
+                       </property>
                        <property name="minimum">
                         <number>1</number>
                        </property>
                        <property name="value">
                         <number>3</number>
                        </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </item>
+                   <item>
+                    <layout class="QHBoxLayout" name="horizontalLayout_32">
+                     <item>
+                      <widget class="QLabel" name="label_27">
+                       <property name="text">
+                        <string>POI alpha:</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QDoubleSpinBox" name="doubleSpinBox_poiAlpha">
+                       <property name="maximumSize">
+                        <size>
+                         <width>68</width>
+                         <height>16777215</height>
+                        </size>
+                       </property>
+                       <property name="decimals">
+                        <number>2</number>
+                       </property>
+                       <property name="minimum">
+                        <double>0.010000000000000</double>
+                       </property>
+                       <property name="maximum">
+                        <double>1.000000000000000</double>
+                       </property>
+                       <property name="singleStep">
+                        <double>0.100000000000000</double>
+                       </property>
+                       <property name="value">
+                        <double>0.500000000000000</double>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </item>
+                   <item>
+                    <layout class="QHBoxLayout" name="horizontalLayout_31">
+                     <item>
+                      <widget class="QLabel" name="label_26">
+                       <property name="text">
+                        <string>POI size:</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QSpinBox" name="spinBox_poiSize">
+                       <property name="maximumSize">
+                        <size>
+                         <width>68</width>
+                         <height>16777215</height>
+                        </size>
+                       </property>
+                       <property name="suffix">
+                        <string> px</string>
+                       </property>
+                       <property name="minimum">
+                        <number>1</number>
+                       </property>
+                       <property name="value">
+                        <number>1</number>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </item>
+                   <item>
+                    <layout class="QHBoxLayout" name="horizontalLayout_33">
+                     <item>
+                      <widget class="QLabel" name="label_28">
+                       <property name="text">
+                        <string>POI form:</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QComboBox" name="comboBox_poiForm">
+                       <property name="maximumSize">
+                        <size>
+                         <width>68</width>
+                         <height>16777215</height>
+                        </size>
+                       </property>
+                       <item>
+                        <property name="text">
+                         <string>cross</string>
+                        </property>
+                       </item>
+                       <item>
+                        <property name="text">
+                         <string>dot</string>
+                        </property>
+                       </item>
                       </widget>
                      </item>
                     </layout>
