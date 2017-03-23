@@ -18,7 +18,7 @@ Custom Qt classes. Some widgets in QT Designer are promoted to these classes:
 # @Credits			:
 # @Maintainer		: Jan Arnold
 # @Date				: 2016/02/27
-# @Version			: 3DCT 2.2.2 module rev. 46
+# @Version			: 3DCT 2.3.0 module rev. 47
 # @Status			: stable
 # @Usage			: part of 3D Correlation Toolbox
 # @Notes			: Some widgets in QT Designer are promoted to these classes
@@ -670,7 +670,7 @@ class QLineEditFilePath(QtGui.QLineEdit):
 			filepath = str(urls[0].path())[1:]
 			if filepath.startswith('.file/id=') and objc:
 				if debug is True: print clrmsg.DEBUG + 'File id bug in PyQt4, converting:', filepath
-				filepath = self.getUrlFromLocalFileID(urls[0])
+				filepath = str(self.getUrlFromLocalFileID(urls[0]))
 				if debug is True: print clrmsg.DEBUG + '							to ->', filepath
 			elif filepath.startswith('.file/id=') and not objc:
 				if debug is True:

@@ -21,7 +21,7 @@ and it will print:
 # 					: https://github.com/tartley/colorama
 # @Maintainer		: Jan Arnold
 # @Date				: 2016/02
-# @Version			: 3DCT 2.2.2 module rev. 1
+# @Version			: 3DCT 2.3.0 module rev. 1
 # @Status			: stable
 # @Usage			: import clrmsg
 # 					: then call e.g. # print(clrmsg.ERROR + 'Error message')

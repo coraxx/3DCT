@@ -1,5 +1,21 @@
 # Changelog #
 
+## 2.3.0 ##
+2017-03-23[^1]
+
+##### Minor Changes: #####
+- Frame around active widget in correlation tool
+- rigid 3d test adjustment
+- added POI size and shape options
+
+##### Bugfixes: #####
+- bugfix for unittest, debug mode must be false
+- bugfix for unittest, assert adjustment
+- fixed test failing on some systems
+- bugfix for missing leading "/" when dragging in folders
+- bugfix for missing cast from URL QString to python string on drop event
+
+
 ## 2.2.2 ##
 2016-11-29[^1]
 

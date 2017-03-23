@@ -16,7 +16,7 @@ to one single stack file, ...).
 # @Credits			:
 # @Maintainer		: Jan Arnold
 # @Date				: 2016/01
-# @Version			: 3DCT 2.2.2 module rev. 30
+# @Version			: 3DCT 2.3.0 module rev. 30
 # @Status			: stable
 # @Usage			: part of 3D Correlation Toolbox
 # @Notes			:
@@ -39,7 +39,7 @@ import qimage2ndarray
 ## and correlation algorithm
 from tdct import clrmsg, TDCT_debug, QtCustom, csvHandler, correlation
 
-__version__ = 'v2.2.2'
+__version__ = 'v2.3.0'
 
 # add working directory temporarily to PYTHONPATH
 if getattr(sys, 'frozen', False):
