@@ -214,7 +214,6 @@ class QTableViewCustom(QtGui.QTableView):
 						self._model.data(self._model.index(row, 2)).toString()
 				x = float(self._model.data(self._model.index(row, 0)).toString())
 				y = float(self._model.data(self._model.index(row, 1)).toString())
-
 				if gauss is True:
 					if optimize is False:
 						zopt = beadPos.getzGauss(x,y,img,parent=self.mainParent)
@@ -531,7 +530,8 @@ class MatplotlibWidgetCustom(QtGui.QWidget):
 		self._setup = False
 
 	def scatterPlot(self,x='random',y='random',frame=False,framesize=None,xlabel="",ylabel=""):
-		if x == 'random' or y == 'random':
+		if ((isinstance(x, str) and (x == 'random'))
+                    or (isinstance(y, 'str') and (y == 'random'))):
 			# the random data
 			x = np.random.randn(1000)
 			y = np.random.randn(1000)

@@ -104,6 +104,8 @@ def getzGauss(x,y,img,parent=None,optimize=False,threshold=None,threshVal=0.6,cu
 	elif isinstance(img, str):
 		img = tf.imread(img)
 
+        x = np.round(x).astype(int)
+        y = np.round(y).astype(int)
 	data_z = img[:,y,x]
 	data = np.array([np.arange(len(data_z)), data_z])
 	poptZ, pcov = gaussfit(data,parent)

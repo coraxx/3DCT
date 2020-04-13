@@ -1689,6 +1689,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
             imageProps = [imgShape,self.sceneLeft.pixelSize,self.imgstack_right_layer1.shape]
             if img.ndim == 2:
                 ## Need RGB for colored markers
+                print('left #1 '.format(cv2.COLOR_GRAY2BGR))
                 img = cv2.cvtColor(img,cv2.COLOR_GRAY2BGR)
         elif '{0:b}'.format(self.sceneLeft.imagetype)[-1] == '0' and '{0:b}'.format(self.sceneRight.imagetype)[-1] == '1':
             model2D = self.modelRight
@@ -1711,6 +1712,7 @@ class MainWidget(QtGui.QMainWindow, Ui_WidgetWindow):
             imageProps = [imgShape,self.sceneRight.pixelSize,self.imgstack_left_layer1.shape]
             if img.ndim == 2:
                 ## Need RGB for colored markers
+                print('right #1 '.format(cv2.COLOR_GRAY2BGR))
                 img = cv2.cvtColor(img,cv2.COLOR_GRAY2BGR)
         else:
             def corrMsgBox(self,msg):
