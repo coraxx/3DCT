@@ -531,7 +531,7 @@ class MatplotlibWidgetCustom(QtGui.QWidget):
 
 	def scatterPlot(self,x='random',y='random',frame=False,framesize=None,xlabel="",ylabel=""):
 		if ((isinstance(x, str) and (x == 'random'))
-                    or (isinstance(y, 'str') and (y == 'random'))):
+                    or (isinstance(y, str) and (y == 'random'))):
 			# the random data
 			x = np.random.randn(1000)
 			y = np.random.randn(1000)
