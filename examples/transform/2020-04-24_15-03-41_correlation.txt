@@ -1,0 +1,25 @@
+#
+# Machine: slava ['Linux', 'x86_64', 'x86_64']
+# Date: Fri Apr 24 15:03:41 2020
+#
+# Input script: /home/vladan/tools/3dct/3DCT/pyto/common.py (Wed Apr 15 19:49:30 2020)  $Revision: 1179 $
+# Working directory: /home/vladan/pool/correlative/transform
+#
+#
+# Transformation parameters
+#
+#   - rotation (Euler phi, psi, theta): [-143.723, 115.579, 44.996]
+#   - scale =  0.500
+#   - translation for rotation around [0,0,0] = [-15.361, 21.287,  0.000]
+#   - translation for rotation around [55.00, 55.00, 55.00] = [ 1.750,  8.594, -35.247]
+#   - rms error (in 2d pixels) =   0.07
+#   - optimization successful
+#
+#
+# Transformation of initial (3D) markers
+#
+#	Initial (3D) markers		Transformed initial		Final (2D) markers	Transformed-Final
+	  87.12	  27.28	  49.12		  35.45	  15.61	  -8.63		  35.52	  15.60		  -0.07	   0.01
+	  41.58	  10.12	  11.25		   4.62	  15.59	  -7.61		   4.56	  15.60		   0.06	  -0.01
+	   5.72	  55.88	  33.08		   4.50	  46.57	  -5.43		   4.56	  46.56		  -0.06	   0.01
+	  51.70	  73.48	  71.09		  35.59	  46.67	  -6.62		  35.52	  46.68		   0.07	  -0.01
