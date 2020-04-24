@@ -110,7 +110,7 @@ The Toolbox is written in Python 2.7 and comes with a PyQt4 GUI. Make sure these
 + [matplotlib](http://matplotlib.org)[^2]
 + cv2[^2]
 + qimage2ndarray[^2]
-+ tifffile[^2]  (Christoph Gohlke)
++ tifffile 0.9.2 [^2]  (Christoph Gohlke)
 + colorama[^2]  (optional for colored stdout when debugging)
 
 [^1]: usually available via your favorite package manager (e.g. apt-get python-qt)

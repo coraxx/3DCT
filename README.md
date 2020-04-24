@@ -16,7 +16,7 @@ The Toolbox is written in Python 2.7 and comes with a PyQt4 GUI. Further depende
 + matplotlib [^2]
 + opencv [^1]
 + cv2 [^2]
-+ tifffile [^2]  (Christoph Gohlke)
++ tifffile 0.9.2 [^2]  (Christoph Gohlke)
 + colorama [^2]  (optional for colored stdout when debugging)
 + qimage2ndarray [^2]
 

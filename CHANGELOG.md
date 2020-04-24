@@ -1,5 +1,17 @@
 # Changelog #
 
+## 2.4.0 ##
+2020-04-24[^2]
+
+##### Major Change: #####
+- Added example for correlation and transformation of correlated images 
+
+##### Bugfixes: #####
+- Fixed pyto tests
+- Fixed float indices in beadsPos.py
+- Fixed future warning in QtCustom.py
+
+
 ## 2.3.0 ##
 2017-03-23[^1]
 
@@ -202,3 +214,5 @@
 
 
 [^1]: Jan Arnold - jan.arnold@coraxx.net
+[^2]: Vladan Lucic - vladan@biochem.mpg.de (Max Planck Institute of Biochemistry)
+
