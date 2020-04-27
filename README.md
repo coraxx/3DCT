@@ -4,7 +4,7 @@
 
 This Toolbox is build for 3D correlative microscopy. It helps with 3D to 2D correlation of three dimensional confocal image stacks to two dimensional SEM/FIB dual beam microscope images. Though it is not limited to that.
 
-The 3D Correlation Toolbox was developed at the Max Planck Institute of Biochemistry, Department of Molecular Structural Biology on the basis of the paper [Site-Specific Cryo-focused Ion Beam Sample Preparation Guided by 3D Correlative Microscopy](http://dx.doi.org/10.1016/j.bpj.2015.10.053)
+The 3D Correlation Toolbox was developed at the Max Planck Institute of Biochemistry, Department of Molecular Structural Biology on the basis of the paper [Site-Specific Cryo-focused Ion Beam Sample Preparation Guided by 3D Correlative Microscopy](http://dx.doi.org/10.1016/j.bpj.2015.10.053). 3DCT uses code from 3D rigid transformation from [Pyto](https://github.com/vladanl/Pyto.git).
 
 Further information can be found on [http://www.biochem.mpg.de/en/rd/baumeister](http://www.biochem.mpg.de/en/rd/baumeister) and [http://3dct.semper.space](http://3dct.semper.space)
 
@@ -48,7 +48,7 @@ Copyright (C) 2016  Jan Arnold
 
 Version 2.0 is the first public release and received a revised GUI and image stack handling (reslicing) done in python (formerly outsourced to FIJI)
 
-Most recent stable release version is 2.3.0.
+Most recent stable release version is 2.4.0.
 
 ### Binaries ###
 
